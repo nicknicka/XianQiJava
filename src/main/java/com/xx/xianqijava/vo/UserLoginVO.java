@@ -1,20 +1,20 @@
 package com.xx.xianqijava.vo;
 
 import io.swagger.v3.oas.annotations.media.Schema;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
 import lombok.Data;
-import lombok.NoArgsConstructor;
 
 /**
  * 用户登录响应 VO
  */
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
 @Schema(description = "用户登录响应")
 public class UserLoginVO {
+
+    @Schema(description = "访问令牌")
+    private String token;
+
+    @Schema(description = "刷新令牌")
+    private String refreshToken;
 
     @Schema(description = "用户ID")
     private Long userId;
@@ -28,9 +28,9 @@ public class UserLoginVO {
     @Schema(description = "头像")
     private String avatar;
 
-    @Schema(description = "访问令牌")
-    private String token;
+    @Schema(description = "手机号")
+    private String phone;
 
-    @Schema(description = "刷新令牌")
-    private String refreshToken;
+    @Schema(description = "Token过期时间(毫秒时间戳)")
+    private Long expiresIn;
 }

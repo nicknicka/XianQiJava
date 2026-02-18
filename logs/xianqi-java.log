@@ -535,3 +535,289 @@ Identify and stop the process that's listening on port 8080 or configure this ap
 2026-02-18T13:36:44.951+08:00  INFO 25223 --- [XianQiJava] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
 2026-02-18T13:36:44.953+08:00  INFO 25223 --- [XianQiJava] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 2 ms
 2026-02-18T13:36:45.070+08:00  INFO 25223 --- [XianQiJava] [http-nio-8080-exec-1] o.springdoc.api.AbstractOpenApiResource  : Init duration for springdoc-openapi is: 99 ms
+2026-02-18T13:42:45.784+08:00  INFO 25223 --- [XianQiJava] [File Watcher] rtingClassPathChangeChangedEventListener : Restarting due to 52 class path changes (0 additions, 1 deletion, 51 modifications)
+2026-02-18T13:42:45.873+08:00  INFO 25223 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Starting XianQiJavaApplication using Java 21.0.7 with PID 25223 (/Users/nickxiao/11project/XianQiJava/target/classes started by nickxiao in /Users/nickxiao/11project/XianQiJava)
+2026-02-18T13:42:45.873+08:00 DEBUG 25223 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Running with Spring Boot v3.2.5, Spring v6.1.6
+2026-02-18T13:42:45.873+08:00  INFO 25223 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : No active profile set, falling back to 1 default profile: "default"
+2026-02-18T13:42:45.937+08:00  INFO 25223 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-02-18T13:42:45.937+08:00  INFO 25223 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-02-18T13:42:45.939+08:00  INFO 25223 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 1 ms. Found 0 Redis repository interfaces.
+2026-02-18T13:42:45.954+08:00  WARN 25223 --- [XianQiJava] [restartedMain] o.m.s.mapper.ClassPathMapperScanner      : No MyBatis mapper was found in '[com.xx.xianqijava.mapper]' package. Please check your configuration.
+2026-02-18T13:42:46.034+08:00  INFO 25223 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-02-18T13:42:46.035+08:00  INFO 25223 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-02-18T13:42:46.035+08:00  INFO 25223 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-02-18T13:42:46.039+08:00  INFO 25223 --- [XianQiJava] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-02-18T13:42:46.040+08:00  INFO 25223 --- [XianQiJava] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 166 ms
+2026-02-18T13:42:46.055+08:00 DEBUG 25223 --- [XianQiJava] [restartedMain] c.x.x.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2026-02-18T13:42:46.155+08:00  INFO 25223 --- [XianQiJava] [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@329d65b, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@13337edc, org.springframework.security.web.context.SecurityContextHolderFilter@d318126, org.springframework.security.web.header.HeaderWriterFilter@422fe81a, org.springframework.security.web.authentication.logout.LogoutFilter@719c22c0, com.xx.xianqijava.security.JwtAuthenticationFilter@7ab89d17, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@23ca1dd5, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@1e184e8e, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@4c4b6e0c, org.springframework.security.web.session.SessionManagementFilter@1a4e83a5, org.springframework.security.web.access.ExceptionTranslationFilter@23d1b08d, org.springframework.security.web.access.intercept.AuthorizationFilter@5efbef7a]
+2026-02-18T13:42:46.199+08:00 DEBUG 25223 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Registered plugin: 'com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor@54cb8b47'
+2026-02-18T13:42:46.199+08:00 DEBUG 25223 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Property 'mapperLocations' was not specified.
+2026-02-18T13:42:46.253+08:00  INFO 25223 --- [XianQiJava] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2026-02-18T13:42:46.258+08:00  INFO 25223 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
+2026-02-18T13:42:46.260+08:00  INFO 25223 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Started XianQiJavaApplication in 0.398 seconds (process running for 405.261)
+2026-02-18T13:42:46.260+08:00 DEBUG 25223 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL start create  ...  
+2026-02-18T13:42:46.260+08:00 DEBUG 25223 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL end create  ...  
+2026-02-18T13:42:46.261+08:00  INFO 25223 --- [XianQiJava] [restartedMain] .ConditionEvaluationDeltaLoggingListener : Condition evaluation unchanged
+2026-02-18T13:42:49.681+08:00  INFO 25223 --- [XianQiJava] [File Watcher] rtingClassPathChangeChangedEventListener : Restarting due to 1 class path change (1 addition, 0 deletions, 0 modifications)
+2026-02-18T13:42:49.747+08:00  INFO 25223 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Starting XianQiJavaApplication using Java 21.0.7 with PID 25223 (/Users/nickxiao/11project/XianQiJava/target/classes started by nickxiao in /Users/nickxiao/11project/XianQiJava)
+2026-02-18T13:42:49.747+08:00 DEBUG 25223 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Running with Spring Boot v3.2.5, Spring v6.1.6
+2026-02-18T13:42:49.747+08:00  INFO 25223 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : No active profile set, falling back to 1 default profile: "default"
+2026-02-18T13:42:49.802+08:00  INFO 25223 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-02-18T13:42:49.803+08:00  INFO 25223 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-02-18T13:42:49.804+08:00  INFO 25223 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 1 ms. Found 0 Redis repository interfaces.
+2026-02-18T13:42:49.814+08:00  WARN 25223 --- [XianQiJava] [restartedMain] o.m.s.mapper.ClassPathMapperScanner      : No MyBatis mapper was found in '[com.xx.xianqijava.mapper]' package. Please check your configuration.
+2026-02-18T13:42:49.848+08:00  INFO 25223 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-02-18T13:42:49.848+08:00  INFO 25223 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-02-18T13:42:49.848+08:00  INFO 25223 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-02-18T13:42:49.851+08:00  INFO 25223 --- [XianQiJava] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-02-18T13:42:49.851+08:00  INFO 25223 --- [XianQiJava] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 104 ms
+2026-02-18T13:42:49.863+08:00 DEBUG 25223 --- [XianQiJava] [restartedMain] c.x.x.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2026-02-18T13:42:49.958+08:00  INFO 25223 --- [XianQiJava] [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@17b1d7cb, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@59d15879, org.springframework.security.web.context.SecurityContextHolderFilter@21ad2352, org.springframework.security.web.header.HeaderWriterFilter@71ccd98a, org.springframework.security.web.authentication.logout.LogoutFilter@42f19be7, com.xx.xianqijava.security.JwtAuthenticationFilter@61257f43, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@36eb8aed, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@217c0533, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@4f8df498, org.springframework.security.web.session.SessionManagementFilter@422d2e9d, org.springframework.security.web.access.ExceptionTranslationFilter@5324c76, org.springframework.security.web.access.intercept.AuthorizationFilter@6933001c]
+2026-02-18T13:42:49.998+08:00 DEBUG 25223 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Registered plugin: 'com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor@2b78ccbd'
+2026-02-18T13:42:49.998+08:00 DEBUG 25223 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Property 'mapperLocations' was not specified.
+2026-02-18T13:42:50.047+08:00  INFO 25223 --- [XianQiJava] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2026-02-18T13:42:50.052+08:00  INFO 25223 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
+2026-02-18T13:42:50.053+08:00  INFO 25223 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Started XianQiJavaApplication in 0.317 seconds (process running for 409.054)
+2026-02-18T13:42:50.053+08:00 DEBUG 25223 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL start create  ...  
+2026-02-18T13:42:50.054+08:00 DEBUG 25223 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL end create  ...  
+2026-02-18T13:42:50.054+08:00  INFO 25223 --- [XianQiJava] [restartedMain] .ConditionEvaluationDeltaLoggingListener : Condition evaluation unchanged
+2026-02-18T13:50:40.335+08:00  INFO 26138 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Starting XianQiJavaApplication using Java 22.0.2 with PID 26138 (/Users/nickxiao/11project/XianQiJava/target/classes started by nickxiao in /Users/nickxiao/11project/XianQiJava)
+2026-02-18T13:50:40.336+08:00 DEBUG 26138 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Running with Spring Boot v3.2.5, Spring v6.1.6
+2026-02-18T13:50:40.336+08:00  INFO 26138 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : No active profile set, falling back to 1 default profile: "default"
+2026-02-18T13:50:40.348+08:00  INFO 26138 --- [XianQiJava] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-02-18T13:50:40.348+08:00  INFO 26138 --- [XianQiJava] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-02-18T13:50:40.617+08:00  INFO 26138 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-02-18T13:50:40.618+08:00  INFO 26138 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-02-18T13:50:40.629+08:00  INFO 26138 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 6 ms. Found 0 Redis repository interfaces.
+2026-02-18T13:50:40.893+08:00  INFO 26138 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-02-18T13:50:40.899+08:00  INFO 26138 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-02-18T13:50:40.899+08:00  INFO 26138 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-02-18T13:50:40.915+08:00  INFO 26138 --- [XianQiJava] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-02-18T13:50:40.915+08:00  INFO 26138 --- [XianQiJava] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 567 ms
+2026-02-18T13:50:40.947+08:00 DEBUG 26138 --- [XianQiJava] [restartedMain] c.x.x.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2026-02-18T13:50:40.964+08:00  WARN 26138 --- [XianQiJava] [restartedMain] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'userController' defined in file [/Users/nickxiao/11project/XianQiJava/target/classes/com/xx/xianqijava/controller/UserController.class]: Unsatisfied dependency expressed through constructor parameter 0: Error creating bean with name 'userServiceImpl' defined in file [/Users/nickxiao/11project/XianQiJava/target/classes/com/xx/xianqijava/service/impl/UserServiceImpl.class]: Unsatisfied dependency expressed through constructor parameter 0: No qualifying bean of type 'org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {}
+2026-02-18T13:50:40.965+08:00  INFO 26138 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardService   : Stopping service [Tomcat]
+2026-02-18T13:50:40.976+08:00  INFO 26138 --- [XianQiJava] [restartedMain] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-02-18T13:50:40.983+08:00 ERROR 26138 --- [XianQiJava] [restartedMain] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Parameter 0 of constructor in com.xx.xianqijava.service.impl.UserServiceImpl required a bean of type 'org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder' that could not be found.
+
+
+Action:
+
+Consider defining a bean of type 'org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder' in your configuration.
+
+2026-02-18T13:57:35.535+08:00  INFO 26695 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Starting XianQiJavaApplication using Java 22.0.2 with PID 26695 (/Users/nickxiao/11project/XianQiJava/target/classes started by nickxiao in /Users/nickxiao/11project/XianQiJava)
+2026-02-18T13:57:35.536+08:00 DEBUG 26695 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Running with Spring Boot v3.2.5, Spring v6.1.6
+2026-02-18T13:57:35.536+08:00  INFO 26695 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : No active profile set, falling back to 1 default profile: "default"
+2026-02-18T13:57:35.548+08:00  INFO 26695 --- [XianQiJava] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-02-18T13:57:35.549+08:00  INFO 26695 --- [XianQiJava] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-02-18T13:57:35.844+08:00  INFO 26695 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-02-18T13:57:35.845+08:00  INFO 26695 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-02-18T13:57:35.857+08:00  INFO 26695 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 6 ms. Found 0 Redis repository interfaces.
+2026-02-18T13:57:36.133+08:00  INFO 26695 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-02-18T13:57:36.140+08:00  INFO 26695 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-02-18T13:57:36.140+08:00  INFO 26695 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-02-18T13:57:36.156+08:00  INFO 26695 --- [XianQiJava] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-02-18T13:57:36.156+08:00  INFO 26695 --- [XianQiJava] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 607 ms
+2026-02-18T13:57:36.185+08:00 DEBUG 26695 --- [XianQiJava] [restartedMain] c.x.x.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2026-02-18T13:57:36.254+08:00 DEBUG 26695 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Registered plugin: 'com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor@cb47a75'
+2026-02-18T13:57:36.254+08:00 DEBUG 26695 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Property 'mapperLocations' was not specified.
+2026-02-18T13:57:36.587+08:00  INFO 26695 --- [XianQiJava] [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@4b780f27, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@6243656a, org.springframework.security.web.context.SecurityContextHolderFilter@63f96be0, org.springframework.security.web.header.HeaderWriterFilter@2f3aea8e, org.springframework.security.web.authentication.logout.LogoutFilter@37039663, com.xx.xianqijava.security.JwtAuthenticationFilter@40117cb6, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@25398f8e, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@65a9040e, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@fce3f5, org.springframework.security.web.session.SessionManagementFilter@3cab3980, org.springframework.security.web.access.ExceptionTranslationFilter@7a485d1, org.springframework.security.web.access.intercept.AuthorizationFilter@4e5cf9c3]
+2026-02-18T13:57:36.753+08:00  INFO 26695 --- [XianQiJava] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2026-02-18T13:57:36.767+08:00  INFO 26695 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
+2026-02-18T13:57:36.772+08:00  INFO 26695 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Started XianQiJavaApplication in 1.404 seconds (process running for 1.552)
+2026-02-18T13:57:36.773+08:00 DEBUG 26695 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL start create  ...  
+2026-02-18T13:57:36.773+08:00 DEBUG 26695 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL end create  ...  
+2026-02-18T13:57:47.614+08:00  INFO 26695 --- [XianQiJava] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-02-18T13:57:47.615+08:00  INFO 26695 --- [XianQiJava] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-02-18T13:57:47.616+08:00  INFO 26695 --- [XianQiJava] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-02-18T13:59:45.130+08:00  INFO 27171 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Starting XianQiJavaApplication using Java 22.0.2 with PID 27171 (/Users/nickxiao/11project/XianQiJava/target/classes started by nickxiao in /Users/nickxiao/11project/XianQiJava)
+2026-02-18T13:59:45.130+08:00 DEBUG 27171 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Running with Spring Boot v3.2.5, Spring v6.1.6
+2026-02-18T13:59:45.131+08:00  INFO 27171 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : No active profile set, falling back to 1 default profile: "default"
+2026-02-18T13:59:45.144+08:00  INFO 27171 --- [XianQiJava] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-02-18T13:59:45.144+08:00  INFO 27171 --- [XianQiJava] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-02-18T13:59:45.430+08:00  INFO 27171 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-02-18T13:59:45.431+08:00  INFO 27171 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-02-18T13:59:45.443+08:00  INFO 27171 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 6 ms. Found 0 Redis repository interfaces.
+2026-02-18T13:59:45.718+08:00  INFO 27171 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-02-18T13:59:45.724+08:00  INFO 27171 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-02-18T13:59:45.724+08:00  INFO 27171 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-02-18T13:59:45.741+08:00  INFO 27171 --- [XianQiJava] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-02-18T13:59:45.741+08:00  INFO 27171 --- [XianQiJava] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 597 ms
+2026-02-18T13:59:45.773+08:00 DEBUG 27171 --- [XianQiJava] [restartedMain] c.x.x.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2026-02-18T13:59:45.867+08:00 DEBUG 27171 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Registered plugin: 'com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor@72cc2bbd'
+2026-02-18T13:59:45.868+08:00 DEBUG 27171 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Property 'mapperLocations' was not specified.
+2026-02-18T13:59:46.259+08:00  INFO 27171 --- [XianQiJava] [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@1c193afd, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@36f1f17a, org.springframework.security.web.context.SecurityContextHolderFilter@5ae41227, org.springframework.security.web.header.HeaderWriterFilter@2bdec295, org.springframework.security.web.authentication.logout.LogoutFilter@2d74fb36, com.xx.xianqijava.security.JwtAuthenticationFilter@4ff08afd, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@15501e0a, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@7395d772, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@5de12965, org.springframework.security.web.session.SessionManagementFilter@4d2b4eb5, org.springframework.security.web.access.ExceptionTranslationFilter@79446c2e, org.springframework.security.web.access.intercept.AuthorizationFilter@19166a9e]
+2026-02-18T13:59:46.432+08:00  INFO 27171 --- [XianQiJava] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2026-02-18T13:59:46.443+08:00  INFO 27171 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
+2026-02-18T13:59:46.452+08:00  INFO 27171 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Started XianQiJavaApplication in 1.478 seconds (process running for 1.627)
+2026-02-18T13:59:46.453+08:00 DEBUG 27171 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL start create  ...  
+2026-02-18T13:59:46.453+08:00 DEBUG 27171 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL end create  ...  
+2026-02-18T13:59:55.555+08:00  INFO 27171 --- [XianQiJava] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-02-18T13:59:55.556+08:00  INFO 27171 --- [XianQiJava] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-02-18T13:59:55.557+08:00  INFO 27171 --- [XianQiJava] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-02-18T14:00:08.419+08:00  INFO 27171 --- [XianQiJava] [http-nio-8080-exec-2] c.x.x.controller.UserController          : 用户注册请求, username=testuser888
+2026-02-18T14:00:08.424+08:00  INFO 27171 --- [XianQiJava] [http-nio-8080-exec-2] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-02-18T14:00:08.496+08:00  INFO 27171 --- [XianQiJava] [http-nio-8080-exec-2] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@76528ddd
+2026-02-18T14:00:08.496+08:00  INFO 27171 --- [XianQiJava] [http-nio-8080-exec-2] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-02-18T14:00:08.499+08:00  INFO 27171 --- [XianQiJava] [http-nio-8080-exec-2] c.x.x.service.impl.UserServiceImpl       : 用户注册开始, username=testuser888
+2026-02-18T14:00:08.653+08:00 DEBUG 27171 --- [XianQiJava] [http-nio-8080-exec-2] c.x.x.c.MybatisPlusMetaObjectHandler     : 开始插入填充...
+2026-02-18T14:00:08.657+08:00  INFO 27171 --- [XianQiJava] [http-nio-8080-exec-2] c.x.x.service.impl.UserServiceImpl       : 用户注册成功, userId=5, username=testuser888
+2026-02-18T14:00:31.566+08:00  INFO 27171 --- [XianQiJava] [http-nio-8080-exec-4] c.x.x.controller.UserController          : 用户注册请求, username=testuser888
+2026-02-18T14:00:31.569+08:00  INFO 27171 --- [XianQiJava] [http-nio-8080-exec-4] c.x.x.service.impl.UserServiceImpl       : 用户注册开始, username=testuser888
+2026-02-18T14:00:31.581+08:00 ERROR 27171 --- [XianQiJava] [http-nio-8080-exec-4] c.x.x.exception.GlobalExceptionHandler   : 业务异常: 用户名已存在
+2026-02-18T14:00:31.583+08:00  WARN 27171 --- [XianQiJava] [http-nio-8080-exec-4] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [com.xx.xianqijava.exception.BusinessException: 用户名已存在]
+2026-02-18T14:07:52.015+08:00  INFO 27171 --- [XianQiJava] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-02-18T14:07:52.022+08:00  INFO 27171 --- [XianQiJava] [SpringApplicationShutdownHook] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-02-18T14:13:26.260+08:00  INFO 28179 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Starting XianQiJavaApplication using Java 22.0.2 with PID 28179 (/Users/nickxiao/11project/XianQiJava/target/classes started by nickxiao in /Users/nickxiao/11project/XianQiJava)
+2026-02-18T14:13:26.262+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Running with Spring Boot v3.2.5, Spring v6.1.6
+2026-02-18T14:13:26.262+08:00  INFO 28179 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : No active profile set, falling back to 1 default profile: "default"
+2026-02-18T14:13:26.297+08:00  INFO 28179 --- [XianQiJava] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-02-18T14:13:26.297+08:00  INFO 28179 --- [XianQiJava] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-02-18T14:13:26.959+08:00  INFO 28179 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-02-18T14:13:26.960+08:00  INFO 28179 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-02-18T14:13:26.980+08:00  INFO 28179 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 10 ms. Found 0 Redis repository interfaces.
+2026-02-18T14:13:27.326+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-02-18T14:13:27.334+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-02-18T14:13:27.334+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-02-18T14:13:27.350+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-02-18T14:13:27.351+08:00  INFO 28179 --- [XianQiJava] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 1052 ms
+2026-02-18T14:13:27.388+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.x.x.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2026-02-18T14:13:27.467+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Registered plugin: 'com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor@17c6a552'
+2026-02-18T14:13:27.468+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Property 'mapperLocations' was not specified.
+2026-02-18T14:13:27.837+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@419a0423, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@443b4d5e, org.springframework.security.web.context.SecurityContextHolderFilter@71cb77a0, org.springframework.security.web.header.HeaderWriterFilter@3e23ce03, org.springframework.security.web.authentication.logout.LogoutFilter@24537517, com.xx.xianqijava.security.JwtAuthenticationFilter@1aa2eddf, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@472472e8, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@3568f2f8, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@64f147e, org.springframework.security.web.session.SessionManagementFilter@238962b9, org.springframework.security.web.access.ExceptionTranslationFilter@6402ba48, org.springframework.security.web.access.intercept.AuthorizationFilter@6ccd3d2b]
+2026-02-18T14:13:28.007+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2026-02-18T14:13:28.019+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
+2026-02-18T14:13:28.023+08:00  INFO 28179 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Started XianQiJavaApplication in 2.163 seconds (process running for 2.414)
+2026-02-18T14:13:28.027+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL start create  ...  
+2026-02-18T14:13:28.027+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL end create  ...  
+2026-02-18T14:13:43.931+08:00  INFO 28179 --- [XianQiJava] [http-nio-8080-exec-1] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring DispatcherServlet 'dispatcherServlet'
+2026-02-18T14:13:43.932+08:00  INFO 28179 --- [XianQiJava] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Initializing Servlet 'dispatcherServlet'
+2026-02-18T14:13:43.933+08:00  INFO 28179 --- [XianQiJava] [http-nio-8080-exec-1] o.s.web.servlet.DispatcherServlet        : Completed initialization in 1 ms
+2026-02-18T14:13:43.991+08:00  INFO 28179 --- [XianQiJava] [http-nio-8080-exec-1] c.x.x.controller.UserController          : 用户登录请求, username=testuser888
+2026-02-18T14:13:43.992+08:00  INFO 28179 --- [XianQiJava] [http-nio-8080-exec-1] c.x.x.service.impl.UserServiceImpl       : 用户登录开始, username=testuser888
+2026-02-18T14:13:44.024+08:00  INFO 28179 --- [XianQiJava] [http-nio-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Starting...
+2026-02-18T14:13:44.116+08:00  INFO 28179 --- [XianQiJava] [http-nio-8080-exec-1] com.zaxxer.hikari.pool.HikariPool        : HikariPool-1 - Added connection com.mysql.cj.jdbc.ConnectionImpl@586d2584
+2026-02-18T14:13:44.117+08:00  INFO 28179 --- [XianQiJava] [http-nio-8080-exec-1] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Start completed.
+2026-02-18T14:13:44.290+08:00  INFO 28179 --- [XianQiJava] [http-nio-8080-exec-1] c.x.x.service.impl.UserServiceImpl       : 用户登录成功, userId=5, username=testuser888
+2026-02-18T14:13:47.402+08:00  INFO 28179 --- [XianQiJava] [http-nio-8080-exec-2] c.x.x.controller.UserController          : 用户登录请求, username=wronguser
+2026-02-18T14:13:47.403+08:00  INFO 28179 --- [XianQiJava] [http-nio-8080-exec-2] c.x.x.service.impl.UserServiceImpl       : 用户登录开始, username=wronguser
+2026-02-18T14:13:47.407+08:00 ERROR 28179 --- [XianQiJava] [http-nio-8080-exec-2] c.x.x.exception.GlobalExceptionHandler   : 业务异常: 用户不存在
+2026-02-18T14:13:47.408+08:00  WARN 28179 --- [XianQiJava] [http-nio-8080-exec-2] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [com.xx.xianqijava.exception.BusinessException: 用户不存在]
+2026-02-18T14:13:47.804+08:00  INFO 28179 --- [XianQiJava] [http-nio-8080-exec-4] c.x.x.controller.UserController          : 用户登录请求, username=testuser888
+2026-02-18T14:13:47.805+08:00  INFO 28179 --- [XianQiJava] [http-nio-8080-exec-4] c.x.x.service.impl.UserServiceImpl       : 用户登录开始, username=testuser888
+2026-02-18T14:13:47.876+08:00 ERROR 28179 --- [XianQiJava] [http-nio-8080-exec-4] c.x.x.exception.GlobalExceptionHandler   : 业务异常: 密码错误
+2026-02-18T14:13:47.876+08:00  WARN 28179 --- [XianQiJava] [http-nio-8080-exec-4] .m.m.a.ExceptionHandlerExceptionResolver : Resolved [com.xx.xianqijava.exception.BusinessException: 密码错误]
+2026-02-18T14:15:11.074+08:00  INFO 28315 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Starting XianQiJavaApplication using Java 21.0.7 with PID 28315 (/Users/nickxiao/11project/XianQiJava/target/classes started by nickxiao in /Users/nickxiao/11project/XianQiJava)
+2026-02-18T14:15:11.074+08:00 DEBUG 28315 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Running with Spring Boot v3.2.5, Spring v6.1.6
+2026-02-18T14:15:11.075+08:00  INFO 28315 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : No active profile set, falling back to 1 default profile: "default"
+2026-02-18T14:15:11.090+08:00  INFO 28315 --- [XianQiJava] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-02-18T14:15:11.090+08:00  INFO 28315 --- [XianQiJava] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-02-18T14:15:11.392+08:00  INFO 28315 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-02-18T14:15:11.393+08:00  INFO 28315 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-02-18T14:15:11.403+08:00  INFO 28315 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 5 ms. Found 0 Redis repository interfaces.
+2026-02-18T14:15:11.455+08:00  INFO 28179 --- [XianQiJava] [File Watcher] rtingClassPathChangeChangedEventListener : Restarting due to 8 class path changes (0 additions, 0 deletions, 8 modifications)
+2026-02-18T14:15:11.485+08:00  INFO 28179 --- [XianQiJava] [Thread-5] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown initiated...
+2026-02-18T14:15:11.488+08:00  INFO 28179 --- [XianQiJava] [Thread-5] com.zaxxer.hikari.HikariDataSource       : HikariPool-1 - Shutdown completed.
+2026-02-18T14:15:11.541+08:00  INFO 28179 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Starting XianQiJavaApplication using Java 22.0.2 with PID 28179 (/Users/nickxiao/11project/XianQiJava/target/classes started by nickxiao in /Users/nickxiao/11project/XianQiJava)
+2026-02-18T14:15:11.541+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Running with Spring Boot v3.2.5, Spring v6.1.6
+2026-02-18T14:15:11.541+08:00  INFO 28179 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : No active profile set, falling back to 1 default profile: "default"
+2026-02-18T14:15:11.608+08:00  INFO 28179 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-02-18T14:15:11.609+08:00  INFO 28179 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-02-18T14:15:11.611+08:00  INFO 28179 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 2 ms. Found 0 Redis repository interfaces.
+2026-02-18T14:15:11.667+08:00  INFO 28315 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-02-18T14:15:11.674+08:00  INFO 28315 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-02-18T14:15:11.675+08:00  INFO 28315 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-02-18T14:15:11.678+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-02-18T14:15:11.679+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-02-18T14:15:11.679+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-02-18T14:15:11.686+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-02-18T14:15:11.686+08:00  INFO 28179 --- [XianQiJava] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 144 ms
+2026-02-18T14:15:11.692+08:00  INFO 28315 --- [XianQiJava] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-02-18T14:15:11.693+08:00  INFO 28315 --- [XianQiJava] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 603 ms
+2026-02-18T14:15:11.698+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.x.x.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2026-02-18T14:15:11.721+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Registered plugin: 'com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor@581660b7'
+2026-02-18T14:15:11.721+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Property 'mapperLocations' was not specified.
+2026-02-18T14:15:11.721+08:00 DEBUG 28315 --- [XianQiJava] [restartedMain] c.x.x.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2026-02-18T14:15:11.787+08:00 DEBUG 28315 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Registered plugin: 'com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor@77adf56d'
+2026-02-18T14:15:11.788+08:00 DEBUG 28315 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Property 'mapperLocations' was not specified.
+2026-02-18T14:15:11.848+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@3874b844, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@25f2fa9c, org.springframework.security.web.context.SecurityContextHolderFilter@2d3edd21, org.springframework.security.web.header.HeaderWriterFilter@760727d0, org.springframework.security.web.authentication.logout.LogoutFilter@50625fd8, com.xx.xianqijava.security.JwtAuthenticationFilter@3251e52d, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@7bb22a9e, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@3444bb9f, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@4e8283da, org.springframework.security.web.session.SessionManagementFilter@66d674ba, org.springframework.security.web.access.ExceptionTranslationFilter@b9ba830, org.springframework.security.web.access.intercept.AuthorizationFilter@7a2aa446]
+2026-02-18T14:15:11.938+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2026-02-18T14:15:11.943+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
+2026-02-18T14:15:11.945+08:00  INFO 28179 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Started XianQiJavaApplication in 0.418 seconds (process running for 106.333)
+2026-02-18T14:15:11.945+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL start create  ...  
+2026-02-18T14:15:11.945+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL end create  ...  
+2026-02-18T14:15:11.946+08:00  INFO 28179 --- [XianQiJava] [restartedMain] .ConditionEvaluationDeltaLoggingListener : Condition evaluation unchanged
+2026-02-18T14:15:12.117+08:00  INFO 28315 --- [XianQiJava] [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@25369da9, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@359ff57d, org.springframework.security.web.context.SecurityContextHolderFilter@43fc4861, org.springframework.security.web.header.HeaderWriterFilter@11a021e3, org.springframework.security.web.authentication.logout.LogoutFilter@7a900e0d, com.xx.xianqijava.security.JwtAuthenticationFilter@62a9cabc, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@2c66ca4c, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@15f5d06, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@27dfd97d, org.springframework.security.web.session.SessionManagementFilter@4ed92b22, org.springframework.security.web.access.ExceptionTranslationFilter@77c12f24, org.springframework.security.web.access.intercept.AuthorizationFilter@17d0fd37]
+2026-02-18T14:15:12.265+08:00  WARN 28315 --- [XianQiJava] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : Unable to start LiveReload server
+2026-02-18T14:15:12.276+08:00  WARN 28315 --- [XianQiJava] [restartedMain] ConfigServletWebServerApplicationContext : Exception encountered during context initialization - cancelling refresh attempt: org.springframework.context.ApplicationContextException: Failed to start bean 'webServerStartStop'
+2026-02-18T14:15:12.285+08:00  INFO 28315 --- [XianQiJava] [restartedMain] .s.b.a.l.ConditionEvaluationReportLogger : 
+
+Error starting ApplicationContext. To display the condition evaluation report re-run your application with 'debug' enabled.
+2026-02-18T14:15:12.290+08:00 ERROR 28315 --- [XianQiJava] [restartedMain] o.s.b.d.LoggingFailureAnalysisReporter   : 
+
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8080 was already in use.
+
+Action:
+
+Identify and stop the process that's listening on port 8080 or configure this application to listen on another port.
+
+2026-02-18T14:15:16.383+08:00  INFO 28179 --- [XianQiJava] [File Watcher] rtingClassPathChangeChangedEventListener : Restarting due to 1 class path change (0 additions, 0 deletions, 1 modification)
+2026-02-18T14:15:16.440+08:00  INFO 28179 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Starting XianQiJavaApplication using Java 22.0.2 with PID 28179 (/Users/nickxiao/11project/XianQiJava/target/classes started by nickxiao in /Users/nickxiao/11project/XianQiJava)
+2026-02-18T14:15:16.440+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Running with Spring Boot v3.2.5, Spring v6.1.6
+2026-02-18T14:15:16.440+08:00  INFO 28179 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : No active profile set, falling back to 1 default profile: "default"
+2026-02-18T14:15:16.504+08:00  INFO 28179 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-02-18T14:15:16.504+08:00  INFO 28179 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-02-18T14:15:16.506+08:00  INFO 28179 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 2 ms. Found 0 Redis repository interfaces.
+2026-02-18T14:15:16.553+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-02-18T14:15:16.553+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-02-18T14:15:16.553+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-02-18T14:15:16.558+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-02-18T14:15:16.558+08:00  INFO 28179 --- [XianQiJava] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 117 ms
+2026-02-18T14:15:16.569+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.x.x.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2026-02-18T14:15:16.588+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Registered plugin: 'com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor@31ce4535'
+2026-02-18T14:15:16.588+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Property 'mapperLocations' was not specified.
+2026-02-18T14:15:16.700+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@1cac78f8, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@56e84fd5, org.springframework.security.web.context.SecurityContextHolderFilter@7787b0cb, org.springframework.security.web.header.HeaderWriterFilter@17bb64be, org.springframework.security.web.authentication.logout.LogoutFilter@1fdaba92, com.xx.xianqijava.security.JwtAuthenticationFilter@7f3519a0, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@2fb48915, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@63e696c9, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@299846c9, org.springframework.security.web.session.SessionManagementFilter@175432a4, org.springframework.security.web.access.ExceptionTranslationFilter@3a8c4cf2, org.springframework.security.web.access.intercept.AuthorizationFilter@432ae8cf]
+2026-02-18T14:15:16.774+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2026-02-18T14:15:16.779+08:00  INFO 28179 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
+2026-02-18T14:15:16.781+08:00  INFO 28179 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Started XianQiJavaApplication in 0.353 seconds (process running for 111.169)
+2026-02-18T14:15:16.781+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL start create  ...  
+2026-02-18T14:15:16.781+08:00 DEBUG 28179 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL end create  ...  
+2026-02-18T14:15:16.781+08:00  INFO 28179 --- [XianQiJava] [restartedMain] .ConditionEvaluationDeltaLoggingListener : Condition evaluation unchanged
+2026-02-18T14:27:24.071+08:00  INFO 28443 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Starting XianQiJavaApplication using Java 21.0.7 with PID 28443 (/Users/nickxiao/11project/XianQiJava/target/classes started by nickxiao in /Users/nickxiao/11project/XianQiJava)
+2026-02-18T14:27:24.071+08:00 DEBUG 28443 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Running with Spring Boot v3.2.5, Spring v6.1.6
+2026-02-18T14:27:24.071+08:00  INFO 28443 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : No active profile set, falling back to 1 default profile: "default"
+2026-02-18T14:27:24.086+08:00  INFO 28443 --- [XianQiJava] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : Devtools property defaults active! Set 'spring.devtools.add-properties' to 'false' to disable
+2026-02-18T14:27:24.086+08:00  INFO 28443 --- [XianQiJava] [restartedMain] .e.DevToolsPropertyDefaultsPostProcessor : For additional web related logging consider setting the 'logging.level.web' property to 'DEBUG'
+2026-02-18T14:27:24.544+08:00  INFO 28443 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Multiple Spring Data modules found, entering strict repository configuration mode
+2026-02-18T14:27:24.545+08:00  INFO 28443 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Bootstrapping Spring Data Redis repositories in DEFAULT mode.
+2026-02-18T14:27:24.556+08:00  INFO 28443 --- [XianQiJava] [restartedMain] .s.d.r.c.RepositoryConfigurationDelegate : Finished Spring Data repository scanning in 5 ms. Found 0 Redis repository interfaces.
+2026-02-18T14:27:24.807+08:00  INFO 28443 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat initialized with port 8080 (http)
+2026-02-18T14:27:24.813+08:00  INFO 28443 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardService   : Starting service [Tomcat]
+2026-02-18T14:27:24.813+08:00  INFO 28443 --- [XianQiJava] [restartedMain] o.apache.catalina.core.StandardEngine    : Starting Servlet engine: [Apache Tomcat/10.1.20]
+2026-02-18T14:27:24.832+08:00  INFO 28443 --- [XianQiJava] [restartedMain] o.a.c.c.C.[Tomcat].[localhost].[/api]    : Initializing Spring embedded WebApplicationContext
+2026-02-18T14:27:24.832+08:00  INFO 28443 --- [XianQiJava] [restartedMain] w.s.c.ServletWebServerApplicationContext : Root WebApplicationContext: initialization completed in 746 ms
+2026-02-18T14:27:24.871+08:00 DEBUG 28443 --- [XianQiJava] [restartedMain] c.x.x.security.JwtAuthenticationFilter   : Filter 'jwtAuthenticationFilter' configured for use
+2026-02-18T14:27:24.936+08:00 DEBUG 28443 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Registered plugin: 'com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor@40d616d2'
+2026-02-18T14:27:24.936+08:00 DEBUG 28443 --- [XianQiJava] [restartedMain] c.b.m.e.s.MybatisSqlSessionFactoryBean   : Property 'mapperLocations' was not specified.
+2026-02-18T14:27:25.262+08:00  INFO 28443 --- [XianQiJava] [restartedMain] o.s.s.web.DefaultSecurityFilterChain     : Will secure any request with [org.springframework.security.web.session.DisableEncodeUrlFilter@4a67366, org.springframework.security.web.context.request.async.WebAsyncManagerIntegrationFilter@277773ec, org.springframework.security.web.context.SecurityContextHolderFilter@10fffe64, org.springframework.security.web.header.HeaderWriterFilter@703ca1e0, org.springframework.security.web.authentication.logout.LogoutFilter@6fa44c4, com.xx.xianqijava.security.JwtAuthenticationFilter@11f0ebf0, org.springframework.security.web.savedrequest.RequestCacheAwareFilter@6af5756, org.springframework.security.web.servletapi.SecurityContextHolderAwareRequestFilter@77003b91, org.springframework.security.web.authentication.AnonymousAuthenticationFilter@349306da, org.springframework.security.web.session.SessionManagementFilter@b960960, org.springframework.security.web.access.ExceptionTranslationFilter@3dc561d2, org.springframework.security.web.access.intercept.AuthorizationFilter@2be1126c]
+2026-02-18T14:27:25.419+08:00  INFO 28443 --- [XianQiJava] [restartedMain] o.s.b.d.a.OptionalLiveReloadServer       : LiveReload server is running on port 35729
+2026-02-18T14:27:25.430+08:00  INFO 28443 --- [XianQiJava] [restartedMain] o.s.b.w.embedded.tomcat.TomcatWebServer  : Tomcat started on port 8080 (http) with context path '/api'
+2026-02-18T14:27:25.434+08:00  INFO 28443 --- [XianQiJava] [restartedMain] c.xx.xianqijava.XianQiJavaApplication    : Started XianQiJavaApplication in 1.538 seconds (process running for 1.831)
+2026-02-18T14:27:25.435+08:00 DEBUG 28443 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL start create  ...  
+2026-02-18T14:27:25.435+08:00 DEBUG 28443 --- [XianQiJava] [restartedMain] c.b.m.a.DdlApplicationRunner             :   ...  DDL end create  ...  
