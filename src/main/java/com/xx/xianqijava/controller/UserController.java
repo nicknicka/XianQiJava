@@ -99,4 +99,15 @@ public class UserController {
         UserCenterVO result = userService.getUserCenterData(userId);
         return Result.success(result);
     }
+
+    /**
+     * 获取用户信用积分
+     */
+    @GetMapping("/{userId}/credit")
+    @Operation(summary = "获取用户信用积分")
+    public Result<Integer> getUserCreditScore(
+            @Parameter(description = "用户ID") @PathVariable("userId") Long userId) {
+        Integer creditScore = userService.getUserCreditScore(userId);
+        return Result.success(creditScore);
+    }
 }

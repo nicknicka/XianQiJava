@@ -88,4 +88,12 @@ public interface UserService extends IService<User> {
      * @return 用户中心数据
      */
     UserCenterVO getUserCenterData(Long userId);
+
+    /**
+     * 获取用户信用积分
+     *
+     * @param userId 用户ID
+     * @return 信用积分
+     */
+    Integer getUserCreditScore(Long userId);
 }

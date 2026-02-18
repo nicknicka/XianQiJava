@@ -106,4 +106,43 @@ public class OrderController {
         orderService.completeOrder(id, userId);
         return Result.success("订单完成成功");
     }
+
+    /**
+     * 申请退款（买家）
+     */
+    @PutMapping("/{id}/refund-request")
+    @Operation(summary = "申请退款")
+    public Result<Void> requestRefund(
+            @Parameter(description = "订单ID") @PathVariable("id") Long id) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("申请退款, orderId={}, userId={}", id, userId);
+        orderService.requestRefund(id, userId);
+        return Result.success("退款申请已提交");
+    }
+
+    /**
+     * 同意退款（卖家）
+     */
+    @PutMapping("/{id}/refund-approve")
+    @Operation(summary = "同意退款")
+    public Result<Void> approveRefund(
+            @Parameter(description = "订单ID") @PathVariable("id") Long id) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("同意退款, orderId={}, userId={}", id, userId);
+        orderService.approveRefund(id, userId);
+        return Result.success("退款成功");
+    }
+
+    /**
+     * 拒绝退款（卖家）
+     */
+    @PutMapping("/{id}/refund-reject")
+    @Operation(summary = "拒绝退款")
+    public Result<Void> rejectRefund(
+            @Parameter(description = "订单ID") @PathVariable("id") Long id) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("拒绝退款, orderId={}, userId={}", id, userId);
+        orderService.rejectRefund(id, userId);
+        return Result.success("已拒绝退款申请");
+    }
 }

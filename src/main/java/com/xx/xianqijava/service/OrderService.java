@@ -43,6 +43,21 @@ public interface OrderService extends IService<Order> {
     void completeOrder(Long orderId, Long userId);
 
     /**
+     * 申请退款（买家）
+     */
+    void requestRefund(Long orderId, Long buyerId);
+
+    /**
+     * 同意退款（卖家）
+     */
+    void approveRefund(Long orderId, Long sellerId);
+
+    /**
+     * 拒绝退款（卖家）
+     */
+    void rejectRefund(Long orderId, Long sellerId);
+
+    /**
      * 生成订单号
      */
     String generateOrderNo();

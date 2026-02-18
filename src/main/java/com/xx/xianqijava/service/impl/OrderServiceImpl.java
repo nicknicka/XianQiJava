@@ -210,6 +210,94 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void requestRefund(Long orderId, Long buyerId) {
+        log.info("申请退款, orderId={}, buyerId={}", orderId, buyerId);
+
+        Order order = getById(orderId);
+        if (order == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        // 检查权限：只有买家可以申请退款
+        if (!order.getBuyerId().equals(buyerId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "只有买家可以申请退款");
+        }
+
+        // 检查订单状态：只有进行中的订单可以申请退款
+        if (order.getStatus() != 1) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "订单状态不正确，无法申请退款");
+        }
+
+        // 更新订单状态为退款中
+        order.setStatus(4);
+        updateById(order);
+
+        log.info("退款申请成功, orderId={}", orderId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void approveRefund(Long orderId, Long sellerId) {
+        log.info("同意退款, orderId={}, sellerId={}", orderId, sellerId);
+
+        Order order = getById(orderId);
+        if (order == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        // 检查权限：只有卖家可以同意退款
+        if (!order.getSellerId().equals(sellerId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "只有卖家可以同意退款");
+        }
+
+        // 检查订单状态：只有退款中的订单可以同意退款
+        if (order.getStatus() != 4) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "订单状态不正确，无法同意退款");
+        }
+
+        // 更新订单状态为已取消
+        order.setStatus(3);
+        updateById(order);
+
+        // 恢复商品状态为在售
+        Product product = productMapper.selectById(order.getProductId());
+        if (product != null) {
+            product.setStatus(1); // 在售
+            productMapper.updateById(product);
+        }
+
+        log.info("退款成功, orderId={}", orderId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void rejectRefund(Long orderId, Long sellerId) {
+        log.info("拒绝退款, orderId={}, sellerId={}", orderId, sellerId);
+
+        Order order = getById(orderId);
+        if (order == null) {
+            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
+        }
+
+        // 检查权限：只有卖家可以拒绝退款
+        if (!order.getSellerId().equals(sellerId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "只有卖家可以拒绝退款");
+        }
+
+        // 检查订单状态：只有退款中的订单可以拒绝退款
+        if (order.getStatus() != 4) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "订单状态不正确，无法拒绝退款");
+        }
+
+        // 恢复订单状态为进行中
+        order.setStatus(1);
+        updateById(order);
+
+        log.info("拒绝退款成功, orderId={}", orderId);
+    }
+
+    @Override
     public String generateOrderNo() {
         // 生成格式：yyyyMMddHHmmss + 4位随机数
         String datetime = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));

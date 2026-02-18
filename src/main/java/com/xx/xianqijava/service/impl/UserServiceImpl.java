@@ -277,4 +277,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         return userCenterVO;
     }
+
+    @Override
+    public Integer getUserCreditScore(Long userId) {
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+        return user.getCreditScore();
+    }
 }

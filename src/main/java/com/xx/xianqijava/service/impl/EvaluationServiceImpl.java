@@ -98,7 +98,7 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
         save(evaluation);
 
         // 6. 更新被评价人的信用积分
-        updateUserCreditScore(evaluatedUserId);
+        updateUserCreditScore(evaluatedUserId, createDTO.getRating());
 
         log.info("评价创建成功, evalId={}", evaluation.getEvalId());
 
@@ -155,19 +155,23 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
 
     /**
      * 更新用户信用积分
-     * 计算规则：(平均评分-3) * 10
-     * 例如：平均5星 → (5-3)*10 = +20分
-     *      平均3星 → (3-3)*10 = 0分
-     *      平均1星 → (1-3)*10 = -20分
+     * 计算规则（每次评价）：
+     * - 好评（5星）：+5分
+     * - 中评（3-4星）：+2分
+     * - 差评（1-2星）：-5分
      */
-    private void updateUserCreditScore(Long userId) {
-        Integer avgRating = getUserAverageRating(userId);
-        if (avgRating == null) {
-            return;
+    private void updateUserCreditScore(Long userId, Integer score) {
+        int creditChange;
+        if (score >= 5) {
+            // 好评
+            creditChange = 5;
+        } else if (score >= 3) {
+            // 中评
+            creditChange = 2;
+        } else {
+            // 差评
+            creditChange = -5;
         }
-
-        // 计算信用积分变化
-        int creditChange = (avgRating - 3) * 10;
 
         User user = userMapper.selectById(userId);
         if (user != null) {
@@ -177,7 +181,8 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
             user.setCreditScore(newCreditScore);
             userMapper.updateById(user);
 
-            log.info("更新用户信用积分, userId={}, 旧积分={}, 新积分={}", userId, user.getCreditScore() - creditChange, newCreditScore);
+            log.info("更新用户信用积分, userId={}, 评分={}, 积分变化={}, 旧积分={}, 新积分={}",
+                    userId, score, creditChange, user.getCreditScore() - creditChange, newCreditScore);
         }
     }
 
