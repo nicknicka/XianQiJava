@@ -187,6 +187,10 @@ public class ShareItemBookingServiceImpl extends ServiceImpl<ShareItemBookingMap
             throw new BusinessException(ErrorCode.BAD_REQUEST, "该预约当前状态不允许取消");
         }
 
+        // 保存原始状态用于判断是否需要恢复物品
+        Integer originalStatus = booking.getStatus();
+
+        // 更新预约状态为已取消
         booking.setStatus(3); // 已取消
         boolean updated = updateById(booking);
         if (!updated) {
@@ -194,11 +198,12 @@ public class ShareItemBookingServiceImpl extends ServiceImpl<ShareItemBookingMap
         }
 
         // 如果是已批准状态，需要恢复物品状态
-        if (booking.getStatus() == 1) {
+        if (originalStatus == 1) {
             ShareItem shareItem = shareItemMapper.selectById(booking.getShareId());
             if (shareItem != null && shareItem.getStatus() == 2) {
                 shareItem.setStatus(1); // 恢复为可借用
                 shareItemMapper.updateById(shareItem);
+                log.info("恢复物品状态为可借用, shareId={}", shareItem.getShareId());
             }
         }
 

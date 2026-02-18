@@ -114,14 +114,9 @@ public class ShareItemServiceImpl extends ServiceImpl<ShareItemMapper, ShareItem
         }
         updateById(shareItem);
 
-        // 删除旧图片
-        LambdaQueryWrapper<ShareItemImage> deleteWrapper = new LambdaQueryWrapper<>();
-        deleteWrapper.eq(ShareItemImage::getShareId, shareId);
-        shareItemImageMapper.delete(deleteWrapper);
-
-        // 添加新图片
+        // 先添加新图片，成功后再删除旧图片（避免数据丢失）
+        List<ShareItemImage> newImages = new ArrayList<>();
         if (createDTO.getImageUrls() != null && !createDTO.getImageUrls().isEmpty()) {
-            List<ShareItemImage> images = new ArrayList<>();
             for (int i = 0; i < createDTO.getImageUrls().size(); i++) {
                 ShareItemImage image = new ShareItemImage();
                 image.setShareId(shareId);
@@ -129,14 +124,28 @@ public class ShareItemServiceImpl extends ServiceImpl<ShareItemMapper, ShareItem
                 image.setSortOrder(i);
                 image.setIsCover(i == 0 ? 1 : 0);
                 image.setStatus(0);
-                images.add(image);
+                newImages.add(image);
             }
-            if (!images.isEmpty()) {
-                images.forEach(shareItemImageMapper::insert);
-                shareItem.setCoverImageId(images.get(0).getImageId());
+            // 批量插入新图片
+            if (!newImages.isEmpty()) {
+                newImages.forEach(shareItemImageMapper::insert);
+                shareItem.setCoverImageId(newImages.get(0).getImageId());
                 updateById(shareItem);
             }
         }
+
+        // 新图片插入成功后，删除旧图片
+        // 注意：整个方法在@Transactional中，如果新图片插入失败，删除操作会回滚
+        LambdaQueryWrapper<ShareItemImage> deleteWrapper = new LambdaQueryWrapper<>();
+        deleteWrapper.eq(ShareItemImage::getShareId, shareId);
+        // 排除刚插入的新图片
+        if (!newImages.isEmpty()) {
+            List<Long> newImageIds = newImages.stream()
+                    .map(ShareItemImage::getImageId)
+                    .collect(java.util.stream.Collectors.toList());
+            deleteWrapper.notIn(ShareItemImage::getImageId, newImageIds);
+        }
+        shareItemImageMapper.delete(deleteWrapper);
 
         log.info("共享物品更新成功, shareId={}", shareId);
         return convertToVO(shareItem);

@@ -154,7 +154,25 @@ public class TransferRecordServiceImpl extends ServiceImpl<TransferRecordMapper,
         record.setCompleteTime(LocalDateTime.now());
         updateById(record);
 
+        // 自动拒绝该物品的其他待确认转赠记录
+        LambdaQueryWrapper<TransferRecord> otherWrapper = new LambdaQueryWrapper<>();
+        otherWrapper.eq(TransferRecord::getShareId, record.getShareId())
+                .eq(TransferRecord::getAcceptStatus, 0) // 待确认
+                .ne(TransferRecord::getTransferId, record.getTransferId()); // 排除当前记录
+        List<TransferRecord> otherTransfers = list(otherWrapper);
+
+        if (!otherTransfers.isEmpty()) {
+            for (TransferRecord other : otherTransfers) {
+                other.setAcceptStatus(2); // 标记为已拒绝
+                other.setRejectReason("该物品已转赠给其他人");
+                other.setConfirmTime(LocalDateTime.now());
+                updateById(other);
+            }
+            log.info("自动拒绝{}条该物品的其他待确认转赠记录", otherTransfers.size());
+        }
+
         // TODO: 发送转赠完成通知给转出人
+        // TODO: 发送转赠拒绝通知给其他待确认的接收人
 
         log.info("转赠已完成, transferId={}, shareId={}, newOwnerId={}",
                 record.getTransferId(), record.getShareId(), toUserId);

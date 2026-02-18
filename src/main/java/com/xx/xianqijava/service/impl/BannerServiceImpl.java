@@ -37,11 +37,20 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
 
         List<Banner> banners = list(queryWrapper);
 
-        // 转换为VO并增加曝光次数
-        for (Banner banner : banners) {
-            banner.setExposureCount(banner.getExposureCount() + 1);
+        // 异步更新曝光次数（使用SQL级别更新避免并发问题）
+        if (!banners.isEmpty()) {
+            final java.util.List<Banner> bannersToUpdate = banners;
+            java.util.concurrent.CompletableFuture.runAsync(() -> {
+                for (Banner banner : bannersToUpdate) {
+                    // 使用SQL更新避免并发丢失
+                    com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Banner> updateWrapper =
+                        new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
+                    updateWrapper.setSql("exposure_count = exposure_count + 1")
+                            .eq(Banner::getBannerId, banner.getBannerId());
+                    baseMapper.update(null, updateWrapper);
+                }
+            });
         }
-        updateBatchById(banners);
 
         return banners.stream()
                 .map(this::convertToVO)

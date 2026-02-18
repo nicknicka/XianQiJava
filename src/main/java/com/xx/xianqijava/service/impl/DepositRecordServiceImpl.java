@@ -87,10 +87,24 @@ public class DepositRecordServiceImpl extends ServiceImpl<DepositRecordMapper, D
 
         // TODO: 调用第三方支付接口
         // 这里模拟支付成功
+
+        // 6. 更新押金状态为已支付
         record.setStatus(1); // 已支付
+        record.setPayTime(java.time.LocalDateTime.now());
         updateById(record);
 
-        log.info("押金支付成功, recordId={}", record.getRecordId());
+        // 7. 更新预约状态为借用中
+        // 再次检查预约状态，确保期间未被取消
+        ShareItemBooking latestBooking = shareItemBookingMapper.selectById(payDTO.getBookingId());
+        if (latestBooking == null || latestBooking.getStatus() != 1) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "预约状态已变化，无法完成支付");
+        }
+
+        latestBooking.setStatus(4); // 借用中
+        latestBooking.setStartTime(java.time.LocalDateTime.now());
+        shareItemBookingMapper.updateById(latestBooking);
+
+        log.info("押金支付成功, recordId={}, booking status updated to borrowing", record.getRecordId());
         return convertToVO(record);
     }
 
