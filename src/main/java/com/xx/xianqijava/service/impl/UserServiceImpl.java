@@ -36,6 +36,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final com.xx.xianqijava.service.ProductService productService;
+    private final com.xx.xianqijava.service.OrderService orderService;
+    private final com.xx.xianqijava.service.EvaluationService evaluationService;
+    private final com.xx.xianqijava.service.ProductFavoriteService productFavoriteService;
 
     @Value("${jwt.expiration}")
     private Long jwtExpiration;
@@ -231,6 +235,28 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public UserInfoVO updateAvatar(Long userId, com.xx.xianqijava.dto.UpdateAvatarDTO avatarDTO) {
+        log.info("更新头像, userId={}, avatar={}", userId, avatarDTO.getAvatar());
+
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        user.setAvatar(avatarDTO.getAvatar());
+
+        boolean updated = updateById(user);
+        if (!updated) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "更新头像失败");
+        }
+
+        log.info("更新头像成功, userId={}", userId);
+
+        return getUserInfo(userId);
+    }
+
+    @Override
     public User getByUsername(String username) {
         LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(User::getUsername, username);
@@ -267,15 +293,37 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userCenterVO.setAvatar(user.getAvatar());
         userCenterVO.setCreditScore(user.getCreditScore());
 
-        // TODO: 统计我的发布数量、订单数量、收藏数量、评价数量
-        // 这些统计需要注入对应的Service来查询
-        userCenterVO.setProductCount(0);
-        userCenterVO.setOrderCount(0);
-        userCenterVO.setFavoriteCount(0);
-        userCenterVO.setEvaluationCount(0);
+        try {
+            // 统计我的发布数量
+            int productCount = productService.countByUserId(userId);
+            userCenterVO.setProductCount(productCount);
 
-        // TODO: 获取最近发布的商品
-        userCenterVO.setRecentProducts(null);
+            // 统计我的订单数量（作为买家和卖家）
+            int orderCount = orderService.countByUserId(userId);
+            userCenterVO.setOrderCount(orderCount);
+
+            // 统计我的收藏数量
+            int favoriteCount = productFavoriteService.countByUserId(userId);
+            userCenterVO.setFavoriteCount(favoriteCount);
+
+            // 统计收到的评价数量
+            int evaluationCount = evaluationService.countByEvaluatedUserId(userId);
+            userCenterVO.setEvaluationCount(evaluationCount);
+
+            // 获取最近发布的商品（最多5个）
+            java.util.List<com.xx.xianqijava.vo.ProductVO> recentProducts =
+                productService.getRecentProductsByUserId(userId, 5);
+            userCenterVO.setRecentProducts(recentProducts);
+
+        } catch (Exception e) {
+            log.error("获取用户中心统计数据失败, userId={}", userId, e);
+            // 如果统计失败,设置默认值
+            userCenterVO.setProductCount(0);
+            userCenterVO.setOrderCount(0);
+            userCenterVO.setFavoriteCount(0);
+            userCenterVO.setEvaluationCount(0);
+            userCenterVO.setRecentProducts(new java.util.ArrayList<>());
+        }
 
         return userCenterVO;
     }

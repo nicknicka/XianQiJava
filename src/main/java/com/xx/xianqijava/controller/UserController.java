@@ -1,6 +1,7 @@
 package com.xx.xianqijava.controller;
 
 import com.xx.xianqijava.common.Result;
+import com.xx.xianqijava.dto.UpdateAvatarDTO;
 import com.xx.xianqijava.dto.UpdateLocationDTO;
 import com.xx.xianqijava.dto.UpdatePasswordDTO;
 import com.xx.xianqijava.dto.UserLoginDTO;
@@ -91,6 +92,18 @@ public class UserController {
         log.info("修改密码, userId={}", userId);
         userService.updatePassword(userId, passwordDTO);
         return Result.success("密码修改成功");
+    }
+
+    /**
+     * 更新头像
+     */
+    @Operation(summary = "更新头像")
+    @PutMapping("/avatar")
+    public Result<UserInfoVO> updateAvatar(@Valid @RequestBody UpdateAvatarDTO avatarDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("更新头像, userId={}", userId);
+        UserInfoVO result = userService.updateAvatar(userId, avatarDTO);
+        return Result.success("头像更新成功", result);
     }
 
     /**

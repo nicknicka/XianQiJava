@@ -1,6 +1,7 @@
 package com.xx.xianqijava.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.xx.xianqijava.dto.UpdateAvatarDTO;
 import com.xx.xianqijava.dto.UpdateLocationDTO;
 import com.xx.xianqijava.dto.UpdatePasswordDTO;
 import com.xx.xianqijava.dto.UserLoginDTO;
@@ -57,6 +58,15 @@ public interface UserService extends IService<User> {
      * @param passwordDTO 密码信息
      */
     void updatePassword(Long userId, UpdatePasswordDTO passwordDTO);
+
+    /**
+     * 更新头像
+     *
+     * @param userId 用户ID
+     * @param avatarDTO 头像信息
+     * @return 更新后的用户信息
+     */
+    UserInfoVO updateAvatar(Long userId, UpdateAvatarDTO avatarDTO);
 
     /**
      * 根据用户名查询用户
