@@ -128,4 +128,17 @@ public class ConversationController {
 
         return Result.success(messagePage);
     }
+
+    /**
+     * 撤回消息
+     */
+    @Operation(summary = "撤回消息")
+    @PutMapping("/message/{messageId}/recall")
+    public Result<Void> recallMessage(
+            @Parameter(description = "消息ID") @PathVariable("messageId") Long messageId) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("撤回消息, messageId={}, userId={}", messageId, userId);
+        conversationService.recallMessage(messageId, userId);
+        return Result.success("消息撤回成功");
+    }
 }

@@ -74,4 +74,12 @@ public interface ConversationService extends IService<Conversation> {
      * @return 消息列表
      */
     IPage<MessageVO> getMessages(Long conversationId, Long userId, Page<com.xx.xianqijava.entity.Message> page);
+
+    /**
+     * 撤回消息
+     *
+     * @param messageId 消息ID
+     * @param userId    当前用户ID
+     */
+    void recallMessage(Long messageId, Long userId);
 }

@@ -253,6 +253,50 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
         return messagePage.convert(msg -> convertMessageToVO(msg, userId));
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void recallMessage(Long messageId, Long userId) {
+        Message message = messageMapper.selectById(messageId);
+        if (message == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "消息不存在");
+        }
+
+        // 检查权限：只有发送者可以撤回消息
+        if (!message.getFromUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "只能撤回自己发送的消息");
+        }
+
+        // 检查消息状态：已撤回或已删除的消息不能撤回
+        if (message.getStatus() != 0) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "消息已被撤回或删除");
+        }
+
+        // 检查时间：只能撤回2分钟内的消息
+        if (message.getCreateTime() != null) {
+            LocalDateTime twoMinutesAgo = LocalDateTime.now().minusMinutes(2);
+            if (message.getCreateTime().isBefore(twoMinutesAgo)) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "超过2分钟，无法撤回消息");
+            }
+        }
+
+        // 撤回消息
+        message.setStatus(1); // 1-撤回
+        messageMapper.updateById(message);
+
+        // 通过WebSocket通知对方消息已撤回
+        Conversation conversation = baseMapper.selectById(message.getConversationId());
+        Long toUserId = conversation.getUserId1().equals(userId)
+                ? conversation.getUserId2() : conversation.getUserId1();
+
+        webSocketHandler.sendMessageToUser(toUserId, "message_recalled",
+                Map.of(
+                        "conversationId", conversation.getConversationId(),
+                        "messageId", messageId
+                ));
+
+        log.info("撤回消息成功, messageId={}, userId={}", messageId, userId);
+    }
+
     /**
      * 转换为VO
      */
