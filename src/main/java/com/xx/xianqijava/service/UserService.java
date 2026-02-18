@@ -1,6 +1,7 @@
 package com.xx.xianqijava.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.xx.xianqijava.dto.UpdateLocationDTO;
 import com.xx.xianqijava.dto.UpdatePasswordDTO;
 import com.xx.xianqijava.dto.UserLoginDTO;
 import com.xx.xianqijava.dto.UserRegisterDTO;
@@ -96,4 +97,20 @@ public interface UserService extends IService<User> {
      * @return 信用积分
      */
     Integer getUserCreditScore(Long userId);
+
+    /**
+     * 更新用户位置信息
+     *
+     * @param userId 用户ID
+     * @param locationDTO 位置信息
+     */
+    void updateUserLocation(Long userId, UpdateLocationDTO locationDTO);
+
+    /**
+     * 获取附近用户列表（同学院/同专业）
+     *
+     * @param userId 当前用户ID
+     * @return 用户列表
+     */
+    java.util.List<User> getNearbyUsers(Long userId);
 }

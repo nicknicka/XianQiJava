@@ -55,4 +55,17 @@ public interface ProductService extends IService<Product> {
      * 转换为VO
      */
     ProductVO convertToVO(Product product, Long currentUserId);
+
+    /**
+     * 获取附近商品列表
+     *
+     * @param page     分页参数
+     * @param userId   当前用户ID
+     * @param latitude 纬度
+     * @param longitude 经度
+     * @param radius   半径（公里）
+     * @return 商品列表
+     */
+    IPage<ProductVO> getNearbyProducts(Page<Product> page, Long userId,
+                                       BigDecimal latitude, BigDecimal longitude, Integer radius);
 }

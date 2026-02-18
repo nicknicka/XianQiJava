@@ -268,4 +268,60 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
         return vo;
     }
+
+    @Override
+    public IPage<ProductVO> getNearbyProducts(Page<Product> page, Long userId,
+                                              BigDecimal latitude, BigDecimal longitude, Integer radius) {
+        log.info("获取附近商品, userId={}, latitude={}, longitude={}, radius={}",
+                userId, latitude, longitude, radius);
+
+        // 获取当前用户信息
+        User currentUser = userMapper.selectById(userId);
+        if (currentUser == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Product::getStatus, 1); // 只查询在售商品
+        wrapper.isNotNull(Product::getLatitude); // 必须有纬度
+        wrapper.isNotNull(Product::getLongitude); // 必须有经度
+
+        // 计算距离并筛选附近商品（使用 Haversine 公式估算）
+        // 这里使用简单的矩形范围筛选，实际应用中可使用更精确的地理空间查询
+        // 1度经纬度约等于111公里
+        if (latitude != null && longitude != null && radius != null && radius > 0) {
+            double latDegreeRange = (double) radius / 111.0;
+            double lonDegreeRange = (double) radius / (111.0 * Math.cos(Math.toRadians(latitude.doubleValue())));
+
+            BigDecimal minLat = latitude.subtract(BigDecimal.valueOf(latDegreeRange));
+            BigDecimal maxLat = latitude.add(BigDecimal.valueOf(latDegreeRange));
+            BigDecimal minLon = longitude.subtract(BigDecimal.valueOf(lonDegreeRange));
+            BigDecimal maxLon = longitude.add(BigDecimal.valueOf(lonDegreeRange));
+
+            wrapper.ge(Product::getLatitude, minLat)
+                   .le(Product::getLatitude, maxLat)
+                   .ge(Product::getLongitude, minLon)
+                   .le(Product::getLongitude, maxLon);
+        }
+
+        // 优先推荐同学院/同专业的用户的商品
+        if (currentUser.getCollege() != null && !currentUser.getCollege().isEmpty()) {
+            // 获取同学院用户列表
+            LambdaQueryWrapper<User> userWrapper = new LambdaQueryWrapper<>();
+            userWrapper.eq(User::getCollege, currentUser.getCollege())
+                      .select(User::getUserId);
+            List<Long> collegeUserIds = userMapper.selectList(userWrapper).stream()
+                    .map(User::getUserId)
+                    .collect(Collectors.toList());
+
+            if (!collegeUserIds.isEmpty()) {
+                wrapper.or().in(Product::getSellerId, collegeUserIds);
+            }
+        }
+
+        wrapper.orderByDesc(Product::getCreateTime);
+
+        IPage<Product> productPage = page(page, wrapper);
+        return productPage.convert(product -> convertToVO(product, userId));
+    }
 }

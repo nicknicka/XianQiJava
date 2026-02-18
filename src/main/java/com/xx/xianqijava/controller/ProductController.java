@@ -136,4 +136,24 @@ public class ProductController {
         productService.deleteProduct(id, userId);
         return Result.success("商品删除成功");
     }
+
+    /**
+     * 获取附近商品列表
+     */
+    @Operation(summary = "获取附近商品列表")
+    @GetMapping("/nearby")
+    public Result<IPage<ProductVO>> getNearbyProducts(
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(description = "页大小") @RequestParam(defaultValue = "20") Integer size,
+            @Parameter(description = "纬度") @RequestParam(required = false) BigDecimal latitude,
+            @Parameter(description = "经度") @RequestParam(required = false) BigDecimal longitude,
+            @Parameter(description = "半径（公里）") @RequestParam(defaultValue = "5") Integer radius) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取附近商品, userId={}, latitude={}, longitude={}, radius={}", userId, latitude, longitude, radius);
+
+        Page<Product> pageParam = new Page<>(page, size);
+        IPage<ProductVO> productPage = productService.getNearbyProducts(pageParam, userId, latitude, longitude, radius);
+
+        return Result.success(productPage);
+    }
 }

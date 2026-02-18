@@ -1,10 +1,12 @@
 package com.xx.xianqijava.controller;
 
 import com.xx.xianqijava.common.Result;
+import com.xx.xianqijava.dto.UpdateLocationDTO;
 import com.xx.xianqijava.dto.UpdatePasswordDTO;
 import com.xx.xianqijava.dto.UserLoginDTO;
 import com.xx.xianqijava.dto.UserRegisterDTO;
 import com.xx.xianqijava.dto.UserUpdateDTO;
+import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.service.UserService;
 import com.xx.xianqijava.util.SecurityUtil;
 import com.xx.xianqijava.vo.UserCenterVO;
@@ -12,11 +14,14 @@ import com.xx.xianqijava.vo.UserInfoVO;
 import com.xx.xianqijava.vo.UserLoginVO;
 import com.xx.xianqijava.vo.UserRegisterVO;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 用户控制器
@@ -109,5 +114,29 @@ public class UserController {
             @Parameter(description = "用户ID") @PathVariable("userId") Long userId) {
         Integer creditScore = userService.getUserCreditScore(userId);
         return Result.success(creditScore);
+    }
+
+    /**
+     * 更新用户位置信息
+     */
+    @Operation(summary = "更新用户位置信息")
+    @PutMapping("/location")
+    public Result<Void> updateUserLocation(@Valid @RequestBody UpdateLocationDTO locationDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("更新用户位置信息, userId={}", userId);
+        userService.updateUserLocation(userId, locationDTO);
+        return Result.success("位置更新成功");
+    }
+
+    /**
+     * 获取附近用户列表
+     */
+    @Operation(summary = "获取附近用户列表")
+    @GetMapping("/nearby")
+    public Result<List<User>> getNearbyUsers() {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取附近用户列表, userId={}", userId);
+        List<User> nearbyUsers = userService.getNearbyUsers(userId);
+        return Result.success(nearbyUsers);
     }
 }

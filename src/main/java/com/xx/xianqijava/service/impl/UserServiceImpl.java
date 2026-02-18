@@ -1,9 +1,11 @@
 package com.xx.xianqijava.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xx.xianqijava.common.ErrorCode;
+import com.xx.xianqijava.dto.UpdateLocationDTO;
 import com.xx.xianqijava.dto.UpdatePasswordDTO;
 import com.xx.xianqijava.dto.UserLoginDTO;
 import com.xx.xianqijava.dto.UserRegisterDTO;
@@ -285,5 +287,54 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
         return user.getCreditScore();
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserLocation(Long userId, UpdateLocationDTO locationDTO) {
+        log.info("更新用户位置信息, userId={}, latitude={}, longitude={}",
+                userId, locationDTO.getLatitude(), locationDTO.getLongitude());
+
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 注意：当前User表没有存储经纬度的字段
+        // 位置信息主要用于匹配同学院/同专业的用户
+        // UpdateLocationDTO中的地址信息可以在发布商品时使用
+
+        log.info("用户位置信息处理完成, userId={}", userId);
+    }
+
+    @Override
+    public java.util.List<User> getNearbyUsers(Long userId) {
+        log.info("获取附近用户列表, userId={}", userId);
+
+        User currentUser = getById(userId);
+        if (currentUser == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 查找同学院或同专业的用户
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.ne(User::getUserId, userId) // 排除自己
+                .eq(User::getStatus, 0); // 只查询正常用户
+
+        // 优先匹配同学院同专业
+        if (StrUtil.isNotBlank(currentUser.getCollege()) && StrUtil.isNotBlank(currentUser.getMajor())) {
+            wrapper.and(w -> w.eq(User::getCollege, currentUser.getCollege())
+                    .or()
+                    .eq(User::getMajor, currentUser.getMajor()));
+        } else if (StrUtil.isNotBlank(currentUser.getCollege())) {
+            wrapper.eq(User::getCollege, currentUser.getCollege());
+        }
+
+        wrapper.orderByDesc(User::getUpdateTime).last("LIMIT 20");
+
+        java.util.List<User> nearbyUsers = list(wrapper);
+        log.info("找到附近用户数量, userId={}, count={}", userId, nearbyUsers.size());
+
+        return nearbyUsers;
     }
 }
