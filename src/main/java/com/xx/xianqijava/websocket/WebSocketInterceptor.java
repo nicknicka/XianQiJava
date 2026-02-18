@@ -3,8 +3,9 @@ package com.xx.xianqijava.websocket;
 import com.xx.xianqijava.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.server.ServerHttpRequest;
+import org.springframework.http.server.ServerHttpResponse;
 import org.springframework.stereotype.Component;
-import org.springframework.web.socket.HandshakeInterceptor;
 import org.springframework.web.socket.WebSocketHandler;
 import org.springframework.web.socket.server.HandshakeInterceptor;
 
@@ -21,8 +22,8 @@ public class WebSocketInterceptor implements HandshakeInterceptor {
     private final JwtUtil jwtUtil;
 
     @Override
-    public boolean beforeHandshake(org.springframework.http.ServerHttpRequest request,
-                                   org.springframework.http.ServerHttpResponse response,
+    public boolean beforeHandshake(ServerHttpRequest request,
+                                   ServerHttpResponse response,
                                    WebSocketHandler wsHandler,
                                    Map<String, Object> attributes) throws Exception {
         // 从查询参数中获取 Token
@@ -53,8 +54,8 @@ public class WebSocketInterceptor implements HandshakeInterceptor {
     }
 
     @Override
-    public void afterHandshake(org.springframework.http.ServerHttpRequest request,
-                              org.springframework.http.ServerHttpResponse response,
+    public void afterHandshake(ServerHttpRequest request,
+                              ServerHttpResponse response,
                               WebSocketHandler wsHandler,
                               Exception exception) {
         if (exception != null) {

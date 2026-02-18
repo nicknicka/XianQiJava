@@ -11,11 +11,11 @@ import lombok.Data;
 @Schema(description = "用户登录请求")
 public class UserLoginDTO {
 
-    @Schema(description = "用户名", required = true)
+    @Schema(description = "用户名")
     @NotBlank(message = "用户名不能为空")
     private String username;
 
-    @Schema(description = "密码", required = true)
+    @Schema(description = "密码")
     @NotBlank(message = "密码不能为空")
     private String password;
 }

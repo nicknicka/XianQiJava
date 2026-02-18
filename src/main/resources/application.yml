@@ -44,8 +44,6 @@ spring:
   jackson:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: GMT+8
-    serialization:
-      write-dates-as-timestamps: false
     default-property-inclusion: non_null
 
   # 文件上传配置
