@@ -2,19 +2,19 @@
 
 > 更新时间：2026-02-18
 > 状态：开发中
-> 已完成：数据库初始化、用户注册、用户登录、个人信息管理、文件上传、商品管理、订单管理、评价管理、商品收藏、浏览历史、商品图片管理、用户中心、商品信息更新
+> 已完成：数据库初始化、用户注册、用户登录、个人信息管理、文件上传、商品管理、订单管理、评价管理、商品收藏、浏览历史、商品图片管理、用户中心、商品信息更新、即时通讯（WebSocket、会话管理、消息管理、消息已读）
 
 ---
 
 ## 📊 进度统计
 
 - **总任务数**: 48个
-- **已完成**: 17个 (35%)
+- **已完成**: 21个 (44%)
 - **进行中**: 0个
-- **待开始**: 31个 (65%)
+- **待开始**: 27个 (56%)
 
 ### 优先级分布
-- **P0 (核心功能)**: 25个
+- **P0 (核心功能)**: 25个 (已完成21个，剩余4个)
 - **P1 (重要功能)**: 17个
 - **P2 (增强功能)**: 3个
 - **管理端**: 3个
@@ -170,6 +170,29 @@
 - [x] ProductController.updateProduct() - 更新商品接口
 - [x] 权限校验（只能更新自己的商品）
 - [x] 已售出商品不能修改
+
+### 20. ✅ 即时通讯模块 (WebSocket + 会话 + 消息)
+- [x] WebSocketConfig - WebSocket配置
+- [x] WebSocketHandler - WebSocket消息处理器
+- [x] WebSocketInterceptor - WebSocket拦截器（JWT认证）
+- [x] ConversationMapper - 会话数据访问层
+- [x] MessageMapper - 消息数据访问层
+- [x] ConversationService - 会话服务接口
+- [x] ConversationServiceImpl - 会话服务实现
+- [x] ConversationController - 会话控制器（7个接口）
+- [x] MessageSendDTO - 发送消息DTO
+- [x] MessageVO - 消息视图对象
+- [x] ConversationVO - 会话视图对象
+- [x] POST `/api/conversation/one-to-one` - 获取或创建单聊会话
+- [x] GET `/api/conversation` - 会话列表（分页）
+- [x] GET `/api/conversation/{id}` - 会话详情
+- [x] DELETE `/api/conversation/{id}` - 删除会话
+- [x] PUT `/api/conversation/{id}/read` - 标记会话已读
+- [x] POST `/api/conversation/message` - 发送消息
+- [x] GET `/api/conversation/{id}/messages` - 历史消息（分页）
+- [x] WebSocket实时消息推送
+- [x] 未读消息数统计和更新
+- [x] 在线状态显示
 
 ---
 
@@ -416,56 +439,70 @@
 
 ### 即时通讯模块
 
-#### 21. 即时通讯基础
+#### 21. ✅ 即时通讯基础 (已完成)
 **WebSocket连接**: `ws://localhost:8080/api/ws?token={jwt_token}`
 
-**功能要点**:
-- WebSocket连接管理
+**已完成内容**:
+- WebSocketConfig - WebSocket配置
+- WebSocketHandler - WebSocket消息处理器
+- WebSocketInterceptor - WebSocket拦截器（JWT认证）
+- 在线用户管理
 - 发送文本消息
 - 接收实时消息
 - 心跳检测
 - 断线重连
 
-**预估工时**: 8小时
-
 ---
 
-#### 22. 会话管理
+#### 22. ✅ 会话管理 (已完成)
 **接口**: `GET /api/conversation` - 会话列表（分页）
+**接口**: `POST /api/conversation/one-to-one` - 获取或创建单聊会话
 **接口**: `GET /api/conversation/{id}` - 会话详情
 **接口**: `DELETE /api/conversation/{id}` - 删除会话
 **接口**: `PUT /api/conversation/{id}/read` - 标记已读
 
-**会话类型**:
-- 单聊：两个用户之间只有一个会话
-- 群聊：多个用户（暂不实现）
-
-**预估工时**: 5小时
+**已完成内容**:
+- ConversationMapper - 会话数据访问层
+- ConversationService - 会话服务接口
+- ConversationServiceImpl - 会话服务实现
+- ConversationController - 会话控制器
+- ConversationVO - 会话视图对象
+- 单聊会话创建（两个用户之间只有一个会话）
+- 会话列表查询（分页、按最后消息时间排序）
+- 会话详情（包含对方用户信息、在线状态、未读数）
+- 删除会话（逻辑删除）
+- 标记会话已读（清空未读数、标记所有消息为已读）
 
 ---
 
-#### 23. 消息管理
+#### 23. ✅ 消息管理 (已完成)
+**接口**: `POST /api/conversation/message` - 发送消息
 **接口**: `GET /api/conversation/{id}/messages` - 历史消息（分页）
-**WebSocket事件**:
-- 发送消息
-- 接收消息
-- 消息已送达回执
-- 消息已读回执
 
-**预估工时**: 6小时
+**已完成内容**:
+- MessageMapper - 消息数据访问层
+- MessageSendDTO - 发送消息DTO
+- MessageVO - 消息视图对象
+- ConversationService.sendMessage() - 发送消息
+- ConversationService.getMessages() - 获取历史消息
+- 消息类型支持：文本、图片、商品卡片、订单卡片、引用消息、系统通知
+- 发送消息时更新会话的最后消息信息
+- 自动增加接收者的未读数
+- 通过WebSocket实时推送新消息给接收者
+- 历史消息分页查询（按创建时间倒序）
+- 引用消息支持（parentMessageId）
 
 ---
 
-#### 24. 消息已读机制
-**接口**: `PUT /api/message/read-all` - 批量标记已读
-**WebSocket事件**: 消息已读推送
+#### 24. ✅ 消息已读机制 (已完成)
+**接口**: `PUT /api/conversation/{id}/read` - 标记会话为已读
 
-**功能要点**:
-- 未读消息数统计
-- 消息已读状态更新
-- 实时推送未读数
-
-**预估工时**: 3小时
+**已完成内容**:
+- 未读消息数统计（unreadCountUser1、unreadCountUser2）
+- 消息已读状态更新（isRead、readTime）
+- ConversationServiceImpl.markConversationAsRead() - 清空用户未读数
+- 标记该会话中所有发给该用户的未读消息为已读
+- ConversationVO中展示未读数和对方在线状态
 
 ---
 
@@ -595,14 +632,21 @@
 - ✅ 浏览历史功能
 - ✅ 用户中心
 
-**待完善**:
+### 第三阶段（✅ 已完成）
+- ✅ 即时通讯基础（WebSocket连接管理、发送消息、接收消息）
+- ✅ 会话管理（获取或创建会话、会话列表、会话详情、删除会话、标记已读）
+- ✅ 消息管理（发送消息、历史消息、WebSocket实时推送）
+- ✅ 消息已读机制（未读数统计、标记已读）
+
+**P0 阶段待完善**:
 - 订单退款功能
 - 用户信用积分系统
 
-### 第三阶段（⬜ 待开始）
-- 即时通讯基础（WebSocket连接管理、发送消息、接收消息）
-- 会话管理
-- 消息管理
+### 第四阶段（⬜ 待开始）
+- 共享物品功能
+- 消息增强功能（图片消息、消息撤回、快捷回复）
+- 系统功能（通知、轮播图、反馈）
+- 敏感词过滤
 
 ### 第四阶段（⬜ 待开始）
 - 共享物品功能
