@@ -3,9 +3,11 @@ package com.xx.xianqijava.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.xx.xianqijava.dto.ProductAuditDTO;
 import com.xx.xianqijava.dto.ProductCreateDTO;
 import com.xx.xianqijava.dto.ProductUpdateDTO;
 import com.xx.xianqijava.entity.Product;
+import com.xx.xianqijava.vo.ProductAuditVO;
 import com.xx.xianqijava.vo.ProductVO;
 
 import java.math.BigDecimal;
@@ -68,4 +70,38 @@ public interface ProductService extends IService<Product> {
      */
     IPage<ProductVO> getNearbyProducts(Page<Product> page, Long userId,
                                        BigDecimal latitude, BigDecimal longitude, Integer radius);
+
+    /**
+     * 审核商品
+     *
+     * @param auditDTO  审核信息
+     * @param auditorId 审核人ID
+     * @return 审核后的商品信息
+     */
+    ProductAuditVO auditProduct(ProductAuditDTO auditDTO, Long auditorId);
+
+    /**
+     * 获取待审核商品列表
+     *
+     * @param page 分页参数
+     * @return 待审核商品列表
+     */
+    IPage<ProductAuditVO> getPendingProducts(Page<Product> page);
+
+    /**
+     * 获取所有商品审核列表（管理员）
+     *
+     * @param page       分页参数
+     * @param auditStatus 审核状态筛选
+     * @return 商品审核列表
+     */
+    IPage<ProductAuditVO> getAllProductAudits(Page<Product> page, Integer auditStatus);
+
+    /**
+     * 获取商品审核详情
+     *
+     * @param productId 商品ID
+     * @return 商品审核详情
+     */
+    ProductAuditVO getProductAuditDetail(Long productId);
 }

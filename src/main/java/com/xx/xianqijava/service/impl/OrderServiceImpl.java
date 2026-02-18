@@ -60,13 +60,24 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.BAD_REQUEST, "不能购买自己的商品");
         }
 
-        // 4. 计算金额 (支持数量购买)
-        BigDecimal amount = product.getPrice();
-        if (createDTO.getQuantity() != null && createDTO.getQuantity() > 1) {
-            amount = amount.multiply(BigDecimal.valueOf(createDTO.getQuantity()));
+        // 4. 验证数量（防止恶意下单）
+        Integer quantity = createDTO.getQuantity() != null && createDTO.getQuantity() > 0
+                ? createDTO.getQuantity() : 1;
+        if (quantity > 10) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "单次购买数量不能超过10件");
         }
 
-        // 5. 创建订单
+        // 5. 计算金额
+        BigDecimal amount = product.getPrice().multiply(BigDecimal.valueOf(quantity));
+
+        // 6. 先将商品状态改为预订（防止超卖）
+        product.setStatus(3); // 预订状态
+        int updated = productMapper.updateById(product);
+        if (updated == 0) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "商品已被其他买家下单，请稍后重试");
+        }
+
+        // 7. 创建订单
         Order order = new Order();
         order.setOrderNo(generateOrderNo());
         order.setProductId(createDTO.getProductId());
@@ -81,7 +92,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
         log.info("订单创建成功, orderId={}, orderNo={}", order.getOrderId(), order.getOrderNo());
 
-        return convertToVO(order, createDTO.getQuantity() != null ? createDTO.getQuantity() : 1);
+        return convertToVO(order, quantity);
     }
 
     @Override
@@ -167,9 +178,22 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
             throw new BusinessException(ErrorCode.BAD_REQUEST, "订单状态不正确，无法取消");
         }
 
+        // 保存原始状态用于判断是否需要恢复商品
+        Integer originalStatus = order.getStatus();
+
         // 更新订单状态
         order.setStatus(3); // 已取消
         updateById(order);
+
+        // 如果是待确认状态取消，恢复商品状态为在售
+        if (originalStatus == 0) {
+            Product product = productMapper.selectById(order.getProductId());
+            if (product != null && product.getStatus() == 3) { // 预订状态
+                product.setStatus(1); // 恢复在售
+                productMapper.updateById(product);
+                log.info("恢复商品状态为在售, productId={}", product.getProductId());
+            }
+        }
 
         log.info("订单取消成功, orderId={}", orderId);
     }

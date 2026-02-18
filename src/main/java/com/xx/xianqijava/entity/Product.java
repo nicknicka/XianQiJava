@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 /**
  * 商品表
@@ -62,6 +63,18 @@ public class Product extends BaseEntity {
 
     @Schema(description = "状态：0-下架，1-在售，2-已售，3-预订")
     private Integer status;
+
+    @Schema(description = "审核状态：0-待审核，1-审核通过，2-审核拒绝")
+    private Integer auditStatus;
+
+    @Schema(description = "审核意见")
+    private String auditRemark;
+
+    @Schema(description = "审核时间")
+    private LocalDateTime auditTime;
+
+    @Schema(description = "审核人ID")
+    private Long auditorId;
 
     @Schema(description = "浏览次数")
     private Integer viewCount;

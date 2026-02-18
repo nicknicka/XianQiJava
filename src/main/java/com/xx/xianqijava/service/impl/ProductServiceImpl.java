@@ -6,18 +6,22 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xx.xianqijava.common.ErrorCode;
+import com.xx.xianqijava.dto.ProductAuditDTO;
 import com.xx.xianqijava.dto.ProductCreateDTO;
 import com.xx.xianqijava.entity.Category;
 import com.xx.xianqijava.entity.Product;
 import com.xx.xianqijava.entity.ProductFavorite;
+import com.xx.xianqijava.entity.ProductImage;
 import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.mapper.CategoryMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
+import com.xx.xianqijava.mapper.ProductImageMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.ProductService;
 import com.xx.xianqijava.service.ProductFavoriteService;
 import com.xx.xianqijava.service.ProductViewHistoryService;
+import com.xx.xianqijava.vo.ProductAuditVO;
 import com.xx.xianqijava.vo.ProductVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +29,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -41,6 +46,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private final CategoryMapper categoryMapper;
     private final ProductFavoriteService productFavoriteService;
     private final ProductViewHistoryService productViewHistoryService;
+    private final ProductImageMapper productImageMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -57,7 +63,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         Product product = new Product();
         BeanUtil.copyProperties(createDTO, product);
         product.setSellerId(userId);
-        product.setStatus(1); // 默认在售
+        product.setStatus(0); // 默认下架（待审核）
+        product.setAuditStatus(0); // 待审核
         product.setViewCount(0);
         product.setFavoriteCount(0);
 
@@ -78,9 +85,13 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
-        // 增加浏览次数
-        product.setViewCount(product.getViewCount() + 1);
-        updateById(product);
+        // 使用 SQL 直接增加浏览次数（避免并发问题）
+        // 使用 MyBatis-Plus 的 UpdateWrapper 实现 SET view_count = view_count + 1
+        com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Product> updateWrapper =
+                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
+        updateWrapper.setSql("view_count = view_count + 1")
+                .eq(Product::getProductId, productId);
+        baseMapper.update(null, updateWrapper);
 
         // 异步记录浏览历史
         productViewHistoryService.recordViewHistory(userId, productId);
@@ -323,5 +334,179 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
         IPage<Product> productPage = page(page, wrapper);
         return productPage.convert(product -> convertToVO(product, userId));
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ProductAuditVO auditProduct(ProductAuditDTO auditDTO, Long auditorId) {
+        log.info("审核商品, productId={}, auditStatus={}, auditorId={}",
+                auditDTO.getProductId(), auditDTO.getAuditStatus(), auditorId);
+
+        Product product = getById(auditDTO.getProductId());
+        if (product == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "商品不存在");
+        }
+
+        // 更新审核状态
+        product.setAuditStatus(auditDTO.getAuditStatus());
+        product.setAuditRemark(auditDTO.getAuditRemark());
+        product.setAuditTime(LocalDateTime.now());
+        product.setAuditorId(auditorId);
+
+        // 审核通过后，自动上架（如果商品是下架状态）
+        if (auditDTO.getAuditStatus() == 1 && product.getStatus() == 0) {
+            product.setStatus(1); // 设为在售
+        }
+
+        boolean updated = updateById(product);
+        if (!updated) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "审核失败");
+        }
+
+        log.info("商品审核完成, productId={}, auditStatus={}", product.getProductId(), product.getAuditStatus());
+        return convertToAuditVO(product);
+    }
+
+    @Override
+    public IPage<ProductAuditVO> getPendingProducts(Page<Product> page) {
+        log.info("查询待审核商品列表, page={}", page.getCurrent());
+
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Product::getAuditStatus, 0) // 待审核
+                .orderByAsc(Product::getCreateTime);
+
+        IPage<Product> productPage = page(page, wrapper);
+        return productPage.convert(this::convertToAuditVO);
+    }
+
+    @Override
+    public IPage<ProductAuditVO> getAllProductAudits(Page<Product> page, Integer auditStatus) {
+        log.info("查询所有商品审核列表, page={}, auditStatus={}", page.getCurrent(), auditStatus);
+
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        if (auditStatus != null) {
+            wrapper.eq(Product::getAuditStatus, auditStatus);
+        }
+        wrapper.orderByDesc(Product::getCreateTime);
+
+        IPage<Product> productPage = page(page, wrapper);
+        return productPage.convert(this::convertToAuditVO);
+    }
+
+    @Override
+    public ProductAuditVO getProductAuditDetail(Long productId) {
+        Product product = getById(productId);
+        if (product == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "商品不存在");
+        }
+        return convertToAuditVO(product);
+    }
+
+    /**
+     * 转换为审核VO
+     */
+    private ProductAuditVO convertToAuditVO(Product product) {
+        ProductAuditVO vo = new ProductAuditVO();
+        BeanUtil.copyProperties(product, vo);
+
+        // 设置审核状态描述
+        vo.setAuditStatusDesc(getAuditStatusDesc(product.getAuditStatus()));
+
+        // 设置商品状态描述
+        vo.setStatusDesc(getProductStatusDesc(product.getStatus()));
+
+        // 设置成色描述
+        vo.setConditionDesc(getConditionDesc(product.getConditionLevel()));
+
+        // 设置时间
+        if (product.getCreateTime() != null) {
+            vo.setCreateTime(product.getCreateTime().toString());
+        }
+        if (product.getAuditTime() != null) {
+            vo.setAuditTime(product.getAuditTime().toString());
+        }
+
+        // 获取卖家信息
+        User seller = userMapper.selectById(product.getSellerId());
+        if (seller != null) {
+            vo.setSellerNickname(seller.getNickname());
+            vo.setSellerPhone(seller.getPhone());
+        }
+
+        // 获取分类信息
+        Category category = categoryMapper.selectById(product.getCategoryId());
+        if (category != null) {
+            vo.setCategoryName(category.getName());
+        }
+
+        // 获取商品图片
+        LambdaQueryWrapper<ProductImage> imageWrapper = new LambdaQueryWrapper<>();
+        imageWrapper.eq(ProductImage::getProductId, product.getProductId())
+                .eq(ProductImage::getStatus, 0)
+                .orderByAsc(ProductImage::getSortOrder);
+        List<ProductImage> images = productImageMapper.selectList(imageWrapper);
+        List<String> imageUrls = images.stream()
+                .map(ProductImage::getImageUrl)
+                .collect(Collectors.toList());
+        vo.setImages(imageUrls);
+
+        return vo;
+    }
+
+    /**
+     * 获取审核状态描述
+     */
+    private String getAuditStatusDesc(Integer auditStatus) {
+        switch (auditStatus) {
+            case 0:
+                return "待审核";
+            case 1:
+                return "审核通过";
+            case 2:
+                return "审核拒绝";
+            default:
+                return "未知状态";
+        }
+    }
+
+    /**
+     * 获取商品状态描述
+     */
+    private String getProductStatusDesc(Integer status) {
+        switch (status) {
+            case 0:
+                return "下架";
+            case 1:
+                return "在售";
+            case 2:
+                return "已售";
+            case 3:
+                return "预订";
+            default:
+                return "未知状态";
+        }
+    }
+
+    /**
+     * 获取成色描述
+     */
+    private String getConditionDesc(Integer conditionLevel) {
+        if (conditionLevel == null) {
+            return "未描述";
+        }
+        switch (conditionLevel) {
+            case 10:
+                return "全新";
+            case 9:
+                return "几乎全新";
+            case 8:
+                return "轻微使用痕迹";
+            case 7:
+                return "明显使用痕迹";
+            case 6:
+                return "外观成色一般";
+            default:
+                return conditionLevel + "成新";
+        }
     }
 }

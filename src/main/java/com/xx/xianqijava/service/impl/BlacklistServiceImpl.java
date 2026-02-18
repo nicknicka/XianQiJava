@@ -91,27 +91,35 @@ public class BlacklistServiceImpl extends ServiceImpl<BlacklistMapper, Blacklist
 
         IPage<Blacklist> blacklistPage = page(page, queryWrapper);
 
-        // 转换为用户信息VO
-        return blacklistPage.convert(blacklist -> {
-            User blockedUser = userMapper.selectById(blacklist.getBlockedUserId());
-            if (blockedUser == null) {
-                return null;
-            }
+        // 转换为用户信息VO，过滤掉已删除的用户
+        java.util.List<UserInfoVO> validUsers = blacklistPage.getRecords().stream()
+                .map(blacklist -> {
+                    User blockedUser = userMapper.selectById(blacklist.getBlockedUserId());
+                    if (blockedUser == null || blockedUser.getDeleted() == 1) {
+                        return null;
+                    }
 
-            UserInfoVO vo = new UserInfoVO();
-            vo.setUserId(blockedUser.getUserId());
-            vo.setUsername(blockedUser.getUsername());
-            vo.setNickname(blockedUser.getNickname());
-            vo.setAvatar(blockedUser.getAvatar());
-            vo.setStudentId(blockedUser.getStudentId());
-            vo.setCollege(blockedUser.getCollege());
-            vo.setMajor(blockedUser.getMajor());
-            vo.setCreditScore(blockedUser.getCreditScore());
-            vo.setStatus(blockedUser.getStatus());
-            vo.setIsVerified(blockedUser.getIsVerified());
+                    UserInfoVO vo = new UserInfoVO();
+                    vo.setUserId(blockedUser.getUserId());
+                    vo.setUsername(blockedUser.getUsername());
+                    vo.setNickname(blockedUser.getNickname());
+                    vo.setAvatar(blockedUser.getAvatar());
+                    vo.setStudentId(blockedUser.getStudentId());
+                    vo.setCollege(blockedUser.getCollege());
+                    vo.setMajor(blockedUser.getMajor());
+                    vo.setCreditScore(blockedUser.getCreditScore());
+                    vo.setStatus(blockedUser.getStatus());
+                    vo.setIsVerified(blockedUser.getIsVerified());
 
-            return vo;
-        });
+                    return vo;
+                })
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toList());
+
+        // 构建新的分页结果
+        IPage<UserInfoVO> resultPage = new Page<>(page.getCurrent(), page.getSize(), blacklistPage.getTotal());
+        resultPage.setRecords(validUsers);
+        return resultPage;
     }
 
     @Override

@@ -223,7 +223,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         log.info("热门商品推荐, categoryId={}, limit={}", categoryId, limit);
 
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Product::getStatus, 1); // 在售
+        wrapper.eq(Product::getStatus, 1) // 在售
                 .orderByDesc(Product::getViewCount) // 按浏览量排序
                 .orderByDesc(Product::getFavoriteCount); // 再按收藏量排序
 

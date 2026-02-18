@@ -77,15 +77,35 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
             throw new BusinessException(ErrorCode.BAD_REQUEST, "通知不存在");
         }
 
-        // 获取当前已读用户列表
+        // 使用SQL级别的更新避免并发问题
+        // 先检查是否已读
         List<Long> readUsers = parseUserList(notification.getIsRead());
-        if (!readUsers.contains(userId)) {
-            readUsers.add(userId);
-            notification.setIsRead(formatUserList(readUsers));
-            updateById(notification);
+        if (readUsers.contains(userId)) {
+            log.info("通知已标记为已读，无需重复操作");
+            return;
         }
 
-        log.info("标记通知已读成功");
+        // 使用FIND_IN_SET和CONCAT避免并发丢失更新
+        String updateSql = String.format(
+            "is_read = CASE " +
+            "WHEN is_read IS NULL THEN '[%d]' " +
+            "WHEN FIND_IN_SET(%d, is_read) = 0 THEN CONCAT(is_read, ',%d') " +
+            "ELSE is_read END",
+            userId, userId, userId
+        );
+
+        // 使用LambdaUpdateWrapper进行条件更新
+        com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<SystemNotification> updateWrapper =
+            new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
+        updateWrapper.setSql(true, updateSql)
+                .eq(SystemNotification::getNotificationId, notificationId);
+
+        int updated = baseMapper.update(null, updateWrapper);
+        if (updated > 0) {
+            log.info("标记通知已读成功");
+        } else {
+            log.warn("标记通知已读失败，可能已被其他操作更新");
+        }
     }
 
     @Override

@@ -16,6 +16,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Objects;
+import java.util.stream.Collectors;
+
 /**
  * 商品收藏服务实现类
  */
@@ -31,7 +34,7 @@ public class ProductFavoriteServiceImpl extends ServiceImpl<ProductFavoriteMappe
     public void addFavorite(Long userId, Long productId) {
         // 检查商品是否存在
         Product product = productMapper.selectById(productId);
-        if (product == null) {
+        if (product == null || product.getDeleted() == 1) {
             throw new BusinessException("商品不存在");
         }
 
@@ -79,13 +82,21 @@ public class ProductFavoriteServiceImpl extends ServiceImpl<ProductFavoriteMappe
                         .eq(ProductFavorite::getUserId, userId)
                         .orderByDesc(ProductFavorite::getCreateTime));
 
-        // 转换为ProductVO
-        return favoritePage.convert(favorite -> {
-            Product product = productMapper.selectById(favorite.getProductId());
-            if (product == null) {
-                return null;
-            }
-            return productService.convertToVO(product, userId);
-        });
+        // 转换为ProductVO，过滤掉已删除的商品
+        java.util.List<ProductVO> validProducts = favoritePage.getRecords().stream()
+                .map(favorite -> {
+                    Product product = productMapper.selectById(favorite.getProductId());
+                    if (product == null || product.getDeleted() == 1) {
+                        return null;
+                    }
+                    return productService.convertToVO(product, userId);
+                })
+                .filter(Objects::nonNull)
+                .collect(java.util.stream.Collectors.toList());
+
+        // 构建新的分页结果
+        IPage<ProductVO> resultPage = new Page<>(page.getCurrent(), page.getSize(), favoritePage.getTotal());
+        resultPage.setRecords(validProducts);
+        return resultPage;
     }
 }
