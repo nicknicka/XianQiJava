@@ -72,14 +72,22 @@ public class ProductViewHistoryServiceImpl extends ServiceImpl<ProductViewHistor
                         .eq(ProductViewHistory::getUserId, userId)
                         .orderByDesc(ProductViewHistory::getViewTime));
 
-        // 转换为ProductVO
-        return historyPage.convert(history -> {
-            Product product = productMapper.selectById(history.getProductId());
-            if (product == null) {
-                return null;
-            }
-            return productService.convertToVO(product, userId);
-        });
+        // 转换为ProductVO，过滤掉已删除的商品
+        java.util.List<ProductVO> validProducts = historyPage.getRecords().stream()
+                .map(history -> {
+                    Product product = productMapper.selectById(history.getProductId());
+                    if (product == null || product.getDeleted() == 1) {
+                        return null;
+                    }
+                    return productService.convertToVO(product, userId);
+                })
+                .filter(java.util.Objects::nonNull)
+                .collect(java.util.stream.Collectors.toList());
+
+        // 构建新的分页结果
+        IPage<ProductVO> resultPage = new Page<>(page.getCurrent(), page.getSize(), validProducts.size());
+        resultPage.setRecords(validProducts);
+        return resultPage;
     }
 
     @Override

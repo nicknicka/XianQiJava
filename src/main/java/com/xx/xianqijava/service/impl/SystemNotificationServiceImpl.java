@@ -130,10 +130,20 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
     public void markAllAsRead(Long userId) {
         log.info("标记所有通知为已读, userId={}", userId);
 
-        // 查询用户所有未读的通知
-        LambdaQueryWrapper<SystemNotification> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(SystemNotification::getStatus, 1)
-                .eq(SystemNotification::getPublishTime).isNotNull()
+        // 使用单条SQL批量更新，避免并发和性能问题
+        String updateSql = String.format(
+            "is_read = CASE " +
+            "WHEN is_read IS NULL THEN '[%d]' " +
+            "WHEN FIND_IN_SET(%d, is_read) = 0 THEN CONCAT(is_read, ',%d') " +
+            "ELSE is_read END",
+            userId, userId, userId
+        );
+
+        com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<SystemNotification> updateWrapper =
+                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
+        updateWrapper.setSql(true, updateSql)
+                .eq(SystemNotification::getStatus, 1)
+                .isNotNull(SystemNotification::getPublishTime)
                 .and(wrapper -> wrapper
                         .eq(SystemNotification::getTargetType, 1)
                         .or()
@@ -141,19 +151,8 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
                 )
                 .apply("NOT FIND_IN_SET({0}, is_read)", userId);
 
-        List<SystemNotification> notifications = list(queryWrapper);
-
-        // 标记所有未读通知为已读
-        for (SystemNotification notification : notifications) {
-            List<Long> readUsers = parseUserList(notification.getIsRead());
-            if (!readUsers.contains(userId)) {
-                readUsers.add(userId);
-                notification.setIsRead(formatUserList(readUsers));
-            }
-        }
-
-        updateBatchById(notifications);
-        log.info("标记所有通知已读成功, count={}", notifications.size());
+        int updated = baseMapper.update(null, updateWrapper);
+        log.info("标记所有通知已读成功, count={}", updated);
     }
 
     /**

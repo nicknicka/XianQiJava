@@ -194,8 +194,11 @@ public class UserVerificationServiceImpl extends ServiceImpl<UserVerificationMap
         UserVerification lastVerification = getOne(wrapper);
 
         // 4. 验证最新记录状态（只有被拒绝的才能重新提交）
-        if (lastVerification != null && lastVerification.getStatus() != 2) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST, "当前认证记录状态不允许重新提交");
+        if (lastVerification == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "没有认证记录，请使用首次提交接口");
+        }
+        if (lastVerification.getStatus() != 2) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "当前认证记录状态不允许重新提交，只能重新提交被拒绝的认证");
         }
 
         // 5. 创建新的认证记录

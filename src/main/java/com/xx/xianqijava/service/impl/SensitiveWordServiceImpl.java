@@ -28,6 +28,17 @@ public class SensitiveWordServiceImpl extends ServiceImpl<SensitiveWordMapper, S
 
     @Override
     public SensitiveWordCheckVO checkSensitiveWord(SensitiveWordCheckDTO dto) {
+        // 防止NPE
+        if (dto.getContent() == null) {
+            SensitiveWordCheckVO result = new SensitiveWordCheckVO();
+            result.setHasSensitiveWord(false);
+            result.setPassed(true);
+            result.setSensitiveWords(new java.util.ArrayList<>());
+            result.setFilteredContent("");
+            result.setMessage("检测内容为空");
+            return result;
+        }
+
         log.info("检测敏感词, checkType={}, contentLength={}", dto.getCheckType(), dto.getContent().length());
 
         SensitiveWordCheckVO result = new SensitiveWordCheckVO();

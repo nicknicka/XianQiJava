@@ -43,13 +43,14 @@ public class RecommendationServiceImpl implements RecommendationService {
             return getHotProducts(null, limit);
         }
 
-        // 2. 提取浏览过的商品分类
+        // 2. 提取浏览过的商品分类（只统计未删除的商品）
         Set<Long> viewedCategoryIds = new HashSet<>();
         Set<Long> viewedProductIds = new HashSet<>();
         for (ProductViewHistory history : historyList) {
             viewedProductIds.add(history.getProductId());
             Product product = productService.getById(history.getProductId());
-            if (product != null && product.getCategoryId() != null) {
+            // 只统计未删除的商品分类
+            if (product != null && product.getDeleted() == 0 && product.getCategoryId() != null) {
                 viewedCategoryIds.add(product.getCategoryId());
             }
         }
@@ -82,13 +83,14 @@ public class RecommendationServiceImpl implements RecommendationService {
             return getHotProducts(null, limit);
         }
 
-        // 2. 提取收藏商品的分类
+        // 2. 提取收藏商品的分类（只统计未删除的商品）
         Set<Long> favoriteCategoryIds = new HashSet<>();
         Set<Long> favoriteProductIds = new HashSet<>();
         for (ProductFavorite favorite : favoriteList) {
             favoriteProductIds.add(favorite.getProductId());
             Product product = productService.getById(favorite.getProductId());
-            if (product != null && product.getCategoryId() != null) {
+            // 只统计未删除的商品分类
+            if (product != null && product.getDeleted() == 0 && product.getCategoryId() != null) {
                 favoriteCategoryIds.add(product.getCategoryId());
             }
         }

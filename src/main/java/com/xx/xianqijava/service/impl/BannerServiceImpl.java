@@ -58,14 +58,17 @@ public class BannerServiceImpl extends ServiceImpl<BannerMapper, Banner> impleme
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
     public void incrementClickCount(Long bannerId) {
         log.info("增加轮播图点击次数, bannerId={}", bannerId);
 
-        Banner banner = getById(bannerId);
-        if (banner != null) {
-            banner.setClickCount(banner.getClickCount() + 1);
-            updateById(banner);
+        // 使用SQL级别更新避免并发丢失
+        com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Banner> updateWrapper =
+                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
+        updateWrapper.setSql("click_count = click_count + 1")
+                .eq(Banner::getBannerId, bannerId);
+        int updated = baseMapper.update(null, updateWrapper);
+        if (updated > 0) {
+            log.info("增加轮播图点击次数成功");
         }
     }
 
