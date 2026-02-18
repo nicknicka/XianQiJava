@@ -9,13 +9,13 @@
 ## 📊 进度统计
 
 - **总任务数**: 48个
-- **已完成**: 35个 (73%)
+- **已完成**: 37个 (77%)
 - **进行中**: 0个
-- **待开始**: 13个 (27%)
+- **待开始**: 11个 (23%)
 
 ### 优先级分布
 - **P0 (核心功能)**: 25个 ✅ (全部完成！)
-- **P1 (重要功能)**: 17个 (已完成15个)
+- **P1 (重要功能)**: 17个 ✅ (全部完成！)
 - **P2 (增强功能)**: 3个
 - **管理端**: 3个
 
@@ -374,6 +374,49 @@
 - [x] GET `/api/share-item/nearby` - 附近共享物品列表
 - [x] 基于经纬度的距离计算（Haversin公式）
 - [x] 优先推荐同学院/同专业的用户和物品
+
+### 35. ✅ 共享物品预约借用功能
+- [x] ShareItemBooking - 预约借用实体
+- [x] ShareItemBookingCreateDTO - 创建预约DTO
+- [x] BookingApproveDTO - 审批预约DTO
+- [x] BookingReturnDTO - 归还确认DTO
+- [x] ShareItemBookingVO - 预约借用VO
+- [x] ShareItemBookingMapper - 数据访问层
+- [x] ShareItemBookingService - 服务接口
+- [x] ShareItemBookingServiceImpl - 服务实现
+- [x] ShareItemBookingController - 控制器
+- [x] POST `/api/share-item-booking` - 创建预约借用
+- [x] PUT `/api/share-item-booking/approve` - 审批预约
+- [x] PUT `/api/share-item-booking/{bookingId}/cancel` - 取消预约
+- [x] PUT `/api/share-item-booking/return` - 确认归还
+- [x] PUT `/api/share-item-booking/{bookingId}/deposit-return` - 退还押金
+- [x] GET `/api/share-item-booking/{bookingId}` - 预约详情
+- [x] GET `/api/share-item-booking/my` - 我的预约列表
+- [x] GET `/api/share-item-booking/received` - 收到的预约列表
+- [x] 预约状态管理（待审批/已批准/已拒绝/已取消/借用中/已完成）
+- [x] 自动计算借用天数、租金、总金额
+- [x] 日期冲突检测
+- [x] 押金退还管理
+
+### 36. ✅ 押金管理功能
+- [x] DepositRecord - 押金记录实体
+- [x] DepositPayDTO - 支付押金DTO
+- [x] DepositRefundDTO - 退还押金DTO
+- [x] DepositRecordVO - 押金记录VO
+- [x] DepositRecordMapper - 数据访问层
+- [x] DepositRecordService - 服务接口
+- [x] DepositRecordServiceImpl - 服务实现
+- [x] DepositRecordController - 控制器
+- [x] POST `/api/deposit/pay` - 支付押金
+- [x] PUT `/api/deposit/refund` - 退还押金
+- [x] PUT `/api/deposit/{recordId}/deduct` - 扣除押金
+- [x] GET `/api/deposit/{recordId}` - 押金记录详情
+- [x] GET `/api/deposit/booking/{bookingId}` - 根据预约ID获取押金记录
+- [x] GET `/api/deposit/my` - 我的押金记录列表
+- [x] 支付方式管理（余额/支付宝/微信）
+- [x] 交易流水号生成
+- [x] 押金状态管理（待支付/已支付/已退还/已扣除）
+- [x] 押金扣除和退还功能
 
 ---
 
@@ -870,7 +913,7 @@
 
 **🎉 恭喜！所有P0核心功能已经全部完成！**
 
-### 第五阶段（✅ 部分完成 - P1重要功能）
+### 第五阶段（✅ 全部完成 - P1重要功能全部完成！）
 - ✅ 消息撤回功能（2分钟内可撤回）
 - ✅ 黑名单功能（添加/移除/查询）
 - ✅ 举报功能（创建举报、查询我的举报）
@@ -883,8 +926,10 @@
 - ✅ 系统配置管理（动态配置、多类型支持、缓存）
 - ✅ 共享物品（创建、更新、删除、状态管理）
 - ✅ 地理位置功能（附近商品、附近共享物品、附近用户）
-- ⬜ 共享物品预约借用
-- ⬜ 押金管理
+- ✅ 共享物品预约借用（创建、审批、取消、归还、押金退还）
+- ✅ 押金管理（支付、退还、扣除、记录查询）
+
+**🎉 恭喜！所有P0和P1功能已经全部完成！**
 
 ### 第六阶段（⬜ 待开始 - P2增强功能）
 - 智能推荐
@@ -904,7 +949,7 @@
 6. ✅ 商品收藏和浏览历史
 7. ✅ 文件上传功能
 
-**P1重要功能** (15/17完成):
+**P1重要功能** (17/17完成 ✅):
 1. ✅ 消息撤回
 2. ✅ 黑名单
 3. ✅ 举报
@@ -917,11 +962,11 @@
 10. ✅ 系统配置管理
 11. ✅ 共享物品（基础功能）
 12. ✅ 地理位置功能（附近推荐）
-13. ⬜ 共享物品预约借用
-14. ⬜ 押金管理
+13. ✅ 共享物品预约借用（创建、审批、归还、押金退还）
+14. ✅ 押金管理（支付、退还、扣除、记录查询）
 
 **下一步建议**:
-1. 继续实现P1重要功能（预约借用、押金管理）
-2. 或开始P2增强功能（智能推荐、管理端）
-3. 进行系统测试和性能优化
+1. 开始P2增强功能（智能推荐、管理端、性能优化）
+2. 进行系统测试和Bug修复
+3. 编写API文档和部署文档
 
