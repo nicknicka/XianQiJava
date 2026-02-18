@@ -1,12 +1,14 @@
 package com.xx.xianqijava.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xx.xianqijava.common.ErrorCode;
+import com.xx.xianqijava.dto.ImageMessageSendDTO;
 import com.xx.xianqijava.dto.MessageSendDTO;
 import com.xx.xianqijava.entity.Conversation;
 import com.xx.xianqijava.entity.Message;
@@ -295,6 +297,83 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
                 ));
 
         log.info("撤回消息成功, messageId={}, userId={}", messageId, userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public MessageVO sendImageMessage(ImageMessageSendDTO sendDTO, Long userId) {
+        log.info("发送图片消息, conversationId={}, imageUrl={}, userId={}",
+                sendDTO.getConversationId(), sendDTO.getImageUrl(), userId);
+
+        Conversation conversation = baseMapper.selectById(sendDTO.getConversationId());
+        if (conversation == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "会话不存在");
+        }
+
+        // 验证用户是否参与该会话
+        if (!conversation.getUserId1().equals(userId) && !conversation.getUserId2().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "无权限在此会话中发送消息");
+        }
+
+        // 确定接收者
+        Long toUserId = conversation.getUserId1().equals(userId) ? conversation.getUserId2() : conversation.getUserId1();
+
+        // 构建图片信息的extraData
+        Map<String, Object> imageData = new java.util.HashMap<>();
+        imageData.put("imageUrl", sendDTO.getImageUrl());
+        if (sendDTO.getWidth() != null) {
+            imageData.put("width", sendDTO.getWidth());
+        }
+        if (sendDTO.getHeight() != null) {
+            imageData.put("height", sendDTO.getHeight());
+        }
+        if (sendDTO.getSize() != null) {
+            imageData.put("size", sendDTO.getSize());
+        }
+        if (sendDTO.getThumbnailUrl() != null) {
+            imageData.put("thumbnailUrl", sendDTO.getThumbnailUrl());
+        }
+
+        // 创建消息
+        Message message = new Message();
+        message.setConversationId(sendDTO.getConversationId());
+        message.setFromUserId(userId);
+        message.setToUserId(toUserId);
+        message.setContent(sendDTO.getImageUrl()); // content存储图片URL
+        message.setType(2); // 2-图片消息
+        message.setParentMessageId(sendDTO.getParentMessageId());
+        message.setIsRead(0);
+        message.setSendStatus(1);
+        message.setStatus(0);
+        message.setExtraData(JSONUtil.toJsonStr(imageData));
+
+        messageMapper.insert(message);
+
+        // 更新会话的最后消息信息
+        conversation.setLastMessageId(message.getMessageId());
+        conversation.setLastMessageContent("[图片]");
+        conversation.setLastMessageTime(message.getCreateTime());
+
+        // 增加接收者的未读数
+        if (conversation.getUserId1().equals(toUserId)) {
+            conversation.setUnreadCountUser1(conversation.getUnreadCountUser1() + 1);
+        } else {
+            conversation.setUnreadCountUser2(conversation.getUnreadCountUser2() + 1);
+        }
+
+        baseMapper.updateById(conversation);
+
+        // 通过WebSocket发送消息给接收者
+        webSocketHandler.sendMessageToUser(toUserId, "new_message",
+                Map.of(
+                        "conversationId", conversation.getConversationId(),
+                        "message", convertMessageToVO(message, userId)
+                ));
+
+        log.info("发送图片消息成功, messageId={}, conversationId={}, from={}, to={}",
+                message.getMessageId(), sendDTO.getConversationId(), userId, toUserId);
+
+        return convertMessageToVO(message, userId);
     }
 
     /**

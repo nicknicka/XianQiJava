@@ -16,8 +16,7 @@ public class MessageSendDTO {
     @Schema(description = "会话ID")
     private Long conversationId;
 
-    @NotBlank(message = "消息内容不能为空")
-    @Schema(description = "消息内容")
+    @Schema(description = "消息内容（图片消息时为图片URL）")
     private String content;
 
     @NotNull(message = "消息类型不能为空")

@@ -3,6 +3,7 @@ package com.xx.xianqijava.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.xx.xianqijava.dto.ImageMessageSendDTO;
 import com.xx.xianqijava.dto.MessageSendDTO;
 import com.xx.xianqijava.entity.Conversation;
 import com.xx.xianqijava.vo.ConversationVO;
@@ -82,4 +83,13 @@ public interface ConversationService extends IService<Conversation> {
      * @param userId    当前用户ID
      */
     void recallMessage(Long messageId, Long userId);
+
+    /**
+     * 发送图片消息
+     *
+     * @param sendDTO 图片消息DTO
+     * @param userId  当前用户ID
+     * @return 消息VO
+     */
+    MessageVO sendImageMessage(ImageMessageSendDTO sendDTO, Long userId);
 }

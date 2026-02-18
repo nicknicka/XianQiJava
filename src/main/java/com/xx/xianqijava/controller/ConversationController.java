@@ -3,6 +3,7 @@ package com.xx.xianqijava.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xx.xianqijava.common.Result;
+import com.xx.xianqijava.dto.ImageMessageSendDTO;
 import com.xx.xianqijava.dto.MessageSendDTO;
 import com.xx.xianqijava.entity.Conversation;
 import com.xx.xianqijava.entity.Message;
@@ -140,5 +141,18 @@ public class ConversationController {
         log.info("撤回消息, messageId={}, userId={}", messageId, userId);
         conversationService.recallMessage(messageId, userId);
         return Result.success("消息撤回成功");
+    }
+
+    /**
+     * 发送图片消息
+     */
+    @Operation(summary = "发送图片消息")
+    @PostMapping("/message/image")
+    public Result<MessageVO> sendImageMessage(@Valid @RequestBody ImageMessageSendDTO sendDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("发送图片消息, userId={}, conversationId={}, imageUrl={}",
+                userId, sendDTO.getConversationId(), sendDTO.getImageUrl());
+        MessageVO messageVO = conversationService.sendImageMessage(sendDTO, userId);
+        return Result.success("图片消息发送成功", messageVO);
     }
 }
