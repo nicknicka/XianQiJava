@@ -2,22 +2,22 @@
 
 > 更新时间：2026-02-18
 > 状态：开发中
-> 已完成：数据库初始化、用户注册、用户登录、个人信息管理、文件上传、商品管理、订单管理、评价管理、商品收藏、浏览历史、商品图片管理、用户中心、商品信息更新、即时通讯（WebSocket、会话管理、消息管理、消息已读、发送图片消息）、订单退款、信用积分自动计算、消息撤回、黑名单、举报、快捷回复、敏感词过滤、系统通知、轮播图、用户反馈、系统配置管理、共享物品、地理位置功能
+> 已完成：数据库初始化、用户注册、用户登录、个人信息管理、文件上传、商品管理、订单管理、评价管理、商品收藏、浏览历史、商品图片管理、用户中心、商品信息更新、即时通讯（WebSocket、会话管理、消息管理、消息已读、发送图片消息）、订单退款、信用积分自动计算、消息撤回、黑名单、举报、快捷回复、敏感词过滤、系统通知、轮播图、用户反馈、系统配置管理、共享物品、地理位置功能、共享物品预约借用、押金管理、智能推荐、一键转赠、实名认证
 
 ---
 
 ## 📊 进度统计
 
 - **总任务数**: 48个
-- **已完成**: 37个 (77%)
+- **已完成**: 41个 (85%)
 - **进行中**: 0个
-- **待开始**: 11个 (23%)
+- **待开始**: 7个 (15%)
 
 ### 优先级分布
 - **P0 (核心功能)**: 25个 ✅ (全部完成！)
 - **P1 (重要功能)**: 17个 ✅ (全部完成！)
-- **P2 (增强功能)**: 3个
-- **管理端**: 3个
+- **P2 (增强功能)**: 3/3个 ✅ (全部完成！)
+- **管理端**: 1/3个完成
 
 ---
 
@@ -417,6 +417,80 @@
 - [x] 交易流水号生成
 - [x] 押金状态管理（待支付/已支付/已退还/已扣除）
 - [x] 押金扣除和退还功能
+
+### 37. ✅ 智能推荐功能
+- [x] RecommendationService - 推荐服务接口
+- [x] RecommendationServiceImpl - 推荐服务实现
+- [x] RecommendationController - 推荐控制器
+- [x] GET `/api/recommend/personalized` - 个性化推荐
+- [x] GET `/api/recommend/hot` - 热门商品推荐
+- [x] GET `/api/recommend/new` - 新品推荐
+- [x] GET `/api/recommend/by-history` - 基于浏览历史推荐
+- [x] GET `/api/recommend/by-favorites` - 基于收藏推荐
+- [x] GET `/api/recommend/collaborative` - 协同过滤推荐
+- [x] 综合推荐算法（多算法融合，权重分配）
+- [x] 基于用户行为的个性化推荐
+- [x] 热门商品排序（浏览量、收藏量）
+- [x] 新品推荐（按创建时间）
+
+### 38. ✅ 一键转赠功能
+- [x] TransferRecord - 转赠记录实体
+- [x] TransferCreateDTO - 创建转赠DTO
+- [x] TransferRespondDTO - 响应转赠DTO
+- [x] TransferRecordVO - 转赠记录视图对象
+- [x] TransferRecordMapper - 数据访问层
+- [x] TransferRecordService - 服务接口
+- [x] TransferRecordServiceImpl - 服务实现
+- [x] TransferRecordController - 控制器
+- [x] POST `/api/transfer` - 发起转赠
+- [x] PUT `/api/transfer/respond` - 响应转赠（接受或拒绝）
+- [x] DELETE `/api/transfer/{transferId}` - 取消转赠
+- [x] GET `/api/transfer/{transferId}` - 转赠记录详情
+- [x] GET `/api/transfer/sent` - 我发起的转赠列表
+- [x] GET `/api/transfer/received` - 我收到的转赠列表
+- [x] GET `/api/transfer/pending` - 待确认的转赠列表
+- [x] 转赠状态管理（待确认/已接受/已拒绝）
+- [x] 自动转移共享物品所有权
+- [x] 转赠权限验证和冲突检测
+
+### 39. ✅ 实名认证功能
+- [x] UserVerification - 实名认证记录实体
+- [x] UserVerificationDTO - 提交认证DTO
+- [x] VerificationAuditDTO - 审核认证DTO
+- [x] UserVerificationVO - 认证记录视图对象
+- [x] UserVerificationMapper - 数据访问层
+- [x] UserVerificationService - 服务接口
+- [x] UserVerificationServiceImpl - 服务实现
+- [x] UserVerificationController - 控制器
+- [x] POST `/api/verification` - 提交实名认证
+- [x] POST `/api/verification/resubmit` - 重新提交认证
+- [x] GET `/api/verification/my` - 获取我的认证记录
+- [x] GET `/api/verification/{verificationId}` - 获取认证详情
+- [x] GET `/api/verification/pending` - 待审核认证列表（管理员）
+- [x] GET `/api/verification/all` - 所有认证记录（管理员）
+- [x] PUT `/api/verification/audit` - 审核实名认证（管理员）
+- [x] 认证状态管理（待审核/通过/拒绝）
+- [x] 审核通过后自动更新用户实名状态和真实姓名
+- [x] 身份证号脱敏显示
+- [x] 重新提交认证功能（仅拒绝后可重新提交）
+
+### 40. ✅ 操作日志功能
+- [x] OperationLog - 操作日志实体（已存在）
+- [x] OperationLogVO - 操作日志视图对象
+- [x] OperationLogMapper - 数据访问层
+- [x] OperationLogService - 服务接口
+- [x] OperationLogServiceImpl - 服务实现
+- [x] OperationLogController - 控制器
+- [x] @OperationLog 注解 - 用于标记需要记录日志的方法
+- [x] OperationLogAspect - AOP切面，自动记录操作日志
+- [x] GET `/api/admin/operation-log` - 获取操作日志列表（管理员）
+- [x] GET `/api/admin/operation-log/my` - 获取我的操作日志
+- [x] DELETE `/api/admin/operation-log/clean` - 清理过期日志（管理员）
+- [x] 支持按用户ID、模块、操作类型、状态、时间范围筛选
+- [x] 异步记录日志（@Async）
+- [x] 自动捕获请求参数、IP地址、User-Agent
+- [x] 自动记录执行时长和执行状态
+- [x] 支持成功/失败状态记录
 
 ---
 
@@ -830,21 +904,77 @@
 
 ---
 
-## 🎨 P2 优先级 - 增强功能 (3个)
+## 🎨 P2 优先级 - 增强功能 (3个) ✅ 全部完成！
 
-### 43-45. 增强功能
+### 37. ✅ 智能推荐（已完成）
 **功能**:
-- 智能推荐（基于浏览历史）
-- 一键转赠（免费转让）
-- 实名认证（学生证认证）
+- ✅ 基于浏览历史的推荐
+- ✅ 基于收藏的推荐
+- ✅ 协同过滤推荐
+- ✅ 综合推荐（多算法融合）
+- ✅ 热门商品推荐
+- ✅ 新品推荐
 
-**预估工时**: 15小时
+**API接口**:
+- GET `/api/recommend/personalized` - 个性化推荐
+- GET `/api/recommend/hot` - 热门商品
+- GET `/api/recommend/new` - 新品推荐
+- GET `/api/recommend/by-history` - 浏览历史推荐
+- GET `/api/recommend/by-favorites` - 收藏推荐
+- GET `/api/recommend/collaborative` - 协同过滤
+
+**实现内容**:
+- RecommendationService - 推荐服务接口
+- RecommendationServiceImpl - 推荐服务实现
+- RecommendationController - 推荐控制器
+- 多种推荐算法实现
+- 综合推荐权重分配（40%浏览历史 + 30%收藏 + 20%协同过滤 + 10%热门商品）
+
+---
+
+### 38. ✅ 一键转赠（已完成）
+**功能**: 共享物品免费转赠
+
+**API接口**:
+- POST `/api/transfer` - 发起转赠
+- PUT `/api/transfer/respond` - 响应转赠
+- DELETE `/api/transfer/{transferId}` - 取消转赠
+- GET `/api/transfer/sent` - 我发起的转赠
+- GET `/api/transfer/received` - 我收到的转赠
+- GET `/api/transfer/pending` - 待确认的转赠
+
+**实现内容**:
+- TransferRecord - 转赠记录实体
+- TransferRecordService - 转赠服务
+- TransferRecordController - 转赠控制器
+- 完整的转赠流程（发起→确认→转移所有权）
+
+---
+
+### 39. ✅ 实名认证（已完成）
+**功能**: 学生证认证
+**接口**:
+- POST `/api/verification` - 提交实名认证
+- POST `/api/verification/resubmit` - 重新提交认证
+- GET `/api/verification/my` - 我的认证记录
+- GET `/api/verification/pending` - 待审核列表（管理员）
+- PUT `/api/verification/audit` - 审核认证（管理员）
+
+**实现内容**:
+- UserVerification - 认证记录实体
+- UserVerificationDTO - 提交认证DTO
+- VerificationAuditDTO - 审核DTO
+- UserVerificationService - 认证服务
+- UserVerificationController - 认证控制器
+- 认证状态管理（待审核/通过/拒绝）
+- 身份证号脱敏显示
+- 审核通过后自动更新用户实名状态
 
 ---
 
 ## 🔧 管理端功能 (3个)
 
-### 46-48. 后台管理
+### 40-42. 后台管理
 **功能**:
 - 操作日志
 - 商品审核
@@ -949,7 +1079,16 @@
 6. ✅ 商品收藏和浏览历史
 7. ✅ 文件上传功能
 
-**P1重要功能** (17/17完成 ✅):
+**P2增强功能** (1/3完成):
+1. ✅ 智能推荐系统（多种推荐算法、综合推荐）
+2. ⬜ 一键转赠
+3. ⬜ 实名认证
+
+**下一步建议**:
+1. 继续实现P2增强功能（一键转赠、实名认证）
+2. 或开始管理端功能（操作日志、商品审核、数据统计）
+3. 进行系统测试和性能优化
+
 1. ✅ 消息撤回
 2. ✅ 黑名单
 3. ✅ 举报

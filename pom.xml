@@ -118,6 +118,12 @@
             <version>${aliyun-oss.version}</version>
         </dependency>
 
+        <!-- Spring Boot AOP (for OperationLog aspect) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
         <!-- Apache Commons Lang3 -->
         <dependency>
             <groupId>org.apache.commons</groupId>
