@@ -1,0 +1,153 @@
+server:
+  port: 8080
+  servlet:
+    context-path: /api
+    encoding:
+      charset: UTF-8
+      enabled: true
+      force: true
+
+spring:
+  application:
+    name: XianQiJava
+
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/XianQi?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root
+    password: 123456
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 20
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
+      connection-test-query: SELECT 1
+
+  # Redis 配置
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      password:
+      database: 0
+      timeout: 5000ms
+      lettuce:
+        pool:
+          min-idle: 0
+          max-idle: 8
+          max-active: 8
+          max-wait: -1ms
+
+  # Jackson 配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: GMT+8
+    serialization:
+      write-dates-as-timestamps: false
+    default-property-inclusion: non_null
+
+  # 文件上传配置
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 20MB
+      file-size-threshold: 0
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  mapper-locations: classpath*:mapper/**/*Mapper.xml
+  type-aliases-package: com.xx.xianqijava.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    cache-enabled: false
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# Knife4j API 文档配置
+knife4j:
+  enable: true
+  setting:
+    language: zh_cn
+    swagger-model-name: 实体类列表
+  production: false
+  basic:
+    enable: false
+
+# Swagger 配置
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  group-configs:
+    - group: default
+      paths-to-match: /**
+      packages-to-scan: com.xx.xianqijava.controller
+
+# JWT 配置
+jwt:
+  secret: XianQiJavaSecretKey2026CampusTradePlatformSecretKeyMustBeLongEnough
+  expiration: 604800000  # 7天，单位毫秒
+  refresh-expiration: 2592000000  # 30天，单位毫秒
+  header: Authorization
+  token-prefix: Bearer
+
+# 阿里云 OSS 配置
+aliyun:
+  oss:
+    enabled: false
+    endpoint: oss-cn-guangzhou.aliyuncs.com
+    access-key-id: your-access-key-id
+    access-key-secret: your-access-key-secret
+    bucket-name: campus-trade
+    base-url: https://campage-trade.oss-cn-guangzhou.aliyuncs.com
+
+# 业务配置
+business:
+  # 文件上传配置
+  upload:
+    max-size: 5242880  # 5MB
+    allowed-types: jpg,jpeg,png,webp,gif
+    max-count: 9
+    local-path: /tmp/xianqi-uploads
+
+  # 商品配置
+  product:
+    max-images: 9
+    title-max-length: 50
+    desc-max-length: 2000
+
+  # 订单配置
+  order:
+    auto-close-time: 1800  # 30分钟
+    auto-finish-time: 604800  # 7天
+
+  # 共享物品配置
+  share:
+    max-days: 30
+
+  # 信用配置
+  credit:
+    initial-score: 100
+
+# 日志配置
+logging:
+  level:
+    com.xx.xianqijava: debug
+    com.baomidou.mybatisplus: debug
+  pattern:
+    console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n'
+  file:
+    name: logs/xianqi-java.log
+    max-size: 10MB
+    max-history: 30
