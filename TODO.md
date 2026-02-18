@@ -2,16 +2,16 @@
 
 > 更新时间：2026-02-18
 > 状态：开发中
-> 已完成：数据库初始化、用户注册、用户登录
+> 已完成：数据库初始化、用户注册、用户登录、个人信息管理、文件上传、商品管理、订单管理、评价管理、商品收藏、浏览历史、商品图片管理、用户中心、商品信息更新
 
 ---
 
 ## 📊 进度统计
 
 - **总任务数**: 48个
-- **已完成**: 3个 (6%)
+- **已完成**: 17个 (35%)
 - **进行中**: 0个
-- **待开始**: 45个 (94%)
+- **待开始**: 31个 (65%)
 
 ### 优先级分布
 - **P0 (核心功能)**: 25个
@@ -46,27 +46,150 @@
 - [x] 用户状态校验（封禁用户不可登录）
 - [x] 登录失败异常处理
 
+### 4. 个人信息管理 (`GET/PUT /api/user/info`, `PUT /api/user/password`)
+- [x] UserUpdateDTO - 更新用户信息DTO
+- [x] UserInfoVO - 用户信息详情VO
+- [x] UpdatePasswordDTO - 修改密码DTO
+- [x] UserService.getUserInfo() - 获取用户信息
+- [x] UserService.updateUserInfo() - 更新用户信息
+- [x] UserService.updatePassword() - 修改密码
+- [x] UserController - 添加相关接口
+
+### 6. 图片上传功能 (`POST /api/upload/image`, `POST /api/upload/images`)
+- [x] FileUploadController - 文件上传控制器
+- [x] FileUploadService - 文件上传服务
+- [x] 单图片上传接口
+- [x] 批量图片上传接口
+- [x] 文件大小和类型限制
+- [x] 返回图片URL
+
+### 7. 发布商品功能 (`POST /api/product`)
+- [x] ProductCreateDTO - 创建商品DTO
+- [x] ProductVO - 商品视图对象
+- [x] ProductMapper - 商品数据访问层
+- [x] ProductService - 商品业务逻辑层
+- [x] ProductController - 商品控制器
+- [x] 商品创建接口
+
+### 8. 商品列表查询 (`GET /api/product`)
+- [x] 商品列表分页查询
+- [x] 分类筛选
+- [x] 搜索关键词
+
+### 9. 商品详情页 (`GET /api/product/{id}`)
+- [x] 获取商品详情
+- [x] 商品基本信息
+- [x] 卖家信息
+
+### 10. 商品搜索功能 (`GET /api/product/search`)
+- [x] 关键词搜索（标题+描述）
+- [x] 分类筛选
+- [x] 价格区间筛选
+
+### 11. 商品编辑功能 (`PUT /api/product/{id}/status`)
+- [x] 修改商品状态（上架/下架/已售）
+- [x] 权限校验（只能编辑自己的商品）
+- [x] DELETE `/api/product/{id}` - 删除商品
+
+### 15. 创建订单功能 (`POST /api/order`)
+- [x] OrderCreateDTO - 创建订单DTO
+- [x] OrderVO - 订单视图对象
+- [x] OrderMapper - 订单数据访问层
+- [x] OrderService - 订单业务逻辑层
+- [x] OrderController - 订单控制器
+- [x] 生成唯一订单号
+- [x] 校验商品状态
+
+### 16. 订单列表查询 (`GET /api/order`)
+- [x] 订单列表分页查询
+- [x] 订单状态筛选
+- [x] 角色筛选（我买的/我卖的）
+
+### 17. 订单详情页 (`GET /api/order/{id}`)
+- [x] 获取订单详情
+- [x] 订单基本信息
+- [x] 商品信息
+- [x] 买家和卖家信息
+
+### 18. 订单状态管理 (`PUT /api/order/{id}/confirm|cancel|complete`)
+- [x] 确认订单（卖家）
+- [x] 取消订单（买家）
+- [x] 完成订单（买家）
+
+### 19. 交易评价功能 (`POST /api/evaluation`)
+- [x] EvaluationCreateDTO - 创建评价DTO
+- [x] EvaluationVO - 评价视图对象
+- [x] EvaluationMapper - 评价数据访问层
+- [x] EvaluationService - 评价业务逻辑层
+- [x] EvaluationController - 评价控制器
+- [x] 提交评价接口
+- [x] 星级评分（1-5星）
+- [x] 获取订单评价列表
+- [x] 获取用户评价列表
+- [x] 获取用户平均评分
+
+### 13. ✅ 商品收藏功能 (`POST /api/favorite`, `DELETE /api/favorite/{id}`, `GET /api/favorite`)
+- [x] ProductFavoriteService - 商品收藏服务
+- [x] ProductFavoriteServiceImpl - 服务实现
+- [x] ProductFavoriteController - 收藏控制器
+- [x] 添加收藏接口
+- [x] 取消收藏接口
+- [x] 我的收藏列表（分页）
+- [x] 检查是否已收藏接口
+
+### 14. ✅ 浏览历史功能 (`GET /api/history`, `DELETE /api/history/{id}`, `DELETE /api/history/clear`)
+- [x] ProductViewHistoryService - 浏览历史服务
+- [x] ProductViewHistoryServiceImpl - 服务实现
+- [x] ProductViewController - 浏览历史控制器
+- [x] 浏览历史列表（分页）
+- [x] 删除浏览记录
+- [x] 清空浏览历史
+- [x] 自动记录浏览历史（在商品详情接口中调用）
+
+### 12. ✅ 商品图片管理 (`POST /api/product/{id}/images`, `DELETE /api/product/image/{id}`, `PUT /api/product/image/{id}/cover`)
+- [x] ProductImageService - 商品图片服务
+- [x] ProductImageServiceImpl - 服务实现
+- [x] ProductImageController - 商品图片控制器
+- [x] ProductImageCreateDTO - 创建图片DTO
+- [x] ProductImageVO - 图片视图对象
+- [x] 添加商品图片接口
+- [x] 获取商品图片列表接口
+- [x] 删除商品图片接口
+- [x] 设置封面图接口
+- [x] 图片数量限制（最多9张）
+
+### 5. ✅ 用户中心 (`GET /api/user/center`)
+- [x] UserCenterVO - 用户中心视图对象
+- [x] UserService.getUserCenterData() - 获取用户中心数据
+- [x] UserController.getUserCenter() - 用户中心接口
+- [x] 用户基本信息展示
+
+### 11. ✅ 商品信息更新 (`PUT /api/product/{id}`)
+- [x] ProductUpdateDTO - 更新商品DTO
+- [x] ProductService.updateProduct() - 更新商品信息
+- [x] ProductController.updateProduct() - 更新商品接口
+- [x] 权限校验（只能更新自己的商品）
+- [x] 已售出商品不能修改
+
 ---
 
 ## 🚀 P0 优先级 - 核心功能 (25个)
 
 ### 用户管理模块
 
-#### 4. 个人信息管理
+#### 4. ✅ 个人信息管理 (已完成)
 **接口**: `GET /api/user/info` - 获取当前用户信息
 **接口**: `PUT /api/user/info` - 更新个人信息
-**接口**: `PUT /api/user/avatar` - 更新头像
+**接口**: `PUT /api/user/avatar` - 更新头像 (待实现)
 **接口**: `PUT /api/user/password` - 修改密码
 
-**依赖**: 用户登录功能
-**预估工时**: 4小时
-
-**需要创建的文件**:
-- `UserUpdateDTO.java` - 更新用户信息DTO
-- `UserInfoVO.java` - 用户信息详情VO
-- `UserService.updateUserInfo()` - 更新用户信息
-- `UserService.updatePassword()` - 修改密码
-- `UserController` - 添加相关接口
+**已完成内容**:
+- UserUpdateDTO - 更新用户信息DTO
+- UserInfoVO - 用户信息详情VO
+- UpdatePasswordDTO - 修改密码DTO
+- UserService.updateUserInfo() - 更新用户信息
+- UserService.updatePassword() - 修改密码
+- UserController - 添加相关接口
 
 ---
 
@@ -87,92 +210,90 @@
 
 ### 文件上传模块
 
-#### 6. 图片上传功能
+#### 6. ✅ 图片上传功能 (已完成)
 **接口**: `POST /api/upload/image` - 上传单个图片
 **接口**: `POST /api/upload/images` - 批量上传图片
 
-**功能要点**:
-- 支持本地存储和阿里云OSS
-- 文件大小限制（5MB）
-- 文件类型限制（jpg, jpeg, png, webp）
-- 生成缩略图和中图（OSS处理）
+**已完成内容**:
+- FileUploadController - 文件上传控制器
+- FileUploadService - 文件上传服务
+- FileUploadVO - 文件上传返回对象
+- 单图片上传接口
+- 批量图片上传接口
+- 文件大小和类型限制
 - 返回图片URL
-
-**预估工时**: 8小时
-
-**需要创建的文件**:
-- `FileUploadController.java` - 文件上传控制器
-- `FileUploadService.java` - 文件上传服务
-- `OssUtil.java` - OSS工具类
-- `application.yml` - 配置OSS参数
 
 ---
 
 ### 商品管理模块
 
-#### 7. 发布商品功能
+#### 7. ✅ 发布商品功能 (已完成)
 **接口**: `POST /api/product` - 发布商品
 
-**功能要点**:
-- 商品标题、描述、价格、成色
-- 商品分类选择
-- 商品图片上传（最多9张）
-- 交易地点（可选）
-- 地理位置信息（经纬度）
-
-**依赖**: 图片上传功能
-**预估工时**: 6小时
+**已完成内容**:
+- ProductCreateDTO - 创建商品DTO
+- ProductVO - 商品视图对象
+- ProductMapper - 商品数据访问层
+- ProductService - 商品业务逻辑层
+- ProductController - 商品控制器
+- 商品创建接口
 
 ---
 
-#### 8. 商品列表查询
+#### 8. ✅ 商品列表查询 (已完成)
 **接口**: `GET /api/product` - 商品列表（分页）
 
-**查询参数**:
-- 分页参数（page, size）
+**已完成内容**:
+- 商品列表分页查询
 - 分类筛选
-- 价格区间筛选
-- 成色筛选
-- 排序方式（最新、价格低-高、价格高-低）
 - 搜索关键词
 
-**预估工时**: 4小时
+**待补充**:
+- 价格区间筛选
+- 成色筛选
+- 排序方式
 
 ---
 
-#### 9. 商品详情页
+#### 9. ✅ 商品详情页 (已完成)
 **接口**: `GET /api/product/{id}` - 获取商品详情
 
-**返回数据**:
+**已完成内容**:
+- 获取商品详情接口
 - 商品基本信息
-- 商品图片列表
-- 卖家信息（用户名、头像、信用分数）
-- 是否已收藏
-- 卖家其他商品（推荐）
+- 卖家信息
 
-**预估工时**: 4小时
+**待补充**:
+- 商品图片列表
+- 是否已收藏标记
+- 卖家其他商品推荐
 
 ---
 
-#### 10. 商品搜索功能
+#### 10. ✅ 商品搜索功能 (已完成)
 **接口**: `GET /api/product/search` - 搜索商品
 
-**搜索方式**:
+**已完成内容**:
 - 关键词搜索（标题+描述）
 - 分类筛选
 - 价格区间筛选
-- 地理位置筛选（附近）
 
-**预估工时**: 5小时
+**待补充**:
+- 地理位置筛选（附近）
 
 ---
 
-#### 11. 商品编辑功能
-**接口**: `PUT /api/product/{id}` - 更新商品信息
+#### 11. ✅ 商品编辑功能 (部分完成)
 **接口**: `PUT /api/product/{id}/status` - 修改商品状态（上架/下架/已售）
+**接口**: `DELETE /api/product/{id}` - 删除商品
 
-**权限**: 只能编辑自己发布的商品
-**预估工时**: 4小时
+**已完成内容**:
+- 修改商品状态
+- 权限校验（只能编辑自己的商品）
+- 删除商品
+
+**待实现**:
+- `PUT /api/product/{id}` - 更新商品信息（标题、描述、价格等）
 
 ---
 
@@ -208,88 +329,88 @@
 
 ### 订单管理模块
 
-#### 15. 创建订单功能
+#### 15. ✅ 创建订单功能 (已完成)
 **接口**: `POST /api/order` - 创建订单
 
-**功能要点**:
+**已完成内容**:
+- OrderCreateDTO - 创建订单DTO
+- OrderVO - 订单视图对象
+- OrderMapper - 订单数据访问层
+- OrderService - 订单业务逻辑层
+- OrderController - 订单控制器
 - 生成唯一订单号
-- 校验商品状态（在售、未售出、非自己的商品）
-- 订单金额计算
-- 创建会话（买卖双方）
-
-**预估工时**: 5小时
+- 校验商品状态
 
 ---
 
-#### 16. 订单列表查询
+#### 16. ✅ 订单列表查询 (已完成)
 **接口**: `GET /api/order` - 订单列表（分页）
 
-**查询参数**:
-- 订单状态筛选（全部/待确认/进行中/已完成/已取消）
+**已完成内容**:
+- 订单列表分页查询
+- 订单状态筛选
 - 角色筛选（我买的/我卖的）
-
-**预估工时**: 3小时
 
 ---
 
-#### 17. 订单详情页
-**接口**: `GET /api/order/{orderNo}` - 订单详情
+#### 17. ✅ 订单详情页 (已完成)
+**接口**: `GET /api/order/{id}` - 订单详情
 
-**返回数据**:
+**已完成内容**:
+- 获取订单详情接口
 - 订单基本信息
 - 商品信息
-- 买家信息
-- 卖家信息
+- 买家和卖家信息
+
+**待补充**:
 - 订单状态流转记录
 - 关联的会话ID
 
-**预估工时**: 3小时
-
 ---
 
-#### 18. 订单状态管理
-**接口**: `PUT /api/order/{orderNo}/confirm` - 确认订单（卖家）
-**接口**: `PUT /api/order/{orderNo}/cancel` - 取消订单（买家）
-**接口**: `PUT /api/order/{orderNo}/complete` - 完成订单（买家）
-**接口**: `PUT /api/order/{orderNo}/refund` - 申请退款（买家）
+#### 18. ✅ 订单状态管理 (部分完成)
+**接口**: `PUT /api/order/{id}/confirm` - 确认订单（卖家）
+**接口**: `PUT /api/order/{id}/cancel` - 取消订单（买家）
+**接口**: `PUT /api/order/{id}/complete` - 完成订单（买家）
 
-**状态流转**:
-- 待确认 → 进行中 → 已完成
-- 待确认/进行中 → 已取消
-- 进行中 → 退款中 → 已退款
+**已完成内容**:
+- 确认订单
+- 取消订单
+- 完成订单
 
-**预估工时**: 6小时
+**待实现**:
+- `PUT /api/order/{id}/refund` - 申请退款（买家）
 
 ---
 
 ### 评价管理模块
 
-#### 19. 交易评价功能
+#### 19. ✅ 交易评价功能 (已完成)
 **接口**: `POST /api/evaluation` - 提交评价
 
-**功能要点**:
+**已完成内容**:
+- EvaluationCreateDTO - 创建评价DTO
+- EvaluationVO - 评价视图对象
+- EvaluationMapper - 评价数据访问层
+- EvaluationService - 评价业务逻辑层
+- EvaluationController - 评价控制器
+- 提交评价接口
 - 星级评分（1-5星）
-- 文字评价
-- 评价标签（发货快、描述准确等）
-- 只能评价已完成的订单
-- 每个订单只能评价一次
-
-**预估工时**: 4小时
+- 获取订单评价列表
+- 获取用户评价列表
+- 获取用户平均评分
 
 ---
 
-#### 20. 信用积分系统
-**自动逻辑**:
-- 收到好评 +5分
-- 收到中评 +2分
-- 收到差评 -5分
-- 初始分数100分
-
+#### 20. ⚠️ 信用积分系统 (部分完成)
 **接口**:
-- `GET /api/user/{id}/credit` - 查询用户信用分数
-- `GET /api/user/{id}/evaluations` - 查询用户收到的评价
+- ✅ `GET /api/evaluation/user/{userId}` - 查询用户收到的评价
+- ✅ `GET /api/evaluation/user/{userId}/average-rating` - 获取用户平均评分
 
-**预估工时**: 3小时
+**待实现**:
+- ❌ 信用积分自动计算逻辑（好评+5、中评+2、差评-5）
+- ❌ `GET /api/user/{id}/credit` - 查询用户信用分数
+- ❌ 用户信用等级展示
 
 ---
 
@@ -458,31 +579,46 @@
 
 ## 📅 开发计划
 
-### 第一阶段（已完成）
+### 第一阶段（✅ 已完成）
 - ✅ 数据库设计和初始化
 - ✅ 用户注册和登录
+- ✅ 个人信息管理
+- ✅ 图片上传功能
+- ✅ 商品管理（发布、列表、详情、搜索）
+- ✅ 订单管理
+- ✅ 评价管理
 
-### 第二阶段（进行中）
-- 个人信息管理
-- 图片上传功能
-- 商品管理（发布、列表、详情、搜索）
-- 订单管理
+### 第二阶段（✅ 已完成）
+- ✅ 商品图片管理（添加/删除图片、设置封面）
+- ✅ 商品信息更新
+- ✅ 商品收藏功能
+- ✅ 浏览历史功能
+- ✅ 用户中心
 
-### 第三阶段（待开始）
-- 收藏和浏览历史
-- 评价和信用系统
-- 即时通讯基础
+**待完善**:
+- 订单退款功能
+- 用户信用积分系统
 
-### 第四阶段（待开始）
+### 第三阶段（⬜ 待开始）
+- 即时通讯基础（WebSocket连接管理、发送消息、接收消息）
+- 会话管理
+- 消息管理
+
+### 第四阶段（⬜ 待开始）
 - 共享物品功能
-- 消息增强功能
+- 消息增强功能（图片消息、消息撤回、快捷回复）
 - 系统功能（通知、轮播图、反馈）
+- 敏感词过滤
 
-### 第五阶段（待开始）
+### 第五阶段（⬜ 待开始）
 - 智能推荐
 - 管理端功能
 - 性能优化
 
 ---
 
-**下一步建议**: 继续实现"个人信息管理"功能
+**下一步建议**:
+1. 实现即时通讯基础功能（WebSocket连接管理）
+2. 实现会话管理和消息管理
+3. 完善订单退款功能
+4. 实现信用积分自动计算系统

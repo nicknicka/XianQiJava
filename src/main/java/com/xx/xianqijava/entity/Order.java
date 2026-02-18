@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-@TableName("order")
+@TableName("`order`")
 @Schema(description = "订单")
 public class Order extends BaseEntity {
 

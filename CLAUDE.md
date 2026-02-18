@@ -19,6 +19,8 @@
 后端 ： XianQiJava
 uniapp ： XianQiUniapp
 
+## 项目编写指南要求
+项目下有一个todo清单，如果任务完成或者新建任务都需要在任务清单上标明，分类好
 
 ## 数据库名
 Xianqi

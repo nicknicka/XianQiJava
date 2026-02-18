@@ -149,3 +149,10 @@ logging:
     name: logs/xianqi-java.log
     max-size: 10MB
     max-history: 30
+
+# 文件上传配置
+file:
+  upload:
+    path: /tmp/uploads  # 本地存储路径
+    url-prefix: /uploads  # URL前缀
+    max-size: 5242880  # 最大文件大小（5MB）

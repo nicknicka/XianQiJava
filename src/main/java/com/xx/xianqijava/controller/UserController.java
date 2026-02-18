@@ -1,9 +1,14 @@
 package com.xx.xianqijava.controller;
 
 import com.xx.xianqijava.common.Result;
+import com.xx.xianqijava.dto.UpdatePasswordDTO;
 import com.xx.xianqijava.dto.UserLoginDTO;
 import com.xx.xianqijava.dto.UserRegisterDTO;
+import com.xx.xianqijava.dto.UserUpdateDTO;
 import com.xx.xianqijava.service.UserService;
+import com.xx.xianqijava.util.SecurityUtil;
+import com.xx.xianqijava.vo.UserCenterVO;
+import com.xx.xianqijava.vo.UserInfoVO;
 import com.xx.xianqijava.vo.UserLoginVO;
 import com.xx.xianqijava.vo.UserRegisterVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -11,10 +16,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 /**
  * 用户控制器
@@ -48,5 +50,53 @@ public class UserController {
         log.info("用户登录请求, username={}", loginDTO.getUsername());
         UserLoginVO result = userService.login(loginDTO);
         return Result.success("登录成功", result);
+    }
+
+    /**
+     * 获取当前用户信息
+     */
+    @Operation(summary = "获取当前用户信息")
+    @GetMapping("/info")
+    public Result<UserInfoVO> getUserInfo() {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取用户信息, userId={}", userId);
+        UserInfoVO result = userService.getUserInfo(userId);
+        return Result.success(result);
+    }
+
+    /**
+     * 更新用户信息
+     */
+    @Operation(summary = "更新用户信息")
+    @PutMapping("/info")
+    public Result<UserInfoVO> updateUserInfo(@Valid @RequestBody UserUpdateDTO updateDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("更新用户信息, userId={}", userId);
+        UserInfoVO result = userService.updateUserInfo(userId, updateDTO);
+        return Result.success("更新成功", result);
+    }
+
+    /**
+     * 修改密码
+     */
+    @Operation(summary = "修改密码")
+    @PutMapping("/password")
+    public Result<Void> updatePassword(@Valid @RequestBody UpdatePasswordDTO passwordDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("修改密码, userId={}", userId);
+        userService.updatePassword(userId, passwordDTO);
+        return Result.success("密码修改成功");
+    }
+
+    /**
+     * 获取用户中心数据
+     */
+    @Operation(summary = "获取用户中心数据")
+    @GetMapping("/center")
+    public Result<UserCenterVO> getUserCenter() {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取用户中心数据, userId={}", userId);
+        UserCenterVO result = userService.getUserCenterData(userId);
+        return Result.success(result);
     }
 }
