@@ -45,6 +45,9 @@ public class DepositRecord extends BaseEntity {
     @Schema(description = "押金状态：0-待支付，1-已支付，2-已退还，3-已扣除")
     private Integer status;
 
+    @Schema(description = "支付时间")
+    private java.time.LocalDateTime payTime;
+
     @Schema(description = "退还时间")
     private java.time.LocalDateTime refundTime;
 

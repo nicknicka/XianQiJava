@@ -54,4 +54,20 @@ public class MessageVO {
 
     @Schema(description = "是否为当前用户发送的消息")
     private Boolean isMine;
+
+    public Boolean getIsMine() {
+        return isMine;
+    }
+
+    public void setIsMine(Boolean isMine) {
+        this.isMine = isMine;
+    }
+
+    public Boolean getMine() {
+        return isMine;
+    }
+
+    public void setMine(Boolean mine) {
+        this.isMine = mine;
+    }
 }

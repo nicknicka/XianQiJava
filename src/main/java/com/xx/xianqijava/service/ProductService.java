@@ -104,4 +104,21 @@ public interface ProductService extends IService<Product> {
      * @return 商品审核详情
      */
     ProductAuditVO getProductAuditDetail(Long productId);
+
+    /**
+     * 统计用户的商品数量
+     *
+     * @param userId 用户ID
+     * @return 商品数量
+     */
+    int countByUserId(Long userId);
+
+    /**
+     * 获取用户最近发布的商品
+     *
+     * @param userId 用户ID
+     * @param limit  限制数量
+     * @return 商品列表
+     */
+    java.util.List<ProductVO> getRecentProductsByUserId(Long userId, int limit);
 }

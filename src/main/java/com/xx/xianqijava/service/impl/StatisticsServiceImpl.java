@@ -220,26 +220,12 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
 
     private BigDecimal calculateTotalAmount() {
-        // 使用SQL SUM函数在数据库层面计算，避免加载所有订单到内存
-        LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Order::getStatus, 2); // 只统计已完成的订单
-        wrapper.select("COALESCE(SUM(amount), 0) as total");
-
-        // 查询第一条记录的SUM结果
-        List<Order> orders = orderMapper.selectList(wrapper);
-        if (orders != null && !orders.isEmpty() && orders.get(0) != null) {
-            // 通过原生SQL获取SUM结果
-            // 注意：这里需要使用MyBatis的自定义查询或Mapper方法
-            // 临时使用原来的方式，但添加了性能优化建议的注释
-        }
-
+        // 查询所有已完成订单的金额，然后在Java中求和
         // TODO: 性能优化 - 建议在OrderMapper中添加自定义SQL方法：
         // @Select("SELECT COALESCE(SUM(amount), 0) FROM `order` WHERE status = 2")
         // BigDecimal sumAmountByStatus(@Param("status") Integer status);
-
-        // 当前实现（可正常工作，但性能不如直接SUM）
-        wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Order::getStatus, 2);
+        LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Order::getStatus, 2); // 只统计已完成的订单
         wrapper.select(Order::getAmount);
 
         List<Order> orderList = orderMapper.selectList(wrapper);

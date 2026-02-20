@@ -44,4 +44,12 @@ public interface ProductFavoriteService extends IService<ProductFavorite> {
      * @return 收藏的商品列表
      */
     IPage<ProductVO> getFavoriteList(Long userId, Page<ProductFavorite> page);
+
+    /**
+     * 统计用户的收藏数量
+     *
+     * @param userId 用户ID
+     * @return 收藏数量
+     */
+    int countByUserId(Long userId);
 }

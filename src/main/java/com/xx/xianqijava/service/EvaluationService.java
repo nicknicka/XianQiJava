@@ -31,4 +31,12 @@ public interface EvaluationService extends IService<Evaluation> {
      * 获取用户收到的评价统计
      */
     Integer getUserAverageRating(Long userId);
+
+    /**
+     * 统计用户收到的评价数量
+     *
+     * @param userId 用户ID
+     * @return 评价数量
+     */
+    int countByEvaluatedUserId(Long userId);
 }

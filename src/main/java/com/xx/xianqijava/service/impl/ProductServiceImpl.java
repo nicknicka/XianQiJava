@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xx.xianqijava.common.ErrorCode;
 import com.xx.xianqijava.dto.ProductAuditDTO;
 import com.xx.xianqijava.dto.ProductCreateDTO;
+import com.xx.xianqijava.dto.ProductUpdateDTO;
 import com.xx.xianqijava.entity.Category;
 import com.xx.xianqijava.entity.Product;
 import com.xx.xianqijava.entity.ProductFavorite;
@@ -223,7 +224,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         product.setTitle(updateDTO.getTitle());
         product.setDescription(updateDTO.getDescription());
         product.setPrice(updateDTO.getPrice());
-        product.setCondition(updateDTO.getCondition());
+        product.setConditionLevel(updateDTO.getConditionLevel());
 
         if (updateDTO.getLocation() != null) {
             product.setLocation(updateDTO.getLocation());
@@ -508,5 +509,27 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             default:
                 return conditionLevel + "成新";
         }
+    }
+
+    @Override
+    public int countByUserId(Long userId) {
+        return Math.toIntExact(lambdaQuery()
+                .eq(Product::getSellerId, userId)
+                .eq(Product::getDeleted, 0)
+                .count());
+    }
+
+    @Override
+    public java.util.List<ProductVO> getRecentProductsByUserId(Long userId, int limit) {
+        java.util.List<Product> products = lambdaQuery()
+                .eq(Product::getSellerId, userId)
+                .eq(Product::getDeleted, 0)
+                .orderByDesc(Product::getCreateTime)
+                .last("LIMIT " + limit)
+                .list();
+
+        return products.stream()
+                .map(product -> convertToVO(product, userId))
+                .collect(java.util.stream.Collectors.toList());
     }
 }

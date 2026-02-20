@@ -61,4 +61,12 @@ public interface OrderService extends IService<Order> {
      * 生成订单号
      */
     String generateOrderNo();
+
+    /**
+     * 统计用户的订单数量（作为买家或卖家）
+     *
+     * @param userId 用户ID
+     * @return 订单数量
+     */
+    int countByUserId(Long userId);
 }

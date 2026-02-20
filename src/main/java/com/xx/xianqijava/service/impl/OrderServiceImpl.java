@@ -391,4 +391,16 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
                 return "未知状态";
         }
     }
+
+    @Override
+    public int countByUserId(Long userId) {
+        // 统计作为买家和卖家的所有订单
+        long buyerCount = lambdaQuery()
+                .eq(Order::getBuyerId, userId)
+                .count();
+        long sellerCount = lambdaQuery()
+                .eq(Order::getSellerId, userId)
+                .count();
+        return Math.toIntExact(buyerCount + sellerCount);
+    }
 }

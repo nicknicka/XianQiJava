@@ -58,6 +58,9 @@ public class ShareItemBooking extends BaseEntity {
     @Schema(description = "预约状态：0-待审批，1-已批准，2-已拒绝，3-已取消，4-借用中，5-已完成")
     private Integer status;
 
+    @Schema(description = "开始时间")
+    private java.time.LocalDateTime startTime;
+
     @Schema(description = "审批时间")
     private java.time.LocalDateTime approveTime;
 

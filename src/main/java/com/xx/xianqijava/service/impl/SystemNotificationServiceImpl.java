@@ -114,7 +114,7 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
 
         LambdaQueryWrapper<SystemNotification> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(SystemNotification::getStatus, 1)
-                .eq(SystemNotification::getPublishTime).isNotNull()
+                .isNotNull(SystemNotification::getPublishTime)
                 .and(wrapper -> wrapper
                         .eq(SystemNotification::getTargetType, 1)
                         .or()

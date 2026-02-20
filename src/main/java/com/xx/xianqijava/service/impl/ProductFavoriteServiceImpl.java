@@ -99,4 +99,12 @@ public class ProductFavoriteServiceImpl extends ServiceImpl<ProductFavoriteMappe
         resultPage.setRecords(validProducts);
         return resultPage;
     }
+
+    @Override
+    public int countByUserId(Long userId) {
+        return Math.toIntExact(baseMapper.selectCount(
+                new LambdaQueryWrapper<ProductFavorite>()
+                        .eq(ProductFavorite::getUserId, userId)
+        ));
+    }
 }

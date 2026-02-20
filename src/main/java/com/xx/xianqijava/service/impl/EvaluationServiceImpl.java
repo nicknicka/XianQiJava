@@ -232,4 +232,11 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
 
         return vo;
     }
+
+    @Override
+    public int countByEvaluatedUserId(Long userId) {
+        return Math.toIntExact(lambdaQuery()
+                .eq(Evaluation::getToUserId, userId)
+                .count());
+    }
 }
