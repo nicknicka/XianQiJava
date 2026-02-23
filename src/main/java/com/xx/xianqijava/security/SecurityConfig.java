@@ -14,6 +14,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+
+import java.util.Arrays;
 
 /**
  * Security 配置类
@@ -46,6 +51,34 @@ public class SecurityConfig {
     }
 
     /**
+     * CORS 配置源
+     */
+    @Bean
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration configuration = new CorsConfiguration();
+
+        // 允许所有域名进行跨域调用
+        configuration.addAllowedOriginPattern("*");
+
+        // 允许跨域发送 cookie
+        configuration.setAllowCredentials(true);
+
+        // 放行全部原始头信息
+        configuration.addAllowedHeader("*");
+
+        // 允许所有请求方法跨域调用
+        configuration.addAllowedMethod("*");
+
+        // 暴露的响应头
+        configuration.setExposedHeaders(Arrays.asList("Authorization", "Content-Type"));
+
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", configuration);
+
+        return source;
+    }
+
+    /**
      * 安全过滤器链
      */
     @Bean
@@ -54,8 +87,8 @@ public class SecurityConfig {
                 // 禁用 CSRF
                 .csrf(AbstractHttpConfigurer::disable)
 
-                // 禁用 CORS（使用自定义 CorsConfig）
-                .cors(AbstractHttpConfigurer::disable)
+                // 启用 CORS（使用自定义配置）
+                .cors(cors -> cors.configurationSource(corsConfigurationSource()))
 
                 // 无状态会话
                 .sessionManagement(session -> session
@@ -73,7 +106,16 @@ public class SecurityConfig {
                                 "/v3/api-docs/**",
                                 "/swagger-resources/**",
                                 "/webjars/**",
-                                "/ws/**"
+                                "/ws/**",
+                                // 公开的API接口（无需认证即可访问）
+                                "/category/**",
+                                "/product",
+                                "/product/search",
+                                "/product/*",  // 商品详情
+                                "/banner",
+                                "/recommend/**",
+                                "/config/public",
+                                "/notification/unread-count"  // 允许未登录访问未读数（返回0）
                         ).permitAll()
 
                         // 其他所有请求需要认证

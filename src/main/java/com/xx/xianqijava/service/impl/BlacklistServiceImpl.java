@@ -100,7 +100,7 @@ public class BlacklistServiceImpl extends ServiceImpl<BlacklistMapper, Blacklist
                     }
 
                     UserInfoVO vo = new UserInfoVO();
-                    vo.setUserId(blockedUser.getUserId());
+                    vo.setId(blockedUser.getUserId());
                     vo.setUsername(blockedUser.getUsername());
                     vo.setNickname(blockedUser.getNickname());
                     vo.setAvatar(blockedUser.getAvatar());

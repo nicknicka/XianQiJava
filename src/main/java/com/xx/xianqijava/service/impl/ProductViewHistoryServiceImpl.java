@@ -11,7 +11,7 @@ import com.xx.xianqijava.mapper.ProductViewHistoryMapper;
 import com.xx.xianqijava.service.ProductService;
 import com.xx.xianqijava.service.ProductViewHistoryService;
 import com.xx.xianqijava.vo.ProductVO;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -22,12 +22,16 @@ import java.time.LocalDateTime;
  * 商品浏览历史服务实现类
  */
 @Service
-@RequiredArgsConstructor
 public class ProductViewHistoryServiceImpl extends ServiceImpl<ProductViewHistoryMapper, ProductViewHistory>
         implements ProductViewHistoryService {
 
     private final ProductMapper productMapper;
     private final ProductService productService;
+
+    public ProductViewHistoryServiceImpl(ProductMapper productMapper, @Lazy ProductService productService) {
+        this.productMapper = productMapper;
+        this.productService = productService;
+    }
 
     @Override
     @Async

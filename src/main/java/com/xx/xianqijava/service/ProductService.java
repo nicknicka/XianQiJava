@@ -121,4 +121,14 @@ public interface ProductService extends IService<Product> {
      * @return 商品列表
      */
     java.util.List<ProductVO> getRecentProductsByUserId(Long userId, int limit);
+
+    /**
+     * 获取我的商品列表
+     *
+     * @param page 分页参数
+     * @param userId 用户ID
+     * @param status 商品状态筛选（可选）
+     * @return 我的商品列表
+     */
+    IPage<ProductVO> getMyProducts(Page<Product> page, Long userId, Integer status);
 }

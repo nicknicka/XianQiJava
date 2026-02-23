@@ -61,7 +61,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         }
 
         // 4. 验证数量（防止恶意下单）
-        Integer quantity = createDTO.getQuantity() != null && createDTO.getQuantity() > 0
+        int quantity = createDTO.getQuantity() != null && createDTO.getQuantity() > 0
                 ? createDTO.getQuantity() : 1;
         if (quantity > 10) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "单次购买数量不能超过10件");
@@ -376,20 +376,14 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
      * 获取订单状态描述
      */
     private String getStatusDesc(Integer status) {
-        switch (status) {
-            case 0:
-                return "待确认";
-            case 1:
-                return "进行中";
-            case 2:
-                return "已完成";
-            case 3:
-                return "已取消";
-            case 4:
-                return "已退款";
-            default:
-                return "未知状态";
-        }
+        return switch (status) {
+            case 0 -> "待确认";
+            case 1 -> "进行中";
+            case 2 -> "已完成";
+            case 3 -> "已取消";
+            case 4 -> "已退款";
+            default -> "未知状态";
+        };
     }
 
     @Override

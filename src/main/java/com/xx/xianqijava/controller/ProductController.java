@@ -156,4 +156,22 @@ public class ProductController {
 
         return Result.success(productPage);
     }
+
+    /**
+     * 获取我的商品列表
+     */
+    @Operation(summary = "获取我的商品列表")
+    @GetMapping("/my")
+    public Result<IPage<ProductVO>> getMyProducts(
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(description = "页大小") @RequestParam(defaultValue = "20") Integer size,
+            @Parameter(description = "商品状态筛选") @RequestParam(required = false) Integer status) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取我的商品列表, userId={}, page={}, size={}, status={}", userId, page, size, status);
+
+        Page<Product> pageParam = new Page<>(page, size);
+        IPage<ProductVO> productPage = productService.getMyProducts(pageParam, userId, status);
+
+        return Result.success(productPage);
+    }
 }

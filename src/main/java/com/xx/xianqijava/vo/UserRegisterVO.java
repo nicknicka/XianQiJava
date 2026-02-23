@@ -10,6 +10,12 @@ import lombok.Data;
 @Schema(description = "用户注册响应")
 public class UserRegisterVO {
 
+    @Schema(description = "访问令牌")
+    private String token;
+
+    @Schema(description = "用户信息")
+    private UserInfoVO userInfo;
+
     @Schema(description = "用户ID")
     private Long userId;
 

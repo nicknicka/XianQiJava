@@ -26,6 +26,7 @@ import com.xx.xianqijava.vo.ProductAuditVO;
 import com.xx.xianqijava.vo.ProductVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -458,34 +459,25 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      * 获取审核状态描述
      */
     private String getAuditStatusDesc(Integer auditStatus) {
-        switch (auditStatus) {
-            case 0:
-                return "待审核";
-            case 1:
-                return "审核通过";
-            case 2:
-                return "审核拒绝";
-            default:
-                return "未知状态";
-        }
+        return switch (auditStatus) {
+            case 0 -> "待审核";
+            case 1 -> "审核通过";
+            case 2 -> "审核拒绝";
+            default -> "未知状态";
+        };
     }
 
     /**
      * 获取商品状态描述
      */
     private String getProductStatusDesc(Integer status) {
-        switch (status) {
-            case 0:
-                return "下架";
-            case 1:
-                return "在售";
-            case 2:
-                return "已售";
-            case 3:
-                return "预订";
-            default:
-                return "未知状态";
-        }
+        return switch (status) {
+            case 0 -> "下架";
+            case 1 -> "在售";
+            case 2 -> "已售";
+            case 3 -> "预订";
+            default -> "未知状态";
+        };
     }
 
     /**
@@ -495,20 +487,14 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if (conditionLevel == null) {
             return "未描述";
         }
-        switch (conditionLevel) {
-            case 10:
-                return "全新";
-            case 9:
-                return "几乎全新";
-            case 8:
-                return "轻微使用痕迹";
-            case 7:
-                return "明显使用痕迹";
-            case 6:
-                return "外观成色一般";
-            default:
-                return conditionLevel + "成新";
-        }
+        return switch (conditionLevel) {
+            case 10 -> "全新";
+            case 9 -> "几乎全新";
+            case 8 -> "轻微使用痕迹";
+            case 7 -> "明显使用痕迹";
+            case 6 -> "外观成色一般";
+            default -> conditionLevel + "成新";
+        };
     }
 
     @Override
@@ -531,5 +517,23 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         return products.stream()
                 .map(product -> convertToVO(product, userId))
                 .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public IPage<ProductVO> getMyProducts(Page<Product> page, Long userId, Integer status) {
+        log.info("获取我的商品列表, userId={}, page={}, status={}", userId, page.getCurrent(), status);
+
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Product::getSellerId, userId);
+        wrapper.eq(Product::getDeleted, 0);
+
+        if (status != null) {
+            wrapper.eq(Product::getStatus, status);
+        }
+
+        wrapper.orderByDesc(Product::getCreateTime);
+
+        IPage<Product> productPage = page(page, wrapper);
+        return productPage.convert(product -> convertToVO(product, userId));
     }
 }

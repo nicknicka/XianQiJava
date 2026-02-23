@@ -12,7 +12,6 @@ import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.mapper.SystemNotificationMapper;
 import com.xx.xianqijava.service.SystemNotificationService;
 import com.xx.xianqijava.vo.SystemNotificationVO;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,7 +25,6 @@ import java.util.List;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificationMapper, SystemNotification>
         implements SystemNotificationService {
 
@@ -219,30 +217,15 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
     }
 
     /**
-     * 格式化用户ID列表为JSON数组字符串
-     */
-    private String formatUserList(List<Long> users) {
-        if (users == null || users.isEmpty()) {
-            return null;
-        }
-        return users.toString();
-    }
-
-    /**
      * 获取通知类型描述
      */
     private String getTypeDesc(Integer type) {
-        switch (type) {
-            case 1:
-                return "系统公告";
-            case 2:
-                return "活动通知";
-            case 3:
-                return "账户提醒";
-            case 4:
-                return "交易提醒";
-            default:
-                return "未知类型";
-        }
+        return switch (type) {
+            case 1 -> "系统公告";
+            case 2 -> "活动通知";
+            case 3 -> "账户提醒";
+            case 4 -> "交易提醒";
+            default -> "未知类型";
+        };
     }
 }

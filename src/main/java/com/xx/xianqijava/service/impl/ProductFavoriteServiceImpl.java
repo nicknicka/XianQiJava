@@ -12,22 +12,25 @@ import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.service.ProductFavoriteService;
 import com.xx.xianqijava.service.ProductService;
 import com.xx.xianqijava.vo.ProductVO;
-import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * 商品收藏服务实现类
  */
 @Service
-@RequiredArgsConstructor
 public class ProductFavoriteServiceImpl extends ServiceImpl<ProductFavoriteMapper, ProductFavorite> implements ProductFavoriteService {
 
     private final ProductMapper productMapper;
     private final ProductService productService;
+
+    public ProductFavoriteServiceImpl(ProductMapper productMapper, @Lazy ProductService productService) {
+        this.productMapper = productMapper;
+        this.productService = productService;
+    }
 
     @Override
     @Transactional

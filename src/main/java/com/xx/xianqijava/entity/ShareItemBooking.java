@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
+import java.io.Serial;
 import java.time.LocalDate;
 
 /**
@@ -19,6 +20,7 @@ import java.time.LocalDate;
 @Schema(description = "共享物品预约借用")
 public class ShareItemBooking extends BaseEntity {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)

@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
+import java.io.Serial;
 
 /**
  * 押金记录表
@@ -18,6 +19,7 @@ import java.math.BigDecimal;
 @Schema(description = "押金记录")
 public class DepositRecord extends BaseEntity {
 
+    @Serial
     private static final long serialVersionUID = 1L;
 
     @TableId(type = IdType.AUTO)

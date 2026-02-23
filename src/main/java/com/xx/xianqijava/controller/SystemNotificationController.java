@@ -67,9 +67,15 @@ public class SystemNotificationController {
     @GetMapping("/unread-count")
     @Operation(summary = "获取未读通知数量")
     public Result<Integer> getUnreadCount() {
-        Long userId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("查询未读通知数量, userId={}", userId);
+        Long userId = SecurityUtil.getCurrentUserId();
 
+        // 未登录用户返回 0
+        if (userId == null) {
+            log.info("查询未读通知数量, 用户未登录，返回 0");
+            return Result.success(0);
+        }
+
+        log.info("查询未读通知数量, userId={}", userId);
         Integer unreadCount = systemNotificationService.getUnreadCount(userId);
         return Result.success(unreadCount);
     }

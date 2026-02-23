@@ -8,6 +8,7 @@ import com.xx.xianqijava.dto.UserLoginDTO;
 import com.xx.xianqijava.dto.UserRegisterDTO;
 import com.xx.xianqijava.dto.UserUpdateDTO;
 import com.xx.xianqijava.entity.User;
+import com.xx.xianqijava.service.FileUploadService;
 import com.xx.xianqijava.service.UserService;
 import com.xx.xianqijava.util.SecurityUtil;
 import com.xx.xianqijava.vo.UserCenterVO;
@@ -21,6 +22,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -35,6 +37,7 @@ import java.util.List;
 public class UserController {
 
     private final UserService userService;
+    private final FileUploadService fileUploadService;
 
     /**
      * 用户注册
@@ -95,15 +98,35 @@ public class UserController {
     }
 
     /**
-     * 更新头像
+     * 更新头像（通过URL）
      */
-    @Operation(summary = "更新头像")
+    @Operation(summary = "更新头像（通过URL）")
     @PutMapping("/avatar")
     public Result<UserInfoVO> updateAvatar(@Valid @RequestBody UpdateAvatarDTO avatarDTO) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
         log.info("更新头像, userId={}", userId);
         UserInfoVO result = userService.updateAvatar(userId, avatarDTO);
         return Result.success("头像更新成功", result);
+    }
+
+    /**
+     * 上传并更新头像（文件上传）
+     */
+    @Operation(summary = "上传并更新头像（文件上传）")
+    @PostMapping("/avatar")
+    public Result<UserInfoVO> uploadAvatar(@RequestParam("file") MultipartFile file) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("上传头像, userId={}, filename={}", userId, file.getOriginalFilename());
+
+        // 上传文件获取URL
+        String avatarUrl = fileUploadService.uploadImage(file);
+
+        // 更新用户头像
+        UpdateAvatarDTO avatarDTO = new UpdateAvatarDTO();
+        avatarDTO.setAvatar(avatarUrl);
+        UserInfoVO result = userService.updateAvatar(userId, avatarDTO);
+
+        return Result.success("头像上传成功", result);
     }
 
     /**

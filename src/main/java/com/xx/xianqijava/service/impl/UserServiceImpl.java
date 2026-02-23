@@ -61,10 +61,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.PHONE_EXISTS);
         }
 
-        // 3. 校验学号是否已注册
-        existUser = getByStudentId(registerDTO.getStudentId());
-        if (existUser != null) {
-            throw new BusinessException(ErrorCode.STUDENT_ID_EXISTS);
+        // 3. 校验学号是否已注册（仅当学号不为空时校验）
+        if (StrUtil.isNotBlank(registerDTO.getStudentId())) {
+            existUser = getByStudentId(registerDTO.getStudentId());
+            if (existUser != null) {
+                throw new BusinessException(ErrorCode.STUDENT_ID_EXISTS);
+            }
         }
 
         // 4. 创建用户对象
@@ -89,8 +91,30 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
         log.info("用户注册成功, userId={}, username={}", user.getUserId(), user.getUsername());
 
-        // 8. 返回注册结果
+        // 8. 生成Token (注册成功后自动登录)
+        String token = jwtUtil.generateToken(user.getUserId(), user.getUsername());
+
+        // 9. 构建用户信息
+        UserInfoVO userInfo = new UserInfoVO();
+        userInfo.setId(user.getUserId());
+        userInfo.setUsername(user.getUsername());
+        userInfo.setNickname(user.getNickname());
+        userInfo.setAvatar(user.getAvatar());
+        userInfo.setPhone(user.getPhone());
+        userInfo.setStudentId(user.getStudentId());
+        userInfo.setRealName(user.getRealName());
+        userInfo.setCollege(user.getCollege());
+        userInfo.setMajor(user.getMajor());
+        userInfo.setCreditScore(user.getCreditScore());
+        userInfo.setStatus(user.getStatus());
+        userInfo.setIsVerified(user.getIsVerified());
+        userInfo.setCreateTime(user.getCreateTime().toString());
+        userInfo.setUpdateTime(user.getUpdateTime().toString());
+
+        // 10. 返回注册结果
         UserRegisterVO registerVO = new UserRegisterVO();
+        registerVO.setToken(token);
+        registerVO.setUserInfo(userInfo);
         registerVO.setUserId(user.getUserId());
         registerVO.setUsername(user.getUsername());
         registerVO.setNickname(user.getNickname());
