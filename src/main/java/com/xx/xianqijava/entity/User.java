@@ -28,6 +28,9 @@ public class User extends BaseEntity {
     @Schema(description = "密码（加密）")
     private String password;
 
+    @Schema(description = "支付密码（加密）")
+    private String payPassword;
+
     @Schema(description = "昵称")
     private String nickname;
 
@@ -57,4 +60,10 @@ public class User extends BaseEntity {
 
     @Schema(description = "是否实名认证：0-否，1-是")
     private Integer isVerified;
+
+    @Schema(description = "允许手机号搜索：0-否，1-是")
+    private Integer phoneSearchEnabled;
+
+    @Schema(description = "显示位置信息：0-否，1-是")
+    private Integer locationEnabled;
 }

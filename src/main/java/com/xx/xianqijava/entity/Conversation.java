@@ -1,6 +1,7 @@
 package com.xx.xianqijava.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -26,9 +27,11 @@ public class Conversation extends BaseEntity {
     private Integer conversationType;
 
     @Schema(description = "用户1ID")
+    @TableField("user_id_1")
     private Long userId1;
 
     @Schema(description = "用户2ID")
+    @TableField("user_id_2")
     private Long userId2;
 
     @Schema(description = "关联订单ID")
@@ -67,6 +70,18 @@ public class Conversation extends BaseEntity {
     @Schema(description = "用户2是否归档：0-否，1-是")
     private Integer isArchivedUser2;
 
-    @Schema(description = "状态：0-正常，1-删除，2-置顶")
+    @Schema(description = "用户1是否置顶：0-否，1-是")
+    private Integer isPinnedUser1;
+
+    @Schema(description = "用户2是否置顶：0-否，1-是")
+    private Integer isPinnedUser2;
+
+    @Schema(description = "用户1的置顶排序（数值越小越靠前）")
+    private Integer pinOrderUser1;
+
+    @Schema(description = "用户2的置顶排序（数值越小越靠前）")
+    private Integer pinOrderUser2;
+
+    @Schema(description = "状态：0-正常，1-删除")
     private Integer status;
 }

@@ -58,6 +58,22 @@ public interface ConversationService extends IService<Conversation> {
     void markConversationAsRead(Long conversationId, Long userId);
 
     /**
+     * 置顶会话
+     *
+     * @param conversationId 会话ID
+     * @param userId        当前用户ID
+     */
+    void pinConversation(Long conversationId, Long userId);
+
+    /**
+     * 取消置顶会话
+     *
+     * @param conversationId 会话ID
+     * @param userId        当前用户ID
+     */
+    void unpinConversation(Long conversationId, Long userId);
+
+    /**
      * 发送消息
      *
      * @param sendDTO 发送消息DTO

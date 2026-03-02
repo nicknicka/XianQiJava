@@ -22,9 +22,13 @@ import com.xx.xianqijava.vo.UserRegisterVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 用户服务实现类
@@ -40,6 +44,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final com.xx.xianqijava.service.OrderService orderService;
     private final com.xx.xianqijava.service.EvaluationService evaluationService;
     private final com.xx.xianqijava.service.ProductFavoriteService productFavoriteService;
+    private final com.xx.xianqijava.service.UserPreferenceService userPreferenceService;
+    private final StringRedisTemplate redisTemplate;
 
     @Value("${jwt.expiration}")
     private Long jwtExpiration;
@@ -408,5 +414,572 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("找到附近用户数量, userId={}, count={}", userId, nearbyUsers.size());
 
         return nearbyUsers;
+    }
+
+    @Override
+    public void sendVerifyCode(String phone, String type) {
+        log.info("发送验证码, phone={}, type={}", phone, type);
+
+        // 验证手机号格式
+        if (!phone.matches("^1[3-9]\\d{9}$")) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "手机号格式不正确");
+        }
+
+        // 检查是否频繁发送（60秒内只能发送一次）
+        String rateLimitKey = "verify_code:rate:" + phone;
+        String lastSendTime = redisTemplate.opsForValue().get(rateLimitKey);
+        if (lastSendTime != null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "验证码发送过于频繁，请60秒后再试");
+        }
+
+        // 生成6位随机验证码
+        String code = String.format("%06d", new Random().nextInt(999999));
+
+        // 存储验证码到Redis，5分钟过期
+        String verifyCodeKey = "verify_code:" + phone;
+        redisTemplate.opsForValue().set(verifyCodeKey, code, 5, TimeUnit.MINUTES);
+
+        // 设置发送频率限制
+        redisTemplate.opsForValue().set(rateLimitKey, String.valueOf(System.currentTimeMillis()), 60, TimeUnit.SECONDS);
+
+        // TODO: 实际发送短信（这里需要对接短信服务商）
+        // 这里仅打印日志，实际生产环境需要调用短信服务API
+        log.info("验证码生成成功, phone={}, code={}, type={}", phone, code, type);
+        // smsService.sendVerifyCode(phone, code);
+    }
+
+    @Override
+    public boolean verifyCode(String phone, String code) {
+        log.info("验证验证码, phone={}, code={}", phone, code);
+
+        String verifyCodeKey = "verify_code:" + phone;
+        String savedCode = redisTemplate.opsForValue().get(verifyCodeKey);
+
+        if (savedCode == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "验证码已过期或不存在");
+        }
+
+        if (!savedCode.equals(code)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "验证码不正确");
+        }
+
+        return true;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void resetPassword(String phone, String code, String newPassword) {
+        log.info("重置密码, phone={}", phone);
+
+        // 验证验证码
+        verifyCode(phone, code);
+
+        // 查找用户
+        User user = getByPhone(phone);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "该手机号未注册");
+        }
+
+        // 加密新密码
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPassword(encodedPassword);
+
+        boolean updated = updateById(user);
+        if (!updated) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "密码重置失败");
+        }
+
+        // 删除验证码
+        String verifyCodeKey = "verify_code:" + phone;
+        redisTemplate.delete(verifyCodeKey);
+
+        log.info("密码重置成功, phone={}, userId={}", phone, user.getUserId());
+    }
+
+    @Override
+    public UserLoginVO loginByPhone(String phone, String code) {
+        log.info("手机号验证码登录, phone={}", phone);
+
+        // 验证验证码
+        verifyCode(phone, code);
+
+        // 查找用户
+        User user = getByPhone(phone);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND, "该手机号未注册");
+        }
+
+        // 校验用户状态
+        if (user.getStatus() == 1) {
+            throw new BusinessException(ErrorCode.USER_BANNED);
+        }
+
+        // 登录成功后删除验证码
+        String verifyCodeKey = "verify_code:" + phone;
+        redisTemplate.delete(verifyCodeKey);
+
+        // 生成Token
+        String token = jwtUtil.generateToken(user.getUserId(), user.getUsername());
+        String refreshToken = jwtUtil.generateRefreshToken(user.getUserId(), user.getUsername());
+
+        // 计算Token过期时间
+        long expiresIn = System.currentTimeMillis() + jwtExpiration;
+
+        log.info("手机号登录成功, userId={}, phone={}", user.getUserId(), phone);
+
+        // 构建返回结果
+        UserLoginVO loginVO = new UserLoginVO();
+        loginVO.setToken(token);
+        loginVO.setRefreshToken(refreshToken);
+        loginVO.setUserId(user.getUserId());
+        loginVO.setUsername(user.getUsername());
+        loginVO.setNickname(user.getNickname());
+        loginVO.setAvatar(user.getAvatar());
+        loginVO.setPhone(user.getPhone());
+        loginVO.setExpiresIn(expiresIn);
+
+        return loginVO;
+    }
+
+    // ==================== 账号安全相关方法实现 ====================
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void bindPhone(Long userId, com.xx.xianqijava.dto.BindPhoneDTO bindPhoneDTO) {
+        log.info("绑定手机号, userId={}, phone={}", userId, bindPhoneDTO.getPhone());
+
+        // 验证验证码
+        verifyCode(bindPhoneDTO.getPhone(), bindPhoneDTO.getCode());
+
+        // 检查手机号是否已被其他用户绑定
+        User existUser = getByPhone(bindPhoneDTO.getPhone());
+        if (existUser != null && !existUser.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "该手机号已被其他用户绑定");
+        }
+
+        // 获取当前用户
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 更新手机号
+        user.setPhone(bindPhoneDTO.getPhone());
+        boolean updated = updateById(user);
+        if (!updated) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "手机号绑定失败");
+        }
+
+        // 删除验证码
+        String verifyCodeKey = "verify_code:" + bindPhoneDTO.getPhone();
+        redisTemplate.delete(verifyCodeKey);
+
+        log.info("手机号绑定成功, userId={}, phone={}", userId, bindPhoneDTO.getPhone());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void changePhone(Long userId, com.xx.xianqijava.dto.ChangePhoneDTO changePhoneDTO) {
+        log.info("更换手机号, userId={}", userId);
+
+        // 验证验证码
+        verifyCode(changePhoneDTO.getNewPhone(), changePhoneDTO.getCode());
+
+        // 检查新手机号是否已被其他用户绑定
+        User existUser = getByPhone(changePhoneDTO.getNewPhone());
+        if (existUser != null && !existUser.getUserId().equals(userId)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "该手机号已被其他用户绑定");
+        }
+
+        // 获取当前用户并验证原手机号
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        if (!changePhoneDTO.getOldPhone().equals(user.getPhone())) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "原手机号不正确");
+        }
+
+        // 更新手机号
+        user.setPhone(changePhoneDTO.getNewPhone());
+        boolean updated = updateById(user);
+        if (!updated) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "手机号更换失败");
+        }
+
+        // 删除验证码
+        String verifyCodeKey = "verify_code:" + changePhoneDTO.getNewPhone();
+        redisTemplate.delete(verifyCodeKey);
+
+        log.info("手机号更换成功, userId={}, newPhone={}", userId, changePhoneDTO.getNewPhone());
+    }
+
+    @Override
+    public boolean hasPayPassword(Long userId) {
+        log.info("检查支付密码, userId={}", userId);
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+        return StrUtil.isNotBlank(user.getPayPassword());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void setPayPassword(Long userId, com.xx.xianqijava.dto.SetPayPasswordDTO setPasswordDTO) {
+        log.info("设置支付密码, userId={}", userId);
+
+        // 验证验证码
+        verifyCode(setPasswordDTO.getPhone(), setPasswordDTO.getCode());
+
+        // 验证手机号是否属于当前用户
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        if (!setPasswordDTO.getPhone().equals(user.getPhone())) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "手机号验证失败");
+        }
+
+        // 检查是否已设置支付密码
+        if (StrUtil.isNotBlank(user.getPayPassword())) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "您已设置过支付密码，如需修改请使用修改功能");
+        }
+
+        // 检查弱密码
+        String password = setPasswordDTO.getPassword();
+        if (isWeakPayPassword(password)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "支付密码过于简单，请重新设置");
+        }
+
+        // 加密支付密码
+        String encodedPassword = passwordEncoder.encode(password);
+        user.setPayPassword(encodedPassword);
+
+        boolean updated = updateById(user);
+        if (!updated) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "支付密码设置失败");
+        }
+
+        // 删除验证码
+        String verifyCodeKey = "verify_code:" + setPasswordDTO.getPhone();
+        redisTemplate.delete(verifyCodeKey);
+
+        log.info("支付密码设置成功, userId={}", userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void changePayPassword(Long userId, com.xx.xianqijava.dto.ChangePayPasswordDTO changePasswordDTO) {
+        log.info("修改支付密码, userId={}", userId);
+
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 检查是否已设置支付密码
+        if (StrUtil.isBlank(user.getPayPassword())) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "您还未设置支付密码");
+        }
+
+        // 验证原支付密码
+        if (!passwordEncoder.matches(changePasswordDTO.getOldPassword(), user.getPayPassword())) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "原支付密码不正确");
+        }
+
+        // 检查弱密码
+        String newPassword = changePasswordDTO.getNewPassword();
+        if (isWeakPayPassword(newPassword)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "支付密码过于简单，请重新设置");
+        }
+
+        // 加密新支付密码
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPayPassword(encodedPassword);
+
+        boolean updated = updateById(user);
+        if (!updated) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "支付密码修改失败");
+        }
+
+        log.info("支付密码修改成功, userId={}", userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void resetPayPassword(Long userId, com.xx.xianqijava.dto.ResetPayPasswordDTO resetPasswordDTO) {
+        log.info("重置支付密码, userId={}", userId);
+
+        // 验证验证码
+        verifyCode(resetPasswordDTO.getPhone(), resetPasswordDTO.getCode());
+
+        // 验证手机号是否属于当前用户
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        if (!resetPasswordDTO.getPhone().equals(user.getPhone())) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "手机号验证失败");
+        }
+
+        // 检查弱密码
+        String newPassword = resetPasswordDTO.getNewPassword();
+        if (isWeakPayPassword(newPassword)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "支付密码过于简单，请重新设置");
+        }
+
+        // 加密新支付密码
+        String encodedPassword = passwordEncoder.encode(newPassword);
+        user.setPayPassword(encodedPassword);
+
+        boolean updated = updateById(user);
+        if (!updated) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "支付密码重置失败");
+        }
+
+        // 删除验证码
+        String verifyCodeKey = "verify_code:" + resetPasswordDTO.getPhone();
+        redisTemplate.delete(verifyCodeKey);
+
+        log.info("支付密码重置成功, userId={}", userId);
+    }
+
+    @Override
+    public boolean verifyPayPassword(Long userId, String password) {
+        log.info("验证支付密码, userId={}", userId);
+
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        if (StrUtil.isBlank(user.getPayPassword())) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "您还未设置支付密码");
+        }
+
+        return passwordEncoder.matches(password, user.getPayPassword());
+    }
+
+    @Override
+    public com.xx.xianqijava.vo.PrivacySettingsVO getPrivacySettings(Long userId) {
+        log.info("获取隐私设置, userId={}", userId);
+
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        return new com.xx.xianqijava.vo.PrivacySettingsVO(
+            user.getPhoneSearchEnabled() != null ? user.getPhoneSearchEnabled() : 1,
+            user.getLocationEnabled() != null ? user.getLocationEnabled() : 1
+        );
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updatePrivacySettings(Long userId, com.xx.xianqijava.dto.UpdatePrivacySettingsDTO settingsDTO) {
+        log.info("更新隐私设置, userId={}", userId);
+
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 只更新非空字段
+        if (settingsDTO.getPhoneSearchEnabled() != null) {
+            user.setPhoneSearchEnabled(settingsDTO.getPhoneSearchEnabled());
+        }
+        if (settingsDTO.getLocationEnabled() != null) {
+            user.setLocationEnabled(settingsDTO.getLocationEnabled());
+        }
+
+        boolean updated = updateById(user);
+        if (!updated) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "隐私设置更新失败");
+        }
+
+        log.info("隐私设置更新成功, userId={}", userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteAccount(Long userId, String password) {
+        log.info("注销账号, userId={}", userId);
+
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 验证登录密码
+        if (!passwordEncoder.matches(password, user.getPassword())) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "登录密码不正确");
+        }
+
+        // 逻辑删除用户
+        user.setDeleted(1);
+        boolean updated = updateById(user);
+        if (!updated) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "账号注销失败");
+        }
+
+        log.info("账号注销成功, userId={}", userId);
+    }
+
+    /**
+     * 检查是否为弱支付密码
+     * 连续数字：123456, 234567, 345678, 456789, 012345
+     * 重复数字：111111, 222222, etc.
+     */
+    private boolean isWeakPayPassword(String password) {
+        if (password == null || password.length() != 6) {
+            return true;
+        }
+
+        // 连续数字检查
+        if ("012345".equals(password) || "123456".equals(password) ||
+            "234567".equals(password) || "345678".equals(password) ||
+            "456789".equals(password) || "543210".equals(password) ||
+            "654321".equals(password) || "765432".equals(password) ||
+            "876543".equals(password) || "987654".equals(password)) {
+            return true;
+        }
+
+        // 重复数字检查
+        if (password.matches("^(\\d)\\1{5}$")) {
+            return true;
+        }
+
+        return false;
+    }
+
+    // ==================== 主题设置相关方法实现 ====================
+
+    @Override
+    public com.xx.xianqijava.vo.ThemeConfigVO getUserThemeConfig(Long userId) {
+        log.info("获取用户主题配置, userId={}", userId);
+
+        // 验证用户是否存在
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 获取用户偏好设置
+        com.xx.xianqijava.entity.UserPreference preference =
+                userPreferenceService.getOrCreateUserPreference(userId);
+
+        com.xx.xianqijava.vo.ThemeConfigVO vo = new com.xx.xianqijava.vo.ThemeConfigVO();
+        vo.setTheme(preference.getTheme() != null ? preference.getTheme() : "light");
+        vo.setAutoDarkMode(preference.getAutoDarkMode() != null ? preference.getAutoDarkMode() == 1 : false);
+        vo.setFontSize(preference.getFontSize() != null ? preference.getFontSize() : 16);
+
+        // 设置可选主题列表
+        vo.setAvailableThemes(getAvailableThemeOptions());
+
+        // 设置可选字体大小列表
+        java.util.Map<String, Integer> fontSizes = new java.util.LinkedHashMap<>();
+        fontSizes.put("极小", 14);
+        fontSizes.put("小", 15);
+        fontSizes.put("默认", 16);
+        fontSizes.put("大", 17);
+        fontSizes.put("极大", 18);
+        vo.setAvailableFontSizes(fontSizes);
+
+        // 设置主题颜色
+        vo.setThemeColors(getThemeColors(preference.getTheme()));
+
+        return vo;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void updateUserThemeConfig(Long userId, String theme, Boolean autoDarkMode, Integer fontSize) {
+        log.info("更新用户主题配置, userId={}, theme={}, autoDarkMode={}, fontSize={}",
+                userId, theme, autoDarkMode, fontSize);
+
+        // 验证用户是否存在
+        User user = getById(userId);
+        if (user == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        // 委托给 UserPreferenceService 处理
+        userPreferenceService.updateThemeConfig(userId, theme, autoDarkMode, fontSize);
+
+        log.info("主题配置更新成功, userId={}", userId);
+    }
+
+    /**
+     * 获取可用的主题选项列表
+     */
+    private java.util.List<com.xx.xianqijava.vo.ThemeOptionVO> getAvailableThemeOptions() {
+        java.util.List<com.xx.xianqijava.vo.ThemeOptionVO> themes = new java.util.ArrayList<>();
+
+        // 浅色主题
+        com.xx.xianqijava.vo.ThemeOptionVO lightTheme = new com.xx.xianqijava.vo.ThemeOptionVO();
+        lightTheme.setValue("light");
+        lightTheme.setLabel("浅色");
+        lightTheme.setIcon("sunny");
+        lightTheme.setDefault(true);
+        themes.add(lightTheme);
+
+        // 深色主题
+        com.xx.xianqijava.vo.ThemeOptionVO darkTheme = new com.xx.xianqijava.vo.ThemeOptionVO();
+        darkTheme.setValue("dark");
+        darkTheme.setLabel("深色");
+        darkTheme.setIcon("moon");
+        darkTheme.setDefault(false);
+        themes.add(darkTheme);
+
+        // 跟随系统
+        com.xx.xianqijava.vo.ThemeOptionVO autoTheme = new com.xx.xianqijava.vo.ThemeOptionVO();
+        autoTheme.setValue("auto");
+        autoTheme.setLabel("跟随系统");
+        autoTheme.setIcon("desktop");
+        autoTheme.setDefault(false);
+        themes.add(autoTheme);
+
+        return themes;
+    }
+
+    /**
+     * 获取主题颜色配置
+     */
+    private com.xx.xianqijava.vo.ThemeColorsVO getThemeColors(String theme) {
+        com.xx.xianqijava.vo.ThemeColorsVO colors = new com.xx.xianqijava.vo.ThemeColorsVO();
+
+        if ("dark".equals(theme)) {
+            // 深色主题颜色
+            colors.setPrimary("#3b82f6");
+            colors.setSuccess("#10b981");
+            colors.setWarning("#f59e0b");
+            colors.setError("#ef4444");
+            colors.setBackground("#111827");
+            colors.setForeground("#f9fafb");
+            colors.setBorder("#374151");
+        } else {
+            // 浅色主题颜色（默认）
+            colors.setPrimary("#3b82f6");
+            colors.setSuccess("#10b981");
+            colors.setWarning("#f59e0b");
+            colors.setError("#ef4444");
+            colors.setBackground("#ffffff");
+            colors.setForeground("#111827");
+            colors.setBorder("#e5e7eb");
+        }
+
+        return colors;
+    }
+
+    /**
+     * 验证主题值是否有效
+     */
+    private boolean isValidTheme(String theme) {
+        return "light".equals(theme) || "dark".equals(theme) || "auto".equals(theme);
     }
 }

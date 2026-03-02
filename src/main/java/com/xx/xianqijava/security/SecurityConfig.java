@@ -107,6 +107,7 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**",
                                 "/ws/**",
+                                "/uploads/**",  // 静态资源（上传的图片等）
                                 // 公开的API接口（无需认证即可访问）
                                 "/category/**",
                                 "/product",

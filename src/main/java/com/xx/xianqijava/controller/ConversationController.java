@@ -101,6 +101,32 @@ public class ConversationController {
     }
 
     /**
+     * 置顶会话
+     */
+    @Operation(summary = "置顶会话")
+    @PutMapping("/{id}/pin")
+    public Result<Void> pinConversation(
+            @Parameter(description = "会话ID") @PathVariable("id") Long id) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("置顶会话, conversationId={}, userId={}", id, userId);
+        conversationService.pinConversation(id, userId);
+        return Result.success("置顶成功");
+    }
+
+    /**
+     * 取消置顶会话
+     */
+    @Operation(summary = "取消置顶会话")
+    @PutMapping("/{id}/unpin")
+    public Result<Void> unpinConversation(
+            @Parameter(description = "会话ID") @PathVariable("id") Long id) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("取消置顶会话, conversationId={}, userId={}", id, userId);
+        conversationService.unpinConversation(id, userId);
+        return Result.success("取消置顶成功");
+    }
+
+    /**
      * 发送消息
      */
     @Operation(summary = "发送消息")

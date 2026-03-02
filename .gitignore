@@ -46,3 +46,15 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Logs ###
+logs/
+*.log
+*.log.*
+
+### Database Scripts ###
+db/
+database/
+sql/
+*.sql
+import_test_data.sh

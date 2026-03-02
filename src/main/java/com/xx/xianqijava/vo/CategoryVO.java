@@ -1,24 +1,15 @@
-package com.xx.xianqijava.entity;
+package com.xx.xianqijava.vo;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 /**
- * 分类表
+ * 分类视图对象
  */
 @Data
-@EqualsAndHashCode(callSuper = true)
-@TableName("category")
 @Schema(description = "分类")
-public class Category extends BaseEntity {
+public class CategoryVO {
 
-    private static final long serialVersionUID = 1L;
-
-    @TableId(type = IdType.AUTO)
     @Schema(description = "分类ID")
     private Long categoryId;
 
@@ -27,9 +18,6 @@ public class Category extends BaseEntity {
 
     @Schema(description = "分类代码")
     private String code;
-
-    @Schema(description = "父分类ID")
-    private Long parentId;
 
     @Schema(description = "图标（emoji）")
     private String icon;

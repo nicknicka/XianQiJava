@@ -16,6 +16,7 @@ public enum ErrorCode {
     NOT_FOUND(404, "资源不存在"),
     REQUEST_TIMEOUT(408, "请求超时"),
     INTERNAL_ERROR(500, "服务器内部错误"),
+    NOT_IMPLEMENTED(501, "功能暂未实现"),
 
     // 用户相关错误码 10xxx
     USER_NOT_FOUND(10001, "用户不存在"),

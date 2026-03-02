@@ -58,6 +58,9 @@ public class SystemNotification extends BaseEntity {
     @Schema(description = "发布时间")
     private java.time.LocalDateTime publishTime;
 
+    @Schema(description = "结束展示时间（可选）")
+    private java.time.LocalDateTime endTime;
+
     @Schema(description = "状态：0-草稿，1-已发布，2-已撤回")
     private Integer status;
 

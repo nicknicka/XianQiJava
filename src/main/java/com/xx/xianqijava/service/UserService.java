@@ -123,4 +123,142 @@ public interface UserService extends IService<User> {
      * @return 用户列表
      */
     java.util.List<User> getNearbyUsers(Long userId);
+
+    /**
+     * 发送验证码
+     *
+     * @param phone 手机号
+     * @param type 类型（login/register/reset）
+     */
+    void sendVerifyCode(String phone, String type);
+
+    /**
+     * 验证验证码
+     *
+     * @param phone 手机号
+     * @param code 验证码
+     * @return 是否有效
+     */
+    boolean verifyCode(String phone, String code);
+
+    /**
+     * 重置密码
+     *
+     * @param phone 手机号
+     * @param code 验证码
+     * @param newPassword 新密码
+     */
+    void resetPassword(String phone, String code, String newPassword);
+
+    /**
+     * 手机号验证码登录
+     *
+     * @param phone 手机号
+     * @param code 验证码
+     * @return 登录结果
+     */
+    UserLoginVO loginByPhone(String phone, String code);
+
+    // ==================== 账号安全相关方法 ====================
+
+    /**
+     * 绑定手机号
+     *
+     * @param userId 用户ID
+     * @param bindPhoneDTO 绑定手机号信息
+     */
+    void bindPhone(Long userId, com.xx.xianqijava.dto.BindPhoneDTO bindPhoneDTO);
+
+    /**
+     * 更换手机号
+     *
+     * @param userId 用户ID
+     * @param changePhoneDTO 更换手机号信息
+     */
+    void changePhone(Long userId, com.xx.xianqijava.dto.ChangePhoneDTO changePhoneDTO);
+
+    /**
+     * 检查是否设置支付密码
+     *
+     * @param userId 用户ID
+     * @return 是否已设置
+     */
+    boolean hasPayPassword(Long userId);
+
+    /**
+     * 设置支付密码
+     *
+     * @param userId 用户ID
+     * @param setPasswordDTO 设置支付密码信息
+     */
+    void setPayPassword(Long userId, com.xx.xianqijava.dto.SetPayPasswordDTO setPasswordDTO);
+
+    /**
+     * 修改支付密码
+     *
+     * @param userId 用户ID
+     * @param changePasswordDTO 修改支付密码信息
+     */
+    void changePayPassword(Long userId, com.xx.xianqijava.dto.ChangePayPasswordDTO changePasswordDTO);
+
+    /**
+     * 重置支付密码
+     *
+     * @param userId 用户ID
+     * @param resetPasswordDTO 重置支付密码信息
+     */
+    void resetPayPassword(Long userId, com.xx.xianqijava.dto.ResetPayPasswordDTO resetPasswordDTO);
+
+    /**
+     * 验证支付密码
+     *
+     * @param userId 用户ID
+     * @param password 支付密码
+     * @return 是否正确
+     */
+    boolean verifyPayPassword(Long userId, String password);
+
+    /**
+     * 获取隐私设置
+     *
+     * @param userId 用户ID
+     * @return 隐私设置
+     */
+    com.xx.xianqijava.vo.PrivacySettingsVO getPrivacySettings(Long userId);
+
+    /**
+     * 更新隐私设置
+     *
+     * @param userId 用户ID
+     * @param settingsDTO 隐私设置信息
+     */
+    void updatePrivacySettings(Long userId, com.xx.xianqijava.dto.UpdatePrivacySettingsDTO settingsDTO);
+
+    /**
+     * 注销账号
+     *
+     * @param userId 用户ID
+     * @param password 登录密码（用于验证）
+     */
+    void deleteAccount(Long userId, String password);
+
+    // ==================== 主题设置相关方法 ====================
+
+    /**
+     * 获取用户主题配置
+     *
+     * @param userId 用户ID
+     * @return 主题配置
+     */
+    com.xx.xianqijava.vo.ThemeConfigVO getUserThemeConfig(Long userId);
+
+    /**
+     * 更新用户主题配置
+     *
+     * @param userId       用户ID
+     * @param theme        主题
+     * @param autoDarkMode 自动深色模式
+     * @param fontSize     字体大小
+     */
+    void updateUserThemeConfig(Long userId, String theme, Boolean autoDarkMode, Integer fontSize);
 }

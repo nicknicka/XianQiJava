@@ -1,20 +1,20 @@
 package com.xx.xianqijava.controller;
 
+import com.xx.xianqijava.common.ErrorCode;
 import com.xx.xianqijava.common.Result;
-import com.xx.xianqijava.dto.UpdateAvatarDTO;
-import com.xx.xianqijava.dto.UpdateLocationDTO;
-import com.xx.xianqijava.dto.UpdatePasswordDTO;
-import com.xx.xianqijava.dto.UserLoginDTO;
-import com.xx.xianqijava.dto.UserRegisterDTO;
-import com.xx.xianqijava.dto.UserUpdateDTO;
+import com.xx.xianqijava.dto.*;
 import com.xx.xianqijava.entity.User;
+import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.service.FileUploadService;
 import com.xx.xianqijava.service.UserService;
 import com.xx.xianqijava.util.SecurityUtil;
+import com.xx.xianqijava.vo.PayPasswordCheckVO;
+import com.xx.xianqijava.vo.PrivacySettingsVO;
 import com.xx.xianqijava.vo.UserCenterVO;
 import com.xx.xianqijava.vo.UserInfoVO;
 import com.xx.xianqijava.vo.UserLoginVO;
 import com.xx.xianqijava.vo.UserRegisterVO;
+import com.xx.xianqijava.service.LoginDeviceService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -38,6 +38,7 @@ public class UserController {
 
     private final UserService userService;
     private final FileUploadService fileUploadService;
+    private final LoginDeviceService loginDeviceService;
 
     /**
      * 用户注册
@@ -174,5 +175,279 @@ public class UserController {
         log.info("获取附近用户列表, userId={}", userId);
         List<User> nearbyUsers = userService.getNearbyUsers(userId);
         return Result.success(nearbyUsers);
+    }
+
+    /**
+     * 发送验证码
+     */
+    @Operation(summary = "发送验证码")
+    @PostMapping("/send-code")
+    public Result<Void> sendVerifyCode(@RequestParam("phone") String phone,
+                                       @RequestParam(value = "type", defaultValue = "login") String type) {
+        log.info("发送验证码请求, phone={}, type={}", phone, type);
+        userService.sendVerifyCode(phone, type);
+        return Result.success("验证码发送成功");
+    }
+
+    /**
+     * 验证验证码（用于重置密码前的验证）
+     */
+    @Operation(summary = "验证验证码")
+    @PostMapping("/verify-code")
+    public Result<Boolean> verifyCode(@RequestParam("phone") String phone,
+                                      @RequestParam("code") String code) {
+        log.info("验证验证码请求, phone={}", phone);
+        boolean isValid = userService.verifyCode(phone, code);
+        return Result.success(isValid);
+    }
+
+    /**
+     * 重置密码
+     */
+    @Operation(summary = "重置密码")
+    @PostMapping("/reset-password")
+    public Result<Void> resetPassword(@RequestParam("phone") String phone,
+                                      @RequestParam("code") String code,
+                                      @RequestParam("newPassword") String newPassword) {
+        log.info("重置密码请求, phone={}", phone);
+        userService.resetPassword(phone, code, newPassword);
+        return Result.success("密码重置成功");
+    }
+
+    /**
+     * 手机号验证码登录
+     */
+    @Operation(summary = "手机号验证码登录")
+    @PostMapping("/login/phone")
+    public Result<UserLoginVO> loginByPhone(@RequestParam("phone") String phone,
+                                            @RequestParam("code") String code) {
+        log.info("手机号验证码登录请求, phone={}", phone);
+        UserLoginVO result = userService.loginByPhone(phone, code);
+        return Result.success("登录成功", result);
+    }
+
+    /**
+     * 微信授权登录
+     */
+    @Operation(summary = "微信授权登录")
+    @PostMapping("/login/wechat")
+    public Result<UserLoginVO> loginByWechat(@RequestParam("code") String code,
+                                              @RequestParam(value = "nickname", required = false) String nickname,
+                                              @RequestParam(value = "avatar", required = false) String avatar) {
+        log.info("微信授权登录请求, code={}", code);
+        // TODO: 对接微信开放平台验证code并获取用户信息
+        // 当前实现：使用模拟数据返回，实际使用时需要对接微信API
+        throw new BusinessException(ErrorCode.NOT_IMPLEMENTED, "微信登录功能暂未开放，请使用其他登录方式");
+    }
+
+    /**
+     * QQ授权登录
+     */
+    @Operation(summary = "QQ授权登录")
+    @PostMapping("/login/qq")
+    public Result<UserLoginVO> loginByQQ(@RequestParam("code") String code,
+                                         @RequestParam(value = "nickname", required = false) String nickname,
+                                         @RequestParam(value = "avatar", required = false) String avatar) {
+        log.info("QQ授权登录请求, code={}", code);
+        // TODO: 对接QQ互联平台验证code并获取用户信息
+        // 当前实现：使用模拟数据返回，实际使用时需要对接QQ API
+        throw new BusinessException(ErrorCode.NOT_IMPLEMENTED, "QQ登录功能暂未开放，请使用其他登录方式");
+    }
+
+    // ==================== 账号安全相关接口 ====================
+
+    /**
+     * 绑定手机号
+     */
+    @Operation(summary = "绑定手机号")
+    @PostMapping("/bind-phone")
+    public Result<Void> bindPhone(@Valid @RequestBody BindPhoneDTO bindPhoneDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("绑定手机号请求, userId={}, phone={}", userId, bindPhoneDTO.getPhone());
+        userService.bindPhone(userId, bindPhoneDTO);
+        return Result.success("手机号绑定成功");
+    }
+
+    /**
+     * 更换手机号
+     */
+    @Operation(summary = "更换手机号")
+    @PostMapping("/change-phone")
+    public Result<Void> changePhone(@Valid @RequestBody ChangePhoneDTO changePhoneDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("更换手机号请求, userId={}", userId);
+        userService.changePhone(userId, changePhoneDTO);
+        return Result.success("手机号更换成功");
+    }
+
+    /**
+     * 检查是否设置支付密码
+     */
+    @Operation(summary = "检查是否设置支付密码")
+    @GetMapping("/pay-password/check")
+    public Result<PayPasswordCheckVO> checkPayPassword() {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("检查支付密码, userId={}", userId);
+        boolean hasPayPassword = userService.hasPayPassword(userId);
+        return Result.success(new PayPasswordCheckVO(hasPayPassword));
+    }
+
+    /**
+     * 设置支付密码
+     */
+    @Operation(summary = "设置支付密码")
+    @PostMapping("/pay-password/set")
+    public Result<Void> setPayPassword(@Valid @RequestBody SetPayPasswordDTO setPasswordDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("设置支付密码请求, userId={}", userId);
+        userService.setPayPassword(userId, setPasswordDTO);
+        return Result.success("支付密码设置成功");
+    }
+
+    /**
+     * 修改支付密码
+     */
+    @Operation(summary = "修改支付密码")
+    @PostMapping("/pay-password/change")
+    public Result<Void> changePayPassword(@Valid @RequestBody ChangePayPasswordDTO changePasswordDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("修改支付密码请求, userId={}", userId);
+        userService.changePayPassword(userId, changePasswordDTO);
+        return Result.success("支付密码修改成功");
+    }
+
+    /**
+     * 重置支付密码
+     */
+    @Operation(summary = "重置支付密码")
+    @PostMapping("/pay-password/reset")
+    public Result<Void> resetPayPassword(@Valid @RequestBody ResetPayPasswordDTO resetPasswordDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("重置支付密码请求, userId={}", userId);
+        userService.resetPayPassword(userId, resetPasswordDTO);
+        return Result.success("支付密码重置成功");
+    }
+
+    /**
+     * 验证支付密码
+     */
+    @Operation(summary = "验证支付密码")
+    @PostMapping("/pay-password/verify")
+    public Result<Boolean> verifyPayPassword(@Valid @RequestBody VerifyPayPasswordDTO verifyPasswordDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("验证支付密码请求, userId={}", userId);
+        boolean isValid = userService.verifyPayPassword(userId, verifyPasswordDTO.getPassword());
+        return Result.success(isValid);
+    }
+
+    /**
+     * 获取隐私设置
+     */
+    @Operation(summary = "获取隐私设置")
+    @GetMapping("/privacy-settings")
+    public Result<PrivacySettingsVO> getPrivacySettings() {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取隐私设置, userId={}", userId);
+        PrivacySettingsVO settings = userService.getPrivacySettings(userId);
+        return Result.success(settings);
+    }
+
+    /**
+     * 更新隐私设置
+     */
+    @Operation(summary = "更新隐私设置")
+    @PutMapping("/privacy-settings")
+    public Result<Void> updatePrivacySettings(@Valid @RequestBody UpdatePrivacySettingsDTO settingsDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("更新隐私设置, userId={}", userId);
+        userService.updatePrivacySettings(userId, settingsDTO);
+        return Result.success("隐私设置更新成功");
+    }
+
+    /**
+     * 注销账号
+     */
+    @Operation(summary = "注销账号")
+    @PostMapping("/delete-account")
+    public Result<Void> deleteAccount(@Valid @RequestBody DeleteAccountDTO deleteAccountDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("注销账号请求, userId={}", userId);
+        userService.deleteAccount(userId, deleteAccountDTO.getPassword());
+        return Result.success("账号注销成功");
+    }
+
+    // ==================== 登录设备管理接口 ====================
+
+    /**
+     * 获取登录设备列表
+     */
+    @Operation(summary = "获取登录设备列表")
+    @GetMapping("/login-devices")
+    public Result<com.baomidou.mybatisplus.core.metadata.IPage<com.xx.xianqijava.vo.LoginDeviceVO>> getLoginDevices(
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(description = "页大小") @RequestParam(defaultValue = "20") Integer size) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取登录设备列表, userId={}, page={}, size={}", userId, page, size);
+
+        com.baomidou.mybatisplus.extension.plugins.pagination.Page<com.xx.xianqijava.entity.LoginDevice> pageParam =
+            new com.baomidou.mybatisplus.extension.plugins.pagination.Page<>(page, size);
+        var devicePage = loginDeviceService.getUserLoginDevices(userId, pageParam);
+
+        return Result.success(devicePage);
+    }
+
+    /**
+     * 移除登录设备
+     */
+    @Operation(summary = "移除登录设备")
+    @DeleteMapping("/login-devices/{deviceId}")
+    public Result<Void> removeLoginDevice(
+            @Parameter(description = "设备ID") @PathVariable("deviceId") Long deviceId) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("移除登录设备, userId={}, deviceId={}", userId, deviceId);
+        loginDeviceService.removeLoginDevice(userId, deviceId);
+        return Result.success("设备移除成功");
+    }
+
+    /**
+     * 移除所有其他设备
+     */
+    @Operation(summary = "移除所有其他设备")
+    @PostMapping("/login-devices/remove-all")
+    public Result<Void> removeAllOtherDevices(
+            @Parameter(description = "当前设备ID") @RequestParam("deviceId") Long deviceId) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("移除所有其他设备, userId={}, currentDeviceId={}", userId, deviceId);
+        loginDeviceService.removeAllOtherDevices(userId, deviceId);
+        return Result.success("其他设备已移除");
+    }
+
+    // ==================== 主题设置接口 ====================
+
+    /**
+     * 获取用户主题设置
+     */
+    @Operation(summary = "获取用户主题设置")
+    @GetMapping("/theme")
+    public Result<com.xx.xianqijava.vo.ThemeConfigVO> getThemeSettings() {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取用户主题设置, userId={}", userId);
+        com.xx.xianqijava.vo.ThemeConfigVO themeConfig = userService.getUserThemeConfig(userId);
+        return Result.success(themeConfig);
+    }
+
+    /**
+     * 更新用户主题设置
+     */
+    @Operation(summary = "更新用户主题设置")
+    @PutMapping("/theme")
+    public Result<Void> updateThemeSettings(
+            @Parameter(description = "主题") @RequestParam(value = "theme", required = false) String theme,
+            @Parameter(description = "自动深色模式") @RequestParam(value = "autoDarkMode", required = false) Boolean autoDarkMode,
+            @Parameter(description = "字体大小") @RequestParam(value = "fontSize", required = false) Integer fontSize) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("更新用户主题设置, userId={}, theme={}, autoDarkMode={}, fontSize={}", userId, theme, autoDarkMode, fontSize);
+        userService.updateUserThemeConfig(userId, theme, autoDarkMode, fontSize);
+        return Result.success("主题设置已更新");
     }
 }

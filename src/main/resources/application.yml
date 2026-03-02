@@ -14,7 +14,7 @@ spring:
   # 数据源配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/XianQi?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/XianQi?useUnicode=true&characterEncoding=utf8mb4&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root
     password: 123456
     hikari:
@@ -156,3 +156,29 @@ file:
     path: /tmp/uploads  # 本地存储路径
     url-prefix: /uploads  # URL前缀
     max-size: 5242880  # 最大文件大小（5MB）
+
+# 推荐系统配置
+recommendation:
+  # 缓存配置
+  cache-enabled: true
+  cache-expire-seconds: 300  # 5分钟
+
+  # 推荐权重配置
+  weight:
+    history-weight: 0.4        # 浏览历史推荐权重
+    favorite-weight: 0.3      # 收藏推荐权重
+    collaborative-weight: 0.2  # 协同过滤推荐权重
+    hot-weight: 0.1           # 热门商品权重
+    geo-weight: 0.15          # 地理位置推荐权重
+
+  # 地理位置推荐配置
+  geo:
+    enabled: true             # 是否启用地理位置推荐
+    nearby-radius-km: 3.0     # 附近商品距离范围（公里）
+    distance-decay-factor: 0.5 # 距离衰减因子
+
+  # 多样性配置
+  diversity:
+    enabled: true             # 是否启用多样性推荐
+    max-category-ratio: 0.6   # 同一分类商品最大占比
+    freshness-factor: 0.2     # 新鲜度因子

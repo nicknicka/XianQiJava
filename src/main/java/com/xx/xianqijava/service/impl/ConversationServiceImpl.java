@@ -97,10 +97,34 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
                         .or()
                         .eq(Conversation::getUserId2, userId)
                 )
-                .eq(Conversation::getStatus, 0)
-                .orderByDesc(Conversation::getLastMessageTime);
+                .eq(Conversation::getStatus, 0);
 
         IPage<Conversation> conversationPage = baseMapper.selectPage(page, queryWrapper);
+
+        // 在内存中排序：置顶的会话排在前面，然后按最后消息时间排序
+        List<Conversation> sortedList = conversationPage.getRecords().stream()
+                .sorted(Comparator
+                        .comparing((Conversation c) -> {
+                            // 获取置顶状态和排序
+                            boolean isPinned = false;
+                            Integer pinOrder = null;
+                            if (c.getUserId1().equals(userId)) {
+                                isPinned = c.getIsPinnedUser1() != null && c.getIsPinnedUser1() == 1;
+                                pinOrder = c.getPinOrderUser1();
+                            } else {
+                                isPinned = c.getIsPinnedUser2() != null && c.getIsPinnedUser2() == 1;
+                                pinOrder = c.getPinOrderUser2();
+                            }
+                            // 置顶的按pinOrder排序，未置顶的排在后面
+                            return isPinned ? (pinOrder != null ? 0 - pinOrder : 0) : 1000000;
+                        })
+                        .thenComparing(Conversation::getLastMessageTime, Comparator.nullsLast(Comparator.reverseOrder()))
+                )
+                .collect(Collectors.toList());
+
+        // 更新分页结果中的记录
+        conversationPage.getRecords().clear();
+        conversationPage.getRecords().addAll(sortedList);
 
         return conversationPage.convert(conversation -> convertToVO(conversation, userId));
     }
@@ -173,6 +197,91 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
         messageMapper.update(null, messageUpdateWrapper);
 
         log.info("标记会话已读, conversationId={}, userId={}", conversationId, userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void pinConversation(Long conversationId, Long userId) {
+        Conversation conversation = baseMapper.selectById(conversationId);
+        if (conversation == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "会话不存在");
+        }
+
+        // 验证用户是否参与该会话
+        if (!conversation.getUserId1().equals(userId) && !conversation.getUserId2().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "无权限操作此会话");
+        }
+
+        // 获取当前最大的置顶排序值
+        LambdaQueryWrapper<Conversation> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.and(wrapper -> wrapper
+                        .eq(Conversation::getUserId1, userId)
+                        .or()
+                        .eq(Conversation::getUserId2, userId)
+                )
+                .eq(Conversation::getStatus, 0);
+        List<Conversation> userConversations = baseMapper.selectList(queryWrapper);
+
+        int maxPinOrder = 0;
+        for (Conversation c : userConversations) {
+            if (conversation.getUserId1().equals(userId)) {
+                if (c.getPinOrderUser1() != null && c.getPinOrderUser1() > maxPinOrder) {
+                    maxPinOrder = c.getPinOrderUser1();
+                }
+            } else {
+                if (c.getPinOrderUser2() != null && c.getPinOrderUser2() > maxPinOrder) {
+                    maxPinOrder = c.getPinOrderUser2();
+                }
+            }
+        }
+
+        // 设置置顶
+        LambdaUpdateWrapper<Conversation> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(Conversation::getConversationId, conversationId);
+
+        if (conversation.getUserId1().equals(userId)) {
+            if (conversation.getIsPinnedUser1() == null || conversation.getIsPinnedUser1() != 1) {
+                updateWrapper.set(Conversation::getIsPinnedUser1, 1)
+                        .set(Conversation::getPinOrderUser1, maxPinOrder + 1);
+            }
+        } else {
+            if (conversation.getIsPinnedUser2() == null || conversation.getIsPinnedUser2() != 1) {
+                updateWrapper.set(Conversation::getIsPinnedUser2, 1)
+                        .set(Conversation::getPinOrderUser2, maxPinOrder + 1);
+            }
+        }
+
+        baseMapper.update(null, updateWrapper);
+        log.info("置顶会话成功, conversationId={}, userId={}", conversationId, userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void unpinConversation(Long conversationId, Long userId) {
+        Conversation conversation = baseMapper.selectById(conversationId);
+        if (conversation == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "会话不存在");
+        }
+
+        // 验证用户是否参与该会话
+        if (!conversation.getUserId1().equals(userId) && !conversation.getUserId2().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "无权限操作此会话");
+        }
+
+        // 取消置顶
+        LambdaUpdateWrapper<Conversation> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(Conversation::getConversationId, conversationId);
+
+        if (conversation.getUserId1().equals(userId)) {
+            updateWrapper.set(Conversation::getIsPinnedUser1, 0)
+                    .set(Conversation::getPinOrderUser1, null);
+        } else {
+            updateWrapper.set(Conversation::getIsPinnedUser2, 0)
+                    .set(Conversation::getPinOrderUser2, null);
+        }
+
+        baseMapper.update(null, updateWrapper);
+        log.info("取消置顶会话成功, conversationId={}, userId={}", conversationId, userId);
     }
 
     @Override
@@ -403,10 +512,12 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
             vo.setUnreadCount(conversation.getUnreadCountUser1());
             vo.setIsMuted(conversation.getIsMutedUser1());
             vo.setIsArchived(conversation.getIsArchivedUser1());
+            vo.setIsTop(conversation.getIsPinnedUser1() != null && conversation.getIsPinnedUser1() == 1 ? 1 : 0);
         } else {
             vo.setUnreadCount(conversation.getUnreadCountUser2());
             vo.setIsMuted(conversation.getIsMutedUser2());
             vo.setIsArchived(conversation.getIsArchivedUser2());
+            vo.setIsTop(conversation.getIsPinnedUser2() != null && conversation.getIsPinnedUser2() == 1 ? 1 : 0);
         }
 
         // 设置时间
