@@ -108,6 +108,7 @@ public class SecurityConfig {
                                 "/webjars/**",
                                 "/ws/**",
                                 "/uploads/**",  // 静态资源（上传的图片等）
+                                "/image/**",    // 图片访问接口（伪地址）
                                 // 公开的API接口（无需认证即可访问）
                                 "/category/**",
                                 "/product",

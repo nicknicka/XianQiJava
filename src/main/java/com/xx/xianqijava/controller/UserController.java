@@ -119,8 +119,8 @@ public class UserController {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
         log.info("上传头像, userId={}, filename={}", userId, file.getOriginalFilename());
 
-        // 上传文件获取URL
-        String avatarUrl = fileUploadService.uploadImage(file);
+        // 上传文件获取URL（使用兼容方法返回String）
+        String avatarUrl = fileUploadService.uploadImageReturnUrl(file);
 
         // 更新用户头像
         UpdateAvatarDTO avatarDTO = new UpdateAvatarDTO();

@@ -10,11 +10,17 @@ import lombok.Data;
 @Schema(description = "文件上传响应")
 public class FileUploadVO {
 
-    @Schema(description = "文件URL")
+    @Schema(description = "文件UUID")
+    private String uuid;
+
+    @Schema(description = "文件URL（伪地址）")
     private String url;
 
-    @Schema(description = "文件名")
+    @Schema(description = "文件名（UUID.扩展名）")
     private String filename;
+
+    @Schema(description = "原始文件名")
+    private String originalFilename;
 
     @Schema(description = "文件大小（字节）")
     private Long size;

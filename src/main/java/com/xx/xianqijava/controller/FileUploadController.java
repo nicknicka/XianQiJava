@@ -1,6 +1,7 @@
 package com.xx.xianqijava.controller;
 
 import com.xx.xianqijava.common.Result;
+import com.xx.xianqijava.dto.FileUploadResultDTO;
 import com.xx.xianqijava.service.FileUploadService;
 import com.xx.xianqijava.util.SecurityUtil;
 import com.xx.xianqijava.vo.FileUploadVO;
@@ -35,13 +36,15 @@ public class FileUploadController {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
         log.info("用户 {} 上传图片: {}", userId, file.getOriginalFilename());
 
-        String url = fileUploadService.uploadImage(file);
+        FileUploadResultDTO uploadResult = fileUploadService.uploadImage(file);
 
         FileUploadVO uploadVO = new FileUploadVO();
-        uploadVO.setUrl(url);
-        uploadVO.setFilename(file.getOriginalFilename());
-        uploadVO.setSize(file.getSize());
-        uploadVO.setExtension(getFileExtension(file.getOriginalFilename()));
+        uploadVO.setUuid(uploadResult.getUuid());
+        uploadVO.setUrl(uploadResult.getUrl());
+        uploadVO.setFilename(uploadResult.getFilename());
+        uploadVO.setOriginalFilename(file.getOriginalFilename());
+        uploadVO.setSize(uploadResult.getSize());
+        uploadVO.setExtension(uploadResult.getExtension());
 
         return Result.success("上传成功", uploadVO);
     }
@@ -55,15 +58,18 @@ public class FileUploadController {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
         log.info("用户 {} 批量上传图片，数量: {}", userId, files.length);
 
-        String[] urls = fileUploadService.uploadImages(files);
+        FileUploadResultDTO[] uploadResults = fileUploadService.uploadImages(files);
 
         List<FileUploadVO> uploadVOs = new ArrayList<>();
-        for (int i = 0; i < urls.length; i++) {
+        for (int i = 0; i < uploadResults.length; i++) {
+            FileUploadResultDTO uploadResult = uploadResults[i];
             FileUploadVO uploadVO = new FileUploadVO();
-            uploadVO.setUrl(urls[i]);
-            uploadVO.setFilename(files[i].getOriginalFilename());
-            uploadVO.setSize(files[i].getSize());
-            uploadVO.setExtension(getFileExtension(files[i].getOriginalFilename()));
+            uploadVO.setUuid(uploadResult.getUuid());
+            uploadVO.setUrl(uploadResult.getUrl());
+            uploadVO.setFilename(uploadResult.getFilename());
+            uploadVO.setOriginalFilename(files[i].getOriginalFilename());
+            uploadVO.setSize(uploadResult.getSize());
+            uploadVO.setExtension(uploadResult.getExtension());
             uploadVOs.add(uploadVO);
         }
 

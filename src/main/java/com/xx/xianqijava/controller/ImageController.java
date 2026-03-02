@@ -31,7 +31,7 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@RequestMapping("/api/image")
+@RequestMapping("/image")
 @RequiredArgsConstructor
 @Tag(name = "图片访问", description = "图片访问相关接口")
 public class ImageController {
