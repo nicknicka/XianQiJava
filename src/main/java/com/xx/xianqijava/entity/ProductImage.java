@@ -23,13 +23,19 @@ public class ProductImage {
     @Schema(description = "商品ID")
     private Long productId;
 
-    @Schema(description = "图片URL")
+    @Schema(description = "图片UUID（用于生成访问URL）")
+    private String imageUuid;
+
+    @Schema(description = "文件扩展名（如: jpg, png）")
+    private String fileExtension;
+
+    @Schema(description = "图片URL（完整路径）")
     private String imageUrl;
 
-    @Schema(description = "缩略图URL")
+    @Schema(description = "缩略图URL（完整路径）")
     private String imageThumbnailUrl;
 
-    @Schema(description = "中等尺寸图片URL")
+    @Schema(description = "中等尺寸图片URL（完整路径）")
     private String imageMediumUrl;
 
     @Schema(description = "排序顺序")

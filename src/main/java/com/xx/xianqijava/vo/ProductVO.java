@@ -71,4 +71,15 @@ public class ProductVO {
 
     @Schema(description = "是否已收藏")
     private Boolean isFavorite;
+
+    // ========== 秒杀相关字段 ==========
+
+    @Schema(description = "秒杀价格")
+    private BigDecimal flashPrice;
+
+    @Schema(description = "秒杀活动结束时间")
+    private String flashEndTime;
+
+    @Schema(description = "是否在秒杀中")
+    private Boolean isFlashSale;
 }

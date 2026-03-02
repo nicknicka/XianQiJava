@@ -85,7 +85,14 @@ public enum ErrorCode {
 
     // OSS 相关错误码 80xxx
     OSS_UPLOAD_ERROR(80001, "OSS上传失败"),
-    OSS_CONFIG_ERROR(80002, "OSS配置错误");
+    OSS_CONFIG_ERROR(80002, "OSS配置错误"),
+
+    // 秒杀相关错误码 90xxx
+    FLASH_SALE_NOT_FOUND(90001, "秒杀活动不存在"),
+    FLASH_SALE_NOT_STARTED(90002, "秒杀活动未开始"),
+    FLASH_SALE_ENDED(90003, "秒杀活动已结束"),
+    FLASH_SALE_STOCK_EMPTY(90004, "秒杀商品已售罄"),
+    FLASH_PRICE_INVALID(90005, "秒杀价格无效");
 
     private final Integer code;
     private final String message;

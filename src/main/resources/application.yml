@@ -153,9 +153,14 @@ logging:
 # 文件上传配置
 file:
   upload:
-    path: /tmp/uploads  # 本地存储路径
+    path: ../uploads  # 本地存储路径（项目父目录下的 uploads 文件夹）
     url-prefix: /uploads  # URL前缀
     max-size: 5242880  # 最大文件大小（5MB）
+
+# 应用配置
+app:
+  base-url: http://localhost:8080  # 应用基础URL（生产环境改为实际域名）
+  image-url-prefix: /api/image  # 图片访问URL前缀（伪地址）
 
 # 推荐系统配置
 recommendation:

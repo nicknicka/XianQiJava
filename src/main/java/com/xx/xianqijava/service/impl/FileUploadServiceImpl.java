@@ -1,8 +1,11 @@
 package com.xx.xianqijava.service.impl;
 
 import com.xx.xianqijava.common.ErrorCode;
+import com.xx.xianqijava.dto.FileUploadResultDTO;
 import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.service.FileUploadService;
+import com.xx.xianqijava.util.ImageUrlBuilder;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -23,6 +26,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class FileUploadServiceImpl implements FileUploadService {
 
     @Value("${file.upload.path:/tmp/uploads}")
@@ -34,18 +38,21 @@ public class FileUploadServiceImpl implements FileUploadService {
     @Value("${file.upload.max-size:5242880}")
     private Long maxSize;
 
+    private final ImageUrlBuilder imageUrlBuilder;
+
     // 允许的图片格式
     private static final List<String> ALLOWED_IMAGE_TYPES = Arrays.asList("jpg", "jpeg", "png", "webp");
 
     @Override
-    public String uploadImage(MultipartFile file) {
+    public FileUploadResultDTO uploadImage(MultipartFile file) {
         validateFile(file);
 
         try {
-            // 生成唯一文件名
+            // 生成UUID作为文件名
             String originalFilename = file.getOriginalFilename();
             String extension = getFileExtension(originalFilename);
-            String newFilename = UUID.randomUUID().toString() + "." + extension;
+            String uuid = UUID.randomUUID().toString();
+            String newFilename = uuid + "." + extension;
 
             // 确保上传目录存在
             File uploadDir = new File(uploadPath);
@@ -53,15 +60,23 @@ public class FileUploadServiceImpl implements FileUploadService {
                 uploadDir.mkdirs();
             }
 
-            // 保存文件
+            // 保存文件（使用UUID.扩展名）
             Path filePath = Paths.get(uploadPath, newFilename);
             Files.copy(file.getInputStream(), filePath);
 
-            // 返回访问URL
-            String fileUrl = urlPrefix + "/" + newFilename;
-            log.info("文件上传成功: {}", fileUrl);
+            // 构建访问URL（使用伪地址）
+            String fileUrl = imageUrlBuilder.buildImageUrl(uuid, extension);
 
-            return fileUrl;
+            log.info("文件上传成功: uuid={}, extension={}, size={}", uuid, extension, file.getSize());
+
+            return FileUploadResultDTO.builder()
+                    .uuid(uuid)
+                    .extension(extension)
+                    .filename(newFilename)
+                    .size(file.getSize())
+                    .url(fileUrl)
+                    .build();
+
         } catch (IOException e) {
             log.error("文件上传失败", e);
             throw new BusinessException(ErrorCode.FILE_UPLOAD_ERROR, "文件上传失败");
@@ -69,7 +84,7 @@ public class FileUploadServiceImpl implements FileUploadService {
     }
 
     @Override
-    public String[] uploadImages(MultipartFile[] files) {
+    public FileUploadResultDTO[] uploadImages(MultipartFile[] files) {
         if (files == null || files.length == 0) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "请选择要上传的文件");
         }
@@ -78,13 +93,18 @@ public class FileUploadServiceImpl implements FileUploadService {
             throw new BusinessException(ErrorCode.PRODUCT_IMAGE_EXCEED_LIMIT);
         }
 
-        List<String> urls = new ArrayList<>();
+        List<FileUploadResultDTO> results = new ArrayList<>();
         for (MultipartFile file : files) {
-            String url = uploadImage(file);
-            urls.add(url);
+            results.add(uploadImage(file));
         }
 
-        return urls.toArray(new String[0]);
+        return results.toArray(new FileUploadResultDTO[0]);
+    }
+
+    @Override
+    public String uploadImageReturnUrl(MultipartFile file) {
+        FileUploadResultDTO result = uploadImage(file);
+        return result.getUrl();
     }
 
     /**
