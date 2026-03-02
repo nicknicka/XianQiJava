@@ -239,4 +239,30 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
                 .eq(Evaluation::getToUserId, userId)
                 .count());
     }
+
+    @Override
+    public IPage<EvaluationVO> getProductEvaluations(Long productId, Page<Evaluation> page) {
+        log.info("获取商品的评价列表, productId={}, page={}", productId, page.getCurrent());
+
+        // 通过订单关联查询商品的评价
+        // 1. 查询该商品相关的所有订单
+        java.util.List<Long> orderIds = orderMapper.selectList(
+                new LambdaQueryWrapper<Order>()
+                        .eq(Order::getProductId, productId)
+                        .eq(Order::getStatus, 2) // 已完成的订单
+        ).stream().map(Order::getOrderId).collect(java.util.stream.Collectors.toList());
+
+        if (orderIds.isEmpty()) {
+            log.info("该商品暂无评价, productId={}", productId);
+            return new Page<>(page.getCurrent(), page.getSize(), 0);
+        }
+
+        // 2. 查询这些订单的评价
+        LambdaQueryWrapper<Evaluation> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(Evaluation::getOrderId, orderIds)
+                .orderByDesc(Evaluation::getCreateTime);
+
+        IPage<Evaluation> evaluationPage = page(page, wrapper);
+        return evaluationPage.convert(evaluation -> convertToVO(evaluation, false));
+    }
 }

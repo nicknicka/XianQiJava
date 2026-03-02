@@ -39,4 +39,13 @@ public interface EvaluationService extends IService<Evaluation> {
      * @return 评价数量
      */
     int countByEvaluatedUserId(Long userId);
+
+    /**
+     * 获取商品的评价列表
+     *
+     * @param productId 商品ID
+     * @param page 分页参数
+     * @return 商品评价列表
+     */
+    IPage<EvaluationVO> getProductEvaluations(Long productId, Page<Evaluation> page);
 }

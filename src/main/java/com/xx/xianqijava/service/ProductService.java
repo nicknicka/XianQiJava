@@ -131,4 +131,23 @@ public interface ProductService extends IService<Product> {
      * @return 我的商品列表
      */
     IPage<ProductVO> getMyProducts(Page<Product> page, Long userId, Integer status);
+
+    /**
+     * 获取相似商品列表
+     *
+     * @param productId 商品ID
+     * @param limit 限制数量
+     * @return 相似商品列表
+     */
+    java.util.List<ProductVO> getSimilarProducts(Long productId, int limit);
+
+    /**
+     * 获取卖家的其他商品
+     *
+     * @param page 分页参数
+     * @param userId 卖家用户ID
+     * @param excludeProductId 排除的商品ID
+     * @return 卖家的其他商品列表
+     */
+    IPage<ProductVO> getSellerProducts(Page<Product> page, Long userId, Long excludeProductId);
 }

@@ -536,4 +536,48 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         IPage<Product> productPage = page(page, wrapper);
         return productPage.convert(product -> convertToVO(product, userId));
     }
+
+    @Override
+    public java.util.List<ProductVO> getSimilarProducts(Long productId, int limit) {
+        log.info("获取相似商品列表, productId={}, limit={}", productId, limit);
+
+        // 获取当前商品信息
+        Product product = getById(productId);
+        if (product == null) {
+            log.warn("商品不存在, productId={}", productId);
+            return java.util.Collections.emptyList();
+        }
+
+        // 查询相似商品：同分类、同状态、未删除、不是当前商品
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Product::getCategoryId, product.getCategoryId())
+                .eq(Product::getStatus, 1)
+                .eq(Product::getDeleted, 0)
+                .ne(Product::getProductId, productId)
+                .orderByDesc(Product::getCreateTime)
+                .last("LIMIT " + limit);
+
+        return list(wrapper).stream()
+                .map(p -> convertToVO(p, null))
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
+    public IPage<ProductVO> getSellerProducts(Page<Product> page, Long userId, Long excludeProductId) {
+        log.info("获取卖家的其他商品, userId={}, excludeProductId={}, page={}", userId, excludeProductId, page.getCurrent());
+
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Product::getSellerId, userId)
+                .eq(Product::getStatus, 1)
+                .eq(Product::getDeleted, 0);
+
+        if (excludeProductId != null) {
+            wrapper.ne(Product::getProductId, excludeProductId);
+        }
+
+        wrapper.orderByDesc(Product::getCreateTime);
+
+        IPage<Product> productPage = page(page, wrapper);
+        return productPage.convert(product -> convertToVO(product, userId));
+    }
 }

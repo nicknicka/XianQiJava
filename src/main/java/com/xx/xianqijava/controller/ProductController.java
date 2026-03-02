@@ -174,4 +174,35 @@ public class ProductController {
 
         return Result.success(productPage);
     }
+
+    /**
+     * 获取相似商品
+     */
+    @Operation(summary = "获取相似商品")
+    @GetMapping("/{id}/similar")
+    public Result<java.util.List<ProductVO>> getSimilarProducts(
+            @Parameter(description = "商品ID") @PathVariable("id") Long id,
+            @Parameter(description = "数量限制") @RequestParam(defaultValue = "6") Integer limit) {
+        log.info("获取相似商品, productId={}, limit={}", id, limit);
+        java.util.List<ProductVO> similarProducts = productService.getSimilarProducts(id, limit);
+        return Result.success(similarProducts);
+    }
+
+    /**
+     * 获取卖家的其他商品
+     */
+    @Operation(summary = "获取卖家的其他商品")
+    @GetMapping("/user/{userId}/products")
+    public Result<IPage<ProductVO>> getSellerProducts(
+            @Parameter(description = "卖家用户ID") @PathVariable("userId") Long userId,
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(description = "页大小") @RequestParam(defaultValue = "10") Integer size,
+            @Parameter(description = "排除的商品ID") @RequestParam(required = false) Long excludeProductId) {
+        log.info("获取卖家的其他商品, userId={}, page={}, size={}, excludeProductId={}", userId, page, size, excludeProductId);
+
+        Page<Product> pageParam = new Page<>(page, size);
+        IPage<ProductVO> productPage = productService.getSellerProducts(pageParam, userId, excludeProductId);
+
+        return Result.success(productPage);
+    }
 }

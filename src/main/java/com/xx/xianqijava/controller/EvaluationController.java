@@ -78,4 +78,21 @@ public class EvaluationController {
         Integer avgRating = evaluationService.getUserAverageRating(userId);
         return Result.success(avgRating);
     }
+
+    /**
+     * 获取商品的评价列表
+     */
+    @GetMapping("/product/{productId}")
+    @Operation(summary = "获取商品的评价列表")
+    public Result<IPage<EvaluationVO>> getProductEvaluations(
+            @Parameter(description = "商品ID") @PathVariable("productId") Long productId,
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "3") Integer size) {
+        log.info("获取商品的评价列表, productId={}, page={}, size={}", productId, page, size);
+
+        Page<com.xx.xianqijava.entity.Evaluation> pageParam = new Page<>(page, size);
+        IPage<EvaluationVO> evaluationVOPage = evaluationService.getProductEvaluations(productId, pageParam);
+
+        return Result.success(evaluationVOPage);
+    }
 }
