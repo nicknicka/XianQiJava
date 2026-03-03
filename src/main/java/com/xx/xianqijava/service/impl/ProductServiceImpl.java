@@ -102,6 +102,87 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     @Override
+    public ProductVO getProductDetail(Long productId, Long userId, String channel) {
+        // 如果是秒杀渠道，需要从 FlashSaleProduct 获取额外信息
+        if ("flash".equals(channel)) {
+            return getFlashSaleProductDetail(productId, userId);
+        }
+        // 默认渠道
+        return getProductDetail(productId, userId);
+    }
+
+    /**
+     * 获取秒杀商品详情
+     */
+    private ProductVO getFlashSaleProductDetail(Long productId, Long userId) {
+        Product product = getById(productId);
+        if (product == null) {
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+
+        // 使用 SQL 直接增加浏览次数
+        com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Product> updateWrapper =
+                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
+        updateWrapper.setSql("view_count = view_count + 1")
+                .eq(Product::getProductId, productId);
+        baseMapper.update(null, updateWrapper);
+
+        // 异步记录浏览历史
+        productViewHistoryService.recordViewHistory(userId, productId);
+
+        // 转换为基础 VO
+        ProductVO productVO = convertToVO(product, userId);
+
+        // 查询秒杀信息
+        // 查询当前正在进行的活动
+        LocalDateTime now = LocalDateTime.now();
+        Map<String, Object> flashSaleInfo = baseMapper.selectFlashSaleInfo(productId, now);
+        if (flashSaleInfo != null && !flashSaleInfo.isEmpty()) {
+            // 设置秒杀相关字段
+            productVO.setIsFlashSale(true);
+            productVO.setSeckillPrice((BigDecimal) flashSaleInfo.get("seckill_price"));
+            productVO.setFlashPrice((BigDecimal) flashSaleInfo.get("seckill_price"));
+            productVO.setFlashSaleStock((Integer) flashSaleInfo.get("flash_sale_stock"));
+            Object soldCount = flashSaleInfo.get("sold_count");
+            productVO.setFlashSaleSold(soldCount != null ? ((Number) soldCount).intValue() : 0);
+            productVO.setLimitPerUser((Integer) flashSaleInfo.get("limit_per_user"));
+
+            // 计算折扣
+            BigDecimal originalPrice = product.getPrice();
+            BigDecimal seckillPrice = (BigDecimal) flashSaleInfo.get("seckill_price");
+            if (originalPrice != null && seckillPrice != null && originalPrice.compareTo(BigDecimal.ZERO) > 0) {
+                int discount = seckillPrice.multiply(BigDecimal.TEN)
+                        .divide(originalPrice, 0, RoundingMode.HALF_UP).intValue();
+                productVO.setDiscount(discount);
+
+                // 计算已抢百分比
+                Integer flashSaleStock = (Integer) flashSaleInfo.get("flash_sale_stock");
+                int soldCountInt = soldCount != null ? ((Number) soldCount).intValue() : 0;
+                if (flashSaleStock != null && flashSaleStock > 0) {
+                    int soldPercent = (soldCountInt * 100) / flashSaleStock;
+                    productVO.setSoldPercent(Math.min(soldPercent, 100));
+                }
+            }
+
+            // 设置结束时间
+            Object endTime = flashSaleInfo.get("end_time");
+            if (endTime != null) {
+                productVO.setEndTime(endTime.toString());
+            }
+
+            // 设置活动ID
+            Object activityId = flashSaleInfo.get("activity_id");
+            if (activityId != null) {
+                productVO.setActivityId(((Number) activityId).longValue());
+            }
+        } else {
+            productVO.setIsFlashSale(false);
+        }
+
+        return productVO;
+    }
+
+    @Override
     public IPage<ProductVO> getProductList(Page<Product> page, Integer categoryId, String keyword) {
         IPage<Product> productPage = baseMapper.selectProductPage(page, categoryId, 1, keyword);
         

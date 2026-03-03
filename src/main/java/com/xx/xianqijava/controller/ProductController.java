@@ -49,10 +49,11 @@ public class ProductController {
     @Operation(summary = "获取商品详情")
     @GetMapping("/{id}")
     public Result<ProductVO> getProductDetail(
-            @Parameter(description = "商品ID") @PathVariable("id") Long id) {
+            @Parameter(description = "商品ID") @PathVariable("id") Long id,
+            @Parameter(description = "渠道：normal（默认）或 flash") @RequestParam(required = false) String channel) {
         Long userId = SecurityUtil.getCurrentUserId();
-        log.info("获取商品详情, productId={}, userId={}", id, userId);
-        ProductVO productVO = productService.getProductDetail(id, userId);
+        log.info("获取商品详情, productId={}, userId={}, channel={}", id, userId, channel);
+        ProductVO productVO = productService.getProductDetail(id, userId, channel);
         return Result.success(productVO);
     }
 

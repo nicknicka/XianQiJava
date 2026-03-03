@@ -41,4 +41,10 @@ public class UserCenterVO {
 
     @Schema(description = "最近发布的商品")
     private List<ProductVO> recentProducts;
+
+    @Schema(description = "关注数量")
+    private Integer followingCount;
+
+    @Schema(description = "粉丝数量")
+    private Integer followerCount;
 }

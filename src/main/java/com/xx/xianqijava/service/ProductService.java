@@ -28,6 +28,11 @@ public interface ProductService extends IService<Product> {
     ProductVO getProductDetail(Long productId, Long userId);
 
     /**
+     * 获取商品详情（支持渠道参数）
+     */
+    ProductVO getProductDetail(Long productId, Long userId, String channel);
+
+    /**
      * 分页查询商品列表
      */
     IPage<ProductVO> getProductList(Page<Product> page, Integer categoryId, String keyword);

@@ -43,6 +43,9 @@ public class Order extends BaseEntity {
     @Schema(description = "类型：1-购买，2-共享")
     private Integer type;
 
+    @Schema(description = "订单类型：0-普通订单 1-秒杀订单 2-共享订单 3-拍卖订单")
+    private Integer orderType;
+
     @Schema(description = "交易金额")
     private BigDecimal amount;
 

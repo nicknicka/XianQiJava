@@ -21,4 +21,24 @@
         ORDER BY create_time DESC
     </select>
 
+    <!-- 查询商品的秒杀信息 -->
+    <select id="selectFlashSaleInfo" resultType="java.util.HashMap">
+        SELECT
+            fa.activity_id,
+            fsp.flash_price,
+            fsp.stock_count AS flash_sale_stock,
+            fsp.sold_count,
+            fspe.limit_per_user,
+            fa.end_time
+        FROM flash_sale_activity fa
+        INNER JOIN flash_sale_product fsp ON fa.activity_id = fsp.activity_id
+        LEFT JOIN flash_sale_product_ext fspe ON fsp.product_id = fspe.product_id
+        WHERE fsp.product_id = #{productId}
+          AND fsp.deleted = 0
+          AND fa.status = 1  -- 进行中
+          AND fa.start_time &lt;= #{now}
+          AND fa.end_time &gt;= #{now}
+        LIMIT 1
+    </select>
+
 </mapper>

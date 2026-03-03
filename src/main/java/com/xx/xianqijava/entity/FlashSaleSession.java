@@ -9,7 +9,7 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 /**
- * 秒杀场次表实体
+ * 秒杀场次表实体（已简化，合并了活动功能）
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -23,14 +23,14 @@ public class FlashSaleSession implements Serializable {
     @Schema(description = "场次ID")
     private Long sessionId;
 
-    @Schema(description = "活动ID")
-    private Long activityId;
+    @Schema(description = "场次名称（原活动名称）")
+    private String name;
 
-    @Schema(description = "场次名称")
-    private String sessionName;
+    @Schema(description = "场次描述")
+    private String description;
 
-    @Schema(description = "场次时间点")
-    private java.time.LocalTime sessionTime;
+    @Schema(description = "场次时间点（HH:mm格式，如 10:00）")
+    private String sessionTime;
 
     @Schema(description = "实际开始时间")
     private LocalDateTime startTime;
@@ -38,10 +38,10 @@ public class FlashSaleSession implements Serializable {
     @Schema(description = "实际结束时间")
     private LocalDateTime endTime;
 
-    @Schema(description = "状态：0-未开始 1-进行中 2-已结束")
+    @Schema(description = "状态：0-未开始，1-进行中，2-已结束，3-已取消")
     private Integer status;
 
-    @Schema(description = "排序")
+    @Schema(description = "排序权重")
     private Integer sortOrder;
 
     @Schema(description = "创建时间")

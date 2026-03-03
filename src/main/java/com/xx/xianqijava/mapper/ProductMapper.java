@@ -7,6 +7,9 @@ import com.xx.xianqijava.entity.Product;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 
+import java.time.LocalDateTime;
+import java.util.Map;
+
 /**
  * 商品Mapper接口
  */
@@ -18,4 +21,9 @@ public interface ProductMapper extends BaseMapper<Product> {
      */
     IPage<Product> selectProductPage(Page<Product> page, @Param("categoryId") Integer categoryId,
                                      @Param("status") Integer status, @Param("keyword") String keyword);
+
+    /**
+     * 查询商品的秒杀信息
+     */
+    Map<String, Object> selectFlashSaleInfo(@Param("productId") Long productId, @Param("now") LocalDateTime now);
 }

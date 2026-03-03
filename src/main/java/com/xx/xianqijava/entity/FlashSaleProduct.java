@@ -10,7 +10,7 @@ import lombok.EqualsAndHashCode;
 import java.math.BigDecimal;
 
 /**
- * 秒杀商品表
+ * 秒杀商品表（已合并 Ext 表功能）
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -22,10 +22,10 @@ public class FlashSaleProduct extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "秒杀商品ID")
-    private Long flashSaleId;
+    private Long id;
 
-    @Schema(description = "活动ID")
-    private Long activityId;
+    @Schema(description = "场次ID")
+    private Long sessionId;
 
     @Schema(description = "商品ID")
     private Long productId;
@@ -38,6 +38,9 @@ public class FlashSaleProduct extends BaseEntity {
 
     @Schema(description = "已售数量")
     private Integer soldCount;
+
+    @Schema(description = "每人限购数量")
+    private Integer limitPerUser;
 
     @Schema(description = "排序权重")
     private Integer sortOrder;

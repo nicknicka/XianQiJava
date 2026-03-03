@@ -54,12 +54,9 @@ public class FlashSaleProductVO {
     @Schema(description = "已售数量")
     private Integer soldCount;
 
-    // 状态信息
-    @Schema(description = "状态：ongoing-进行中，upcoming-即将开始，ended-已结束")
-    private String status;
-
-    @Schema(description = "结束时间")
-    private String endTime;
+    // 场次关联
+    @Schema(description = "所属场次ID")
+    private Long sessionId;
 
     // 商品详细信息
     @Schema(description = "分类ID")

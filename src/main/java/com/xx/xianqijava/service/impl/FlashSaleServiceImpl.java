@@ -3,21 +3,17 @@ package com.xx.xianqijava.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.xx.xianqijava.entity.FlashSaleActivity;
 import com.xx.xianqijava.entity.FlashSaleProduct;
-import com.xx.xianqijava.entity.FlashSaleProductExt;
 import com.xx.xianqijava.entity.FlashSaleSession;
 import com.xx.xianqijava.entity.FlashSaleOrderExt;
-import com.xx.xianqijava.entity.FlashSaleProductRelation;
+import com.xx.xianqijava.entity.Order;
 import com.xx.xianqijava.entity.Product;
 import com.xx.xianqijava.enums.FlashSaleStatus;
 import com.xx.xianqijava.exception.BusinessException;
-import com.xx.xianqijava.mapper.FlashSaleActivityMapper;
 import com.xx.xianqijava.mapper.FlashSaleOrderExtMapper;
-import com.xx.xianqijava.mapper.FlashSaleProductExtMapper;
 import com.xx.xianqijava.mapper.FlashSaleProductMapper;
 import com.xx.xianqijava.mapper.FlashSaleSessionMapper;
-import com.xx.xianqijava.mapper.FlashSaleProductRelationMapper;
+import com.xx.xianqijava.mapper.OrderMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.service.FlashSaleService;
 import com.xx.xianqijava.vo.FlashSaleProductVO;
@@ -29,55 +25,51 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
-import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
- * 秒杀服务实现类（优化版）
+ * 秒杀服务实现类（已简化，只使用场次和商品表）
  */
 @Slf4j
 @Service
 @RequiredArgsConstructor
-public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleActivityMapper, FlashSaleActivity> implements FlashSaleService {
+public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleSessionMapper, FlashSaleSession> implements FlashSaleService {
 
-    private final FlashSaleActivityMapper activityMapper;
     private final FlashSaleProductMapper flashProductMapper;
     private final ProductMapper productMapper;
-    private final FlashSaleProductExtMapper flashSaleProductExtMapper;
     private final FlashSaleSessionMapper flashSaleSessionMapper;
     private final FlashSaleOrderExtMapper flashSaleOrderExtMapper;
-    private final FlashSaleProductRelationMapper flashSaleProductRelationMapper;
+    private final OrderMapper orderMapper;
 
     @Override
-    public FlashSaleActivity getCurrentActivity() {
+    public FlashSaleSession getCurrentSession() {
         LocalDateTime now = LocalDateTime.now();
 
-        // 查询当前进行中的活动
-        LambdaQueryWrapper<FlashSaleActivity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FlashSaleActivity::getStatus, FlashSaleStatus.IN_PROGRESS.getCode())
-               .le(FlashSaleActivity::getStartTime, now)
-               .ge(FlashSaleActivity::getEndTime, now)
-               .orderByDesc(FlashSaleActivity::getSortOrder)
+        // 查询当前进行中的场次
+        LambdaQueryWrapper<FlashSaleSession> wrapper = new LambdaQueryWrapper<>();
+        wrapper.le(FlashSaleSession::getStartTime, now)
+               .ge(FlashSaleSession::getEndTime, now)
+               .orderByAsc(FlashSaleSession::getStartTime)
                .last("LIMIT 1");
 
-        return activityMapper.selectOne(wrapper);
+        return flashSaleSessionMapper.selectOne(wrapper);
     }
 
     @Override
     public List<ProductVO> getCurrentFlashSaleProducts(Integer limit) {
-        // 获取当前活动
-        FlashSaleActivity currentActivity = getCurrentActivity();
-        if (currentActivity == null) {
+        // 获取当前场次
+        FlashSaleSession currentSession = getCurrentSession();
+        if (currentSession == null) {
             return List.of();
         }
 
-        // 查询活动商品
+        // 查询场次商品
         LambdaQueryWrapper<FlashSaleProduct> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FlashSaleProduct::getActivityId, currentActivity.getActivityId())
+        wrapper.eq(FlashSaleProduct::getSessionId, currentSession.getSessionId())
                .orderByDesc(FlashSaleProduct::getSortOrder)
                .last("LIMIT " + (limit != null ? limit : 10));
 
@@ -90,51 +82,47 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleActivityMapper, F
     }
 
     @Override
-    public List<FlashSaleProductVO> getActivityProducts(Long activityId) {
+    public List<FlashSaleProductVO> getSessionProducts(Long sessionId) {
         // 查询秒杀商品
         LambdaQueryWrapper<FlashSaleProduct> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FlashSaleProduct::getActivityId, activityId)
+        wrapper.eq(FlashSaleProduct::getSessionId, sessionId)
                .orderByDesc(FlashSaleProduct::getSortOrder);
 
         List<FlashSaleProduct> flashProducts = flashProductMapper.selectList(wrapper);
 
         return flashProducts.stream()
-                .map(this::convertToFlashSaleProductVO)
+                .map(fp -> convertToFlashSaleProductVO(fp, null))
                 .collect(Collectors.toList());
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public void updateActivityStatus() {
+    public void updateSessionStatus() {
         LocalDateTime now = LocalDateTime.now();
 
-        // 查询所有未结束的活动
-        LambdaQueryWrapper<FlashSaleActivity> wrapper = new LambdaQueryWrapper<>();
-        wrapper.in(FlashSaleActivity::getStatus,
+        // 查询所有需要更新状态的场次
+        LambdaQueryWrapper<FlashSaleSession> wrapper = new LambdaQueryWrapper<>();
+        wrapper.in(FlashSaleSession::getStatus,
                    FlashSaleStatus.NOT_STARTED.getCode(),
                    FlashSaleStatus.IN_PROGRESS.getCode());
 
-        List<FlashSaleActivity> activities = activityMapper.selectList(wrapper);
+        List<FlashSaleSession> sessions = flashSaleSessionMapper.selectList(wrapper);
 
-        for (FlashSaleActivity activity : activities) {
-            Integer newStatus = null;
+        for (FlashSaleSession session : sessions) {
+            Integer newStatus;
 
-            if (now.isBefore(activity.getStartTime())) {
-                // 未开始
+            if (now.isBefore(session.getStartTime())) {
                 newStatus = FlashSaleStatus.NOT_STARTED.getCode();
-            } else if (now.isAfter(activity.getEndTime())) {
-                // 已结束
+            } else if (now.isAfter(session.getEndTime())) {
                 newStatus = FlashSaleStatus.ENDED.getCode();
             } else {
-                // 进行中
                 newStatus = FlashSaleStatus.IN_PROGRESS.getCode();
             }
 
-            if (!activity.getStatus().equals(newStatus)) {
-                activity.setStatus(newStatus);
-                activityMapper.updateById(activity);
-                log.info("活动状态已更新, activityId={}, oldStatus={}, newStatus={}",
-                         activity.getActivityId(), activity.getStatus(), newStatus);
+            if (!session.getStatus().equals(newStatus)) {
+                session.setStatus(newStatus);
+                flashSaleSessionMapper.updateById(session);
+                log.info("场次状态已更新, sessionId={}, status={}", session.getSessionId(), newStatus);
             }
         }
     }
@@ -143,25 +131,20 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleActivityMapper, F
      * 转换为 ProductVO（包含秒杀价）
      */
     private ProductVO convertToProductVO(FlashSaleProduct flashProduct) {
-        // 查询商品信息
         Product product = productMapper.selectById(flashProduct.getProductId());
         if (product == null) {
             log.warn("商品不存在, productId={}", flashProduct.getProductId());
             return null;
         }
 
-        // 创建 ProductVO
         ProductVO vo = new ProductVO();
         BeanUtil.copyProperties(product, vo);
-
-        // 设置秒杀相关信息
         vo.setFlashPrice(flashProduct.getFlashPrice());
         vo.setIsFlashSale(true);
 
-        // 获取活动结束时间
-        FlashSaleActivity activity = activityMapper.selectById(flashProduct.getActivityId());
-        if (activity != null) {
-            vo.setFlashEndTime(activity.getEndTime().toString());
+        FlashSaleSession session = flashSaleSessionMapper.selectById(flashProduct.getSessionId());
+        if (session != null) {
+            vo.setFlashEndTime(session.getEndTime().toString());
         }
 
         return vo;
@@ -170,76 +153,91 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleActivityMapper, F
     /**
      * 转换为 FlashSaleProductVO
      */
-    private FlashSaleProductVO convertToFlashSaleProductVO(FlashSaleProduct flashProduct) {
+    private FlashSaleProductVO convertToFlashSaleProductVO(FlashSaleProduct flashProduct, FlashSaleSession session) {
         FlashSaleProductVO vo = new FlashSaleProductVO();
-        BeanUtil.copyProperties(flashProduct, vo);
+        vo.setId(flashProduct.getProductId());
+        vo.setSessionId(flashProduct.getSessionId());
+        vo.setSeckillPrice(flashProduct.getFlashPrice());
+        vo.setStock(flashProduct.getStockCount());
+        vo.setSoldCount(flashProduct.getSoldCount());
+        vo.setLimitPerUser(flashProduct.getLimitPerUser() != null ? flashProduct.getLimitPerUser() : 1);
 
-        // 查询商品信息
+        if (flashProduct.getStockCount() > 0) {
+            vo.setSoldPercent(flashProduct.getSoldCount() * 100 / flashProduct.getStockCount());
+        }
+
         Product product = productMapper.selectById(flashProduct.getProductId());
         if (product != null) {
             vo.setTitle(product.getTitle());
+            vo.setDescription(product.getDescription());
             vo.setCoverImage(getProductCoverImage(product.getProductId()));
             vo.setOriginalPrice(product.getPrice());
+            vo.setPrice(product.getPrice());
 
-            // 计算折扣 (转换为整数，如8表示8折)
             if (flashProduct.getFlashPrice().compareTo(BigDecimal.ZERO) > 0) {
                 BigDecimal discount = flashProduct.getFlashPrice()
-                        .divide(product.getPrice(), 1, RoundingMode.HALF_UP)
+                        .divide(product.getPrice(), 1, BigDecimal.ROUND_HALF_UP)
                         .multiply(BigDecimal.TEN);
                 vo.setDiscount(discount.intValue());
             }
+
+            vo.setLocation(product.getLocation());
+            vo.setCondition(product.getConditionLevel() != null ? product.getConditionLevel().toString() : "");
+            vo.setCategoryId(product.getCategoryId() != null ? product.getCategoryId().intValue() : null);
         }
 
-        // 获取活动结束时间
-        FlashSaleActivity activity = activityMapper.selectById(flashProduct.getActivityId());
-        if (activity != null) {
-            vo.setEndTime(activity.getEndTime().toString());
+        if (session != null) {
+            vo.setEndTime(session.getEndTime().toString());
+
+            LocalDateTime now = LocalDateTime.now();
+            if (now.isBefore(session.getStartTime())) {
+                vo.setStatus("upcoming");
+            } else if (now.isAfter(session.getEndTime())) {
+                vo.setStatus("ended");
+            } else {
+                vo.setStatus("ongoing");
+            }
         }
 
         return vo;
     }
 
-    /**
-     * 获取商品封面图（简化版）
-     */
     private String getProductCoverImage(Long productId) {
         // TODO: 从 product_image 表查询封面图
-        // 这里暂时返回空字符串，后续可以集成图片服务
         return "";
     }
 
-    // ========== 新增方法实现 ==========
+    // ========== 场次相关方法 ==========
 
     @Override
     public List<FlashSaleSessionVO> getActiveSessions() {
         LocalDateTime now = LocalDateTime.now();
+        LocalDateTime startRange = now.minusHours(2);
+        LocalDateTime endRange = now.plusHours(24);
 
-        // 获取当前活动
-        FlashSaleActivity currentActivity = getCurrentActivity();
-        if (currentActivity == null) {
-            return List.of();
-        }
-
-        // 查询该活动的所有场次
         LambdaQueryWrapper<FlashSaleSession> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FlashSaleSession::getActivityId, currentActivity.getActivityId())
+        wrapper.ge(FlashSaleSession::getEndTime, startRange)
+               .le(FlashSaleSession::getStartTime, endRange)
                .orderByAsc(FlashSaleSession::getStartTime);
 
         List<FlashSaleSession> sessions = flashSaleSessionMapper.selectList(wrapper);
 
-        // 转换为 VO
         return sessions.stream()
                 .map(session -> {
                     FlashSaleSessionVO vo = new FlashSaleSessionVO();
                     vo.setSessionId(session.getSessionId());
+                    vo.setName(session.getName());
+                    vo.setDescription(session.getDescription());
 
-                    // 格式化时间 (HH:mm)
-                    DateTimeFormatter formatter = DateTimeFormatter.ofPattern("HH:mm");
-                    vo.setTime(session.getSessionTime().format(formatter));
-                    vo.setStartTime(session.getStartTime().toString());
-                    vo.setEndTime(session.getEndTime().toString());
+                    if (session.getSessionTime() != null) {
+                        vo.setTime(session.getSessionTime());
+                    } else if (session.getStartTime() != null) {
+                        vo.setTime(session.getStartTime().format(DateTimeFormatter.ofPattern("HH:mm")));
+                    }
 
-                    // 判断状态
+                    vo.setStartTime(session.getStartTime() != null ? session.getStartTime().toString() : "");
+                    vo.setEndTime(session.getEndTime() != null ? session.getEndTime().toString() : "");
+
                     if (now.isBefore(session.getStartTime())) {
                         vo.setStatus("upcoming");
                         vo.setProgress(0);
@@ -248,11 +246,16 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleActivityMapper, F
                         vo.setProgress(100);
                     } else {
                         vo.setStatus("ongoing");
-                        // 计算进度百分比
                         long total = java.time.Duration.between(session.getStartTime(), session.getEndTime()).toSeconds();
                         long elapsed = java.time.Duration.between(session.getStartTime(), now).toSeconds();
                         vo.setProgress((int) (elapsed * 100 / total));
                     }
+
+                    int productCount = flashProductMapper.selectCount(
+                        new LambdaQueryWrapper<FlashSaleProduct>()
+                            .eq(FlashSaleProduct::getSessionId, session.getSessionId())
+                    ).intValue();
+                    vo.setProductCount(productCount);
 
                     return vo;
                 })
@@ -261,177 +264,251 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleActivityMapper, F
 
     @Override
     public List<FlashSaleProductVO> getSessionProducts(Long sessionId, Integer page, Integer pageSize) {
-        // 分页参数
         int offset = (page != null && page > 0 ? page - 1 : 0) * (pageSize != null ? pageSize : 10);
         int limit = pageSize != null ? pageSize : 10;
 
-        // 查询场次商品关联
-        LambdaQueryWrapper<FlashSaleProductRelation> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(FlashSaleProductRelation::getSessionId, sessionId)
-               .orderByDesc(FlashSaleProductRelation::getSortOrder)
+        LambdaQueryWrapper<FlashSaleProduct> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(FlashSaleProduct::getSessionId, sessionId)
+               .orderByDesc(FlashSaleProduct::getSortOrder)
                .last("LIMIT " + limit + " OFFSET " + offset);
 
-        List<FlashSaleProductRelation> relations = flashSaleProductRelationMapper.selectList(wrapper);
+        List<FlashSaleProduct> products = flashProductMapper.selectList(wrapper);
+        FlashSaleSession session = flashSaleSessionMapper.selectById(sessionId);
 
-        return relations.stream()
-                .map(this::convertRelationToProductVO)
+        return products.stream()
+                .map(fp -> convertToFlashSaleProductVO(fp, session))
                 .collect(Collectors.toList());
     }
 
     @Override
-    public boolean canBuy(Long userId, Long productId, Long activityId) {
-        // 检查商品是否存在且库存充足
-        FlashSaleProductExt ext = flashSaleProductExtMapper.selectOne(
-                new LambdaQueryWrapper<FlashSaleProductExt>()
-                        .eq(FlashSaleProductExt::getProductId, productId)
+    public boolean canBuy(Long userId, Long productId, Long sessionId) {
+        FlashSaleProduct flashProduct = flashProductMapper.selectOne(
+                new LambdaQueryWrapper<FlashSaleProduct>()
+                        .eq(FlashSaleProduct::getProductId, productId)
+                        .eq(FlashSaleProduct::getSessionId, sessionId)
         );
 
-        if (ext == null || ext.getStockCount() <= ext.getSoldCount()) {
+        if (flashProduct == null || flashProduct.getStockCount() <= flashProduct.getSoldCount()) {
             return false;
         }
 
-        // 检查用户购买限制
-        int userBuyCount = getUserBuyCount(userId, activityId);
-        return userBuyCount < ext.getLimitPerUser();
+        int userBuyCount = getUserBuyCount(userId, sessionId);
+        int limitPerUser = flashProduct.getLimitPerUser() != null ? flashProduct.getLimitPerUser() : 1;
+        return userBuyCount < limitPerUser;
     }
 
     @Override
-    public int getUserBuyCount(Long userId, Long activityId) {
-        // 查询用户在该活动中的购买数量
+    public int getUserBuyCount(Long userId, Long sessionId) {
         return flashSaleOrderExtMapper.selectCount(
                 new LambdaQueryWrapper<FlashSaleOrderExt>()
                         .eq(FlashSaleOrderExt::getUserId, userId)
-                        .eq(FlashSaleOrderExt::getActivityId, activityId)
+                        .eq(FlashSaleOrderExt::getSessionId, sessionId)
         ).intValue();
     }
 
     @Override
     public FlashSaleProductVO getFlashSaleProductDetail(Long productId) {
-        // 查询商品扩展信息
-        FlashSaleProductExt ext = flashSaleProductExtMapper.selectOne(
-                new LambdaQueryWrapper<FlashSaleProductExt>()
-                        .eq(FlashSaleProductExt::getProductId, productId)
+        // 查询当前进行中的场次
+        FlashSaleSession currentSession = getCurrentSession();
+        if (currentSession == null) {
+            return null;
+        }
+
+        FlashSaleProduct flashProduct = flashProductMapper.selectOne(
+                new LambdaQueryWrapper<FlashSaleProduct>()
+                        .eq(FlashSaleProduct::getProductId, productId)
+                        .eq(FlashSaleProduct::getSessionId, currentSession.getSessionId())
         );
 
-        if (ext == null) {
+        if (flashProduct == null) {
             return null;
         }
 
-        // 查询商品基础信息
-        Product product = productMapper.selectById(productId);
-        if (product == null) {
-            return null;
-        }
-
-        // 创建 VO
-        FlashSaleProductVO vo = new FlashSaleProductVO();
-        vo.setId(product.getProductId());
-        vo.setTitle(product.getTitle());
-        vo.setDescription(product.getDescription());
-        vo.setCoverImage(getProductCoverImage(productId));
-
-        // 价格信息
-        vo.setSeckillPrice(ext.getFlashPrice());
-        vo.setOriginalPrice(ext.getOriginalPrice());
-        vo.setPrice(product.getPrice());
-
-        // 计算折扣
-        if (ext.getOriginalPrice().compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal discount = ext.getFlashPrice()
-                    .divide(ext.getOriginalPrice(), 1, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.TEN);
-            vo.setDiscount(discount.intValue());
-        }
-
-        // 库存信息
-        vo.setStock(ext.getStockCount());
-        vo.setSoldCount(ext.getSoldCount());
-        if (ext.getStockCount() > 0) {
-            vo.setSoldPercent(ext.getSoldCount() * 100 / ext.getStockCount());
-        }
-
-        // 时间信息
-        vo.setEndTime(ext.getEndTime().toString());
-
-        // 其他信息
-        vo.setLimitPerUser(ext.getLimitPerUser());
-        vo.setLocation(product.getLocation());
-        vo.setCondition(product.getConditionLevel() != null ? product.getConditionLevel().toString() : "");
-        vo.setCategoryId(product.getCategoryId() != null ? product.getCategoryId().intValue() : null);
-
-        // 状态
-        LocalDateTime now = LocalDateTime.now();
-        if (now.isBefore(ext.getStartTime())) {
-            vo.setStatus("upcoming");
-        } else if (now.isAfter(ext.getEndTime())) {
-            vo.setStatus("ended");
-        } else {
-            vo.setStatus("ongoing");
-        }
-
-        return vo;
+        return convertToFlashSaleProductVO(flashProduct, currentSession);
     }
 
-    /**
-     * 将关联关系转换为 FlashSaleProductVO
-     */
-    private FlashSaleProductVO convertRelationToProductVO(FlashSaleProductRelation relation) {
-        // 查询商品扩展信息
-        FlashSaleProductExt ext = flashSaleProductExtMapper.selectOne(
-                new LambdaQueryWrapper<FlashSaleProductExt>()
-                        .eq(FlashSaleProductExt::getProductId, relation.getProductId())
+    // ========== 前端秒杀页面所需方法 ==========
+
+    @Override
+    public boolean checkSeckillEligibility(Long userId, Long productId) {
+        FlashSaleSession currentSession = getCurrentSession();
+        if (currentSession == null) {
+            return false;
+        }
+
+        FlashSaleProduct flashProduct = flashProductMapper.selectOne(
+                new LambdaQueryWrapper<FlashSaleProduct>()
+                        .eq(FlashSaleProduct::getProductId, productId)
+                        .eq(FlashSaleProduct::getSessionId, currentSession.getSessionId())
+                        .eq(FlashSaleProduct::getDeleted, 0)
         );
 
-        // 如果关联表中有覆盖配置，使用关联表的配置
-        BigDecimal flashPrice = relation.getFlashPrice() != null
-                ? relation.getFlashPrice()
-                : (ext != null ? ext.getFlashPrice() : BigDecimal.ZERO);
-        Integer stockCount = relation.getStockCount() != null
-                ? relation.getStockCount()
-                : (ext != null ? ext.getStockCount() : 0);
-        Integer soldCount = ext != null ? ext.getSoldCount() : 0;
+        if (flashProduct == null || flashProduct.getStockCount() <= flashProduct.getSoldCount()) {
+            return false;
+        }
 
-        // 查询商品信息
-        Product product = productMapper.selectById(relation.getProductId());
+        int limitPerUser = flashProduct.getLimitPerUser() != null ? flashProduct.getLimitPerUser() : 1;
+        int userBuyCount = getUserBuyCount(userId, currentSession.getSessionId());
+        return userBuyCount < limitPerUser;
+    }
+
+    @Override
+    public String getCannotBuyReason(Long userId, Long productId) {
+        FlashSaleSession currentSession = getCurrentSession();
+        if (currentSession == null) {
+            return "暂无秒杀场次";
+        }
+
+        FlashSaleProduct flashProduct = flashProductMapper.selectOne(
+                new LambdaQueryWrapper<FlashSaleProduct>()
+                        .eq(FlashSaleProduct::getProductId, productId)
+                        .eq(FlashSaleProduct::getSessionId, currentSession.getSessionId())
+                        .eq(FlashSaleProduct::getDeleted, 0)
+        );
+
+        if (flashProduct == null) {
+            return "商品未参与秒杀";
+        }
+
+        if (flashProduct.getStockCount() <= flashProduct.getSoldCount()) {
+            return "已抢光";
+        }
+
+        int limitPerUser = flashProduct.getLimitPerUser() != null ? flashProduct.getLimitPerUser() : 1;
+        int userBuyCount = getUserBuyCount(userId, currentSession.getSessionId());
+        if (userBuyCount >= limitPerUser) {
+            return "已达限购数量";
+        }
+
+        return "无法购买";
+    }
+
+    @Override
+    public Integer getRemainingStock(Long productId) {
+        FlashSaleSession currentSession = getCurrentSession();
+        if (currentSession == null) {
+            return 0;
+        }
+
+        FlashSaleProduct flashProduct = flashProductMapper.selectOne(
+                new LambdaQueryWrapper<FlashSaleProduct>()
+                        .eq(FlashSaleProduct::getProductId, productId)
+                        .eq(FlashSaleProduct::getSessionId, currentSession.getSessionId())
+                        .eq(FlashSaleProduct::getDeleted, 0)
+        );
+
+        if (flashProduct == null) {
+            return 0;
+        }
+
+        return Math.max(0, flashProduct.getStockCount() - flashProduct.getSoldCount());
+    }
+
+    @Override
+    public Integer getUserBuyLimit(Long productId) {
+        FlashSaleSession currentSession = getCurrentSession();
+        if (currentSession == null) {
+            return 1;
+        }
+
+        FlashSaleProduct flashProduct = flashProductMapper.selectOne(
+                new LambdaQueryWrapper<FlashSaleProduct>()
+                        .eq(FlashSaleProduct::getProductId, productId)
+                        .eq(FlashSaleProduct::getSessionId, currentSession.getSessionId())
+        );
+
+        return flashProduct != null && flashProduct.getLimitPerUser() != null
+                ? flashProduct.getLimitPerUser() : 1;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public java.util.Map<String, Object> seckillBuy(Long userId, Long productId, Integer quantity, String remark) {
+        FlashSaleSession currentSession = getCurrentSession();
+        if (currentSession == null) {
+            throw new BusinessException("暂无秒杀场次");
+        }
+
+        FlashSaleProduct flashProduct = flashProductMapper.selectOne(
+                new LambdaQueryWrapper<FlashSaleProduct>()
+                        .eq(FlashSaleProduct::getProductId, productId)
+                        .eq(FlashSaleProduct::getSessionId, currentSession.getSessionId())
+                        .eq(FlashSaleProduct::getDeleted, 0)
+        );
+
+        if (flashProduct == null) {
+            throw new BusinessException("商品未参与秒杀");
+        }
+
+        int remainingStock = flashProduct.getStockCount() - flashProduct.getSoldCount();
+        if (remainingStock < quantity) {
+            throw new BusinessException("库存不足");
+        }
+
+        int limitPerUser = flashProduct.getLimitPerUser() != null ? flashProduct.getLimitPerUser() : 1;
+        int userBuyCount = getUserBuyCount(userId, currentSession.getSessionId());
+        if (userBuyCount + quantity > limitPerUser) {
+            throw new BusinessException("超过限购数量");
+        }
+
+        Product product = productMapper.selectById(productId);
         if (product == null) {
-            return null;
+            throw new BusinessException("商品不存在");
         }
 
-        // 创建 VO
-        FlashSaleProductVO vo = new FlashSaleProductVO();
-        vo.setId(product.getProductId());
-        vo.setTitle(product.getTitle());
-        vo.setDescription(product.getDescription());
-        vo.setCoverImage(getProductCoverImage(relation.getProductId()));
+        // 创建订单
+        BigDecimal totalAmount = flashProduct.getFlashPrice().multiply(BigDecimal.valueOf(quantity));
 
-        // 价格信息
-        vo.setSeckillPrice(flashPrice);
-        vo.setOriginalPrice(product.getPrice());
-        vo.setPrice(product.getPrice());
+        Order order = new Order();
+        order.setOrderNo(generateOrderNo());
+        order.setProductId(productId);
+        order.setBuyerId(userId);
+        order.setSellerId(product.getSellerId());
+        order.setType(1);
+        order.setOrderType(1);
+        order.setAmount(totalAmount);
+        order.setStatus(0);
+        order.setRemark(remark);
 
-        // 计算折扣
-        if (product.getPrice().compareTo(BigDecimal.ZERO) > 0) {
-            BigDecimal discount = flashPrice
-                    .divide(product.getPrice(), 1, RoundingMode.HALF_UP)
-                    .multiply(BigDecimal.TEN);
-            vo.setDiscount(discount.intValue());
-        }
+        orderMapper.insert(order);
 
-        // 库存信息
-        vo.setStock(stockCount);
-        vo.setSoldCount(soldCount);
-        if (stockCount > 0) {
-            vo.setSoldPercent(soldCount * 100 / stockCount);
-        }
+        // 创建秒杀订单扩展记录
+        FlashSaleOrderExt flashOrderExt = new FlashSaleOrderExt();
+        flashOrderExt.setOrderId(order.getOrderId());
+        flashOrderExt.setUserId(userId);
+        flashOrderExt.setProductId(productId);
+        flashOrderExt.setSessionId(currentSession.getSessionId());
+        flashOrderExt.setFlashPrice(flashProduct.getFlashPrice());
 
-        // 限制
-        vo.setLimitPerUser(ext != null ? ext.getLimitPerUser() : 1);
+        BigDecimal discount = flashProduct.getFlashPrice()
+                .divide(product.getPrice(), 1, BigDecimal.ROUND_HALF_UP)
+                .multiply(BigDecimal.TEN);
+        flashOrderExt.setDiscount(discount);
+        flashOrderExt.setSeckillTime(LocalDateTime.now());
 
-        // 其他信息
-        vo.setLocation(product.getLocation());
-        vo.setCondition(product.getConditionLevel() != null ? product.getConditionLevel().toString() : "");
-        vo.setCategoryId(product.getCategoryId() != null ? product.getCategoryId().intValue() : null);
+        flashSaleOrderExtMapper.insert(flashOrderExt);
 
-        return vo;
+        // 更新已售数量
+        flashProduct.setSoldCount(flashProduct.getSoldCount() + quantity);
+        flashProductMapper.updateById(flashProduct);
+
+        java.util.Map<String, Object> result = new java.util.HashMap<>();
+        result.put("orderId", order.getOrderId());
+        result.put("orderNo", order.getOrderNo());
+        result.put("sessionId", currentSession.getSessionId());
+        result.put("productId", productId);
+        result.put("quantity", quantity);
+        result.put("totalAmount", totalAmount);
+
+        log.info("秒杀抢购成功, userId={}, productId={}, sessionId={}, orderId={}",
+                 userId, productId, currentSession.getSessionId(), order.getOrderId());
+
+        return result;
+    }
+
+    private String generateOrderNo() {
+        String timestamp = LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyyMMddHHmmss"));
+        int random = (int) (Math.random() * 10000);
+        return String.format("SEKK%s%04d", timestamp, random);
     }
 }

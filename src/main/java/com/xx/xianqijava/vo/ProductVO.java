@@ -74,12 +74,33 @@ public class ProductVO {
 
     // ========== 秒杀相关字段 ==========
 
-    @Schema(description = "秒杀价格")
+    @Schema(description = "秒杀价格（seckillPrice）")
+    private BigDecimal seckillPrice;
+
+    @Schema(description = "秒杀价格（flashPrice - 别名）")
     private BigDecimal flashPrice;
 
+    @Schema(description = "秒杀库存")
+    private Integer flashSaleStock;
+
+    @Schema(description = "已售数量")
+    private Integer flashSaleSold;
+
+    @Schema(description = "已抢百分比（0-100）")
+    private Integer soldPercent;
+
+    @Schema(description = "折扣（如8表示8折）")
+    private Integer discount;
+
+    @Schema(description = "每人限购数量")
+    private Integer limitPerUser;
+
     @Schema(description = "秒杀活动结束时间")
-    private String flashEndTime;
+    private String endTime;
 
     @Schema(description = "是否在秒杀中")
     private Boolean isFlashSale;
+
+    @Schema(description = "秒杀活动ID")
+    private Long activityId;
 }

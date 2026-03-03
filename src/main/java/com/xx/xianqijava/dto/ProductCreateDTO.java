@@ -52,4 +52,21 @@ public class ProductCreateDTO {
 
     @Schema(description = "经度")
     private BigDecimal longitude;
+
+    // ========== 秒杀配置 ==========
+
+    @Schema(description = "是否参与秒杀")
+    private Boolean isFlashSale;
+
+    @Schema(description = "秒杀价格")
+    @DecimalMin(value = "0.01", message = "秒杀价格不能小于0.01元")
+    private BigDecimal flashPrice;
+
+    @Schema(description = "秒杀库存")
+    @Min(value = 1, message = "秒杀库存不能小于1")
+    private Integer flashSaleStock;
+
+    @Schema(description = "每人限购数量")
+    @Min(value = 1, message = "限购数量不能小于1")
+    private Integer limitPerUser;
 }

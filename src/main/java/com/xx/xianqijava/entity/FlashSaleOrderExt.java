@@ -10,7 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
 /**
- * 秒杀订单扩展表实体
+ * 秒杀订单扩展表实体（已简化，只关联场次）
  */
 @Data
 @EqualsAndHashCode(callSuper = false)
@@ -32,9 +32,6 @@ public class FlashSaleOrderExt implements Serializable {
 
     @Schema(description = "商品ID")
     private Long productId;
-
-    @Schema(description = "秒杀活动ID")
-    private Long activityId;
 
     @Schema(description = "秒杀场次ID")
     private Long sessionId;

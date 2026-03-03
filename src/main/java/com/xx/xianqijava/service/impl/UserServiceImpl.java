@@ -44,6 +44,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final com.xx.xianqijava.service.OrderService orderService;
     private final com.xx.xianqijava.service.EvaluationService evaluationService;
     private final com.xx.xianqijava.service.ProductFavoriteService productFavoriteService;
+    private final com.xx.xianqijava.service.UserFollowService userFollowService;
     private final com.xx.xianqijava.service.UserPreferenceService userPreferenceService;
     private final StringRedisTemplate redisTemplate;
 
@@ -340,6 +341,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             int evaluationCount = evaluationService.countByEvaluatedUserId(userId);
             userCenterVO.setEvaluationCount(evaluationCount);
 
+            // 统计关注数量
+            int followingCount = userFollowService.countFollowing(userId);
+            userCenterVO.setFollowingCount(followingCount);
+
+            // 统计粉丝数量
+            int followerCount = userFollowService.countFollowers(userId);
+            userCenterVO.setFollowerCount(followerCount);
+
             // 获取最近发布的商品（最多5个）
             java.util.List<com.xx.xianqijava.vo.ProductVO> recentProducts =
                 productService.getRecentProductsByUserId(userId, 5);
@@ -352,6 +361,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             userCenterVO.setOrderCount(0);
             userCenterVO.setFavoriteCount(0);
             userCenterVO.setEvaluationCount(0);
+            userCenterVO.setFollowingCount(0);
+            userCenterVO.setFollowerCount(0);
             userCenterVO.setRecentProducts(new java.util.ArrayList<>());
         }
 
