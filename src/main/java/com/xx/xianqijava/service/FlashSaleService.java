@@ -28,11 +28,6 @@ public interface FlashSaleService extends IService<FlashSaleSession> {
      */
     List<FlashSaleProductVO> getSessionProducts(Long sessionId);
 
-    /**
-     * 更新场次状态（定时任务调用）
-     */
-    void updateSessionStatus();
-
     // ========== 场次相关方法 ==========
 
     /**

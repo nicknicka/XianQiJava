@@ -12,20 +12,35 @@ import java.math.BigDecimal;
 @Schema(description = "商品信息")
 public class ProductVO {
 
+    @Schema(description = "商品ID（前端兼容字段）")
+    private Long id;
+
     @Schema(description = "商品ID")
     private Long productId;
 
     @Schema(description = "卖家ID")
     private Long sellerId;
 
+    @Schema(description = "前端兼容字段：用户ID（同sellerId）")
+    private Long userId;
+
     @Schema(description = "卖家昵称")
     private String sellerNickname;
+
+    @Schema(description = "前端兼容字段：用户名（同sellerNickname）")
+    private String userName;
 
     @Schema(description = "卖家头像")
     private String sellerAvatar;
 
+    @Schema(description = "前端兼容字段：用户头像（同sellerAvatar）")
+    private String userAvatar;
+
     @Schema(description = "卖家信用分数")
     private Integer sellerCreditScore;
+
+    @Schema(description = "前端兼容字段：信用等级（同sellerCreditScore）")
+    private Integer creditLevel;
 
     @Schema(description = "商品标题")
     private String title;
@@ -48,8 +63,14 @@ public class ProductVO {
     @Schema(description = "成色：1-10")
     private Integer conditionLevel;
 
+    @Schema(description = "前端兼容字段：成色（同conditionLevel）")
+    private Integer condition;
+
     @Schema(description = "封面图片")
     private String coverImage;
+
+    @Schema(description = "前端兼容字段：图片列表")
+    private String[] images;
 
     @Schema(description = "图片数量")
     private Integer imageCount;
@@ -83,6 +104,9 @@ public class ProductVO {
     @Schema(description = "秒杀库存")
     private Integer flashSaleStock;
 
+    @Schema(description = "前端兼容字段：库存（同flashSaleStock）")
+    private Integer stock;
+
     @Schema(description = "已售数量")
     private Integer flashSaleSold;
 
@@ -103,4 +127,13 @@ public class ProductVO {
 
     @Schema(description = "秒杀活动ID")
     private Long activityId;
+
+    @Schema(description = "秒杀场次ID")
+    private Long sessionId;
+
+    @Schema(description = "场次状态：upcoming-即将开始, ongoing-进行中, ended-已结束")
+    private String sessionStatus;
+
+    @Schema(description = "场次开始时间")
+    private String startTime;
 }

@@ -94,4 +94,8 @@ public class FlashSaleProductVO {
     // 限制信息
     @Schema(description = "每人限购数量")
     private Integer limitPerUser;
+
+    // 状态（前端展示用，不存数据库）
+    @Schema(description = "状态：upcoming-即将开始, ongoing-进行中, ended-已结束")
+    private String status;
 }
