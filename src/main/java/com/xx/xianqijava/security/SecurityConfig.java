@@ -117,7 +117,8 @@ public class SecurityConfig {
                                 "/banner",
                                 "/recommend/**",
                                 "/config/public",
-                                "/notification/unread-count"  // 允许未登录访问未读数（返回0）
+                                "/notification/unread-count",  // 允许未登录访问未读数（返回0）
+                                "/flash-sale/**"  // 限时秒杀接口（无需认证即可浏览）
                         ).permitAll()
 
                         // 其他所有请求需要认证
