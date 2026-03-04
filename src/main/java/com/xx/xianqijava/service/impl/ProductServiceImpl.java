@@ -424,6 +424,28 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             vo.setFavoriteCount(0);
         }
 
+        // 获取商品图片
+        LambdaQueryWrapper<ProductImage> imageWrapper = new LambdaQueryWrapper<>();
+        imageWrapper.eq(ProductImage::getProductId, product.getProductId())
+                   .eq(ProductImage::getStatus, 0)  // 未删除
+                   .orderByAsc(ProductImage::getSortOrder);
+        List<ProductImage> images = productImageMapper.selectList(imageWrapper);
+
+        if (!images.isEmpty()) {
+            // 设置图片列表
+            String[] imageUrls = images.stream()
+                .map(ProductImage::getImageUrl)
+                .toArray(String[]::new);
+            vo.setImages(imageUrls);
+
+            // 设置封面图（优先使用isCover=1的图片，否则使用第一张）
+            ProductImage coverImage = images.stream()
+                .filter(img -> img.getIsCover() != null && img.getIsCover() == 1)
+                .findFirst()
+                .orElse(images.get(0));
+            vo.setCoverImage(coverImage.getImageUrl());
+        }
+
         // 检查是否已收藏
         if (currentUserId != null) {
             LambdaQueryWrapper<ProductFavorite> wrapper = new LambdaQueryWrapper<>();
@@ -746,6 +768,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     public ProductDraftVO saveDraft(ProductDraftSaveDTO draftDTO, Long userId) {
         log.info("保存商品草稿, userId={}, draftId={}", userId, draftDTO.getDraftId());
 
+        // 0. 验证用户是否存在
+        User user = userMapper.selectById(userId);
+        if (user == null || user.getDeleted() == 1) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "用户不存在，请重新登录");
+        }
+
         // 1. 如果是新草稿，检查数量限制
         if (draftDTO.getDraftId() == null) {
             int currentDraftCount = countUserDrafts(userId);
@@ -784,6 +812,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             product.setSellerId(userId);
             product.setAsDraft();
             product.setAuditStatus(0); // 待审核
+            // 草稿时字段可以为空，不需要设置默认值
         }
 
         // 3. 更新字段（只更新非空字段）
@@ -814,6 +843,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if (draftDTO.getLongitude() != null) {
             product.setLongitude(draftDTO.getLongitude());
         }
+
+        // 注意：秒杀相关字段（isFlashSale, sessionId, flashPrice 等）
+        // 和交易方式字段（canDelivery, freeShipping）在草稿时不保存
+        // 这些字段需要在正式发布时由用户重新设置或通过 FlashSaleProduct 表维护
 
         // 4. 保存商品
         boolean saved = isUpdate ? updateById(product) : save(product);
