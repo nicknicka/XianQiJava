@@ -48,10 +48,11 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleSessionMapper, Fl
     public FlashSaleSession getCurrentSession() {
         LocalDateTime now = LocalDateTime.now();
 
-        // 查询当前进行中的场次
+        // 查询当前进行中的场次（只查询启用的）
         LambdaQueryWrapper<FlashSaleSession> wrapper = new LambdaQueryWrapper<>();
         wrapper.le(FlashSaleSession::getStartTime, now)
                .ge(FlashSaleSession::getEndTime, now)
+               .eq(FlashSaleSession::getEnabled, 1)  // 只查询启用的场次
                .orderByAsc(FlashSaleSession::getStartTime)
                .last("LIMIT 1");
 
@@ -64,10 +65,11 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleSessionMapper, Fl
         LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
         LocalDateTime endOfDay = now.toLocalDate().atTime(23, 59, 59);
 
-        // 查询当天的所有场次
+        // 查询当天的所有场次（只查询启用的）
         LambdaQueryWrapper<FlashSaleSession> sessionWrapper = new LambdaQueryWrapper<>();
         sessionWrapper.ge(FlashSaleSession::getStartTime, startOfDay)
                       .le(FlashSaleSession::getStartTime, endOfDay)
+                      .eq(FlashSaleSession::getEnabled, 1)  // 只查询启用的场次
                       .orderByAsc(FlashSaleSession::getStartTime);
 
         List<FlashSaleSession> todaySessions = flashSaleSessionMapper.selectList(sessionWrapper);
@@ -247,10 +249,11 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleSessionMapper, Fl
         LocalDateTime startOfDay = now.toLocalDate().atStartOfDay();
         LocalDateTime endOfDay = now.toLocalDate().atTime(23, 59, 59);
 
-        // 查询当天所有场次
+        // 查询当天所有场次（只查询启用的）
         LambdaQueryWrapper<FlashSaleSession> wrapper = new LambdaQueryWrapper<>();
         wrapper.ge(FlashSaleSession::getStartTime, startOfDay)
                .le(FlashSaleSession::getStartTime, endOfDay)
+               .eq(FlashSaleSession::getEnabled, 1)  // 只查询启用的场次
                .orderByAsc(FlashSaleSession::getStartTime);
 
         List<FlashSaleSession> sessions = flashSaleSessionMapper.selectList(wrapper);

@@ -1,9 +1,10 @@
 package com.xx.xianqijava.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -12,7 +13,6 @@ import java.time.LocalDateTime;
  * 秒杀场次表实体（已简化，合并了活动功能）
  */
 @Data
-@EqualsAndHashCode(callSuper = false)
 @TableName("flash_sale_session")
 @Schema(description = "秒杀场次")
 public class FlashSaleSession implements Serializable {
@@ -41,9 +41,12 @@ public class FlashSaleSession implements Serializable {
     @Schema(description = "排序权重")
     private Integer sortOrder;
 
+    @Schema(description = "场次类型：1-默认固定场次，2-特殊临时场次")
+    private Integer sessionType;
+
+    @Schema(description = "是否启用：0-禁用（暂停/取消），1-启用")
+    private Integer enabled;
+
     @Schema(description = "创建时间")
     private LocalDateTime createTime;
-
-    @Schema(description = "更新时间")
-    private LocalDateTime updateTime;
 }

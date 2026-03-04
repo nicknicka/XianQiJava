@@ -15,9 +15,11 @@ import com.xx.xianqijava.entity.ProductFavorite;
 import com.xx.xianqijava.entity.ProductImage;
 import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.exception.BusinessException;
+import com.xx.xianqijava.entity.ProductStatistics;
 import com.xx.xianqijava.mapper.CategoryMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.mapper.ProductImageMapper;
+import com.xx.xianqijava.mapper.ProductStatisticsMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.ProductService;
 import com.xx.xianqijava.service.ProductFavoriteService;
@@ -50,6 +52,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private final ProductFavoriteService productFavoriteService;
     private final ProductViewHistoryService productViewHistoryService;
     private final ProductImageMapper productImageMapper;
+    private final ProductStatisticsMapper productStatisticsMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -68,8 +71,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         product.setSellerId(userId);
         product.setStatus(0); // 默认下架（待审核）
         product.setAuditStatus(0); // 待审核
-        product.setViewCount(0);
-        product.setFavoriteCount(0);
+        // 注意：viewCount 和 favoriteCount 现在由 product_statistics 表维护，不需要在这里设置
 
         boolean saved = save(product);
         if (!saved) {
@@ -88,15 +90,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
-        // 使用 SQL 直接增加浏览次数（避免并发问题）
-        // 使用 MyBatis-Plus 的 UpdateWrapper 实现 SET view_count = view_count + 1
-        com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Product> updateWrapper =
-                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
-        updateWrapper.setSql("view_count = view_count + 1")
-                .eq(Product::getProductId, productId);
-        baseMapper.update(null, updateWrapper);
-
-        // 异步记录浏览历史
+        // 异步记录浏览历史（触发器会自动更新 product_statistics 表的 view_count）
         productViewHistoryService.recordViewHistory(userId, productId);
 
         return convertToVO(product, userId);
@@ -121,14 +115,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
-        // 使用 SQL 直接增加浏览次数
-        com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<Product> updateWrapper =
-                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
-        updateWrapper.setSql("view_count = view_count + 1")
-                .eq(Product::getProductId, productId);
-        baseMapper.update(null, updateWrapper);
-
-        // 异步记录浏览历史
+        // 异步记录浏览历史（触发器会自动更新 product_statistics 表的 view_count）
         productViewHistoryService.recordViewHistory(userId, productId);
 
         // 转换为基础 VO
@@ -348,6 +335,17 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         Category category = categoryMapper.selectById(product.getCategoryId());
         if (category != null) {
             vo.setCategoryName(category.getName());
+        }
+
+        // 从 product_statistics 表获取统计数据
+        ProductStatistics statistics = productStatisticsMapper.selectById(product.getProductId());
+        if (statistics != null) {
+            vo.setViewCount(statistics.getViewCount());
+            vo.setFavoriteCount(statistics.getFavoriteCount());
+        } else {
+            // 如果统计数据不存在，使用默认值
+            vo.setViewCount(0);
+            vo.setFavoriteCount(0);
         }
 
         // 检查是否已收藏

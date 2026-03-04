@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 
 /**
  * 秒杀商品表（已合并 Ext 表功能）
@@ -41,6 +42,15 @@ public class FlashSaleProduct extends BaseEntity {
 
     @Schema(description = "每人限购数量")
     private Integer limitPerUser;
+
+    @Schema(description = "重复类型：0-不重复（卖完下架），1-每日重复")
+    private Integer repeatType;
+
+    @Schema(description = "参与秒杀的日期（NULL表示每日重复，有值表示指定日期）")
+    private LocalDate saleDate;
+
+    @Schema(description = "库存状态：0-在售，1-已售罄，2-手动下架")
+    private Integer stockStatus;
 
     @Schema(description = "排序权重")
     private Integer sortOrder;
