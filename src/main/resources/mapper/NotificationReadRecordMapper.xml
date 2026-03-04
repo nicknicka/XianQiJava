@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xx.xianqijava.mapper.NotificationReadRecordMapper">
+
+    <!-- 批量插入阅读记录（使用 INSERT IGNORE 避免重复） -->
+    <insert id="batchInsertIgnore">
+        INSERT IGNORE INTO notification_read_records (notification_id, user_id, read_time)
+        VALUES
+        <foreach collection="records" item="record" separator=",">
+            (#{record.notificationId}, #{record.userId}, #{record.readTime})
+        </foreach>
+    </insert>
+
+</mapper>

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.xx.xianqijava.mapper.SystemNotificationMapper">
+
+    <!-- 查询用户的未读通知数量 -->
+    <select id="countUnreadNotifications" resultType="int">
+        SELECT COUNT(*)
+        FROM system_notification n
+        WHERE n.status = 1
+          AND n.publish_time IS NOT NULL
+          AND (
+              n.target_type = 1
+              OR #{userId} MEMBER OF(n.target_users)
+          )
+          AND NOT EXISTS (
+              SELECT 1
+              FROM notification_read_records r
+              WHERE r.notification_id = n.notification_id
+                AND r.user_id = #{userId}
+          )
+    </select>
+
+    <!-- 批量插入阅读记录 -->
+    <insert id="batchInsertReadRecords">
+        INSERT IGNORE INTO notification_read_records (notification_id, user_id, read_time)
+        SELECT n.notification_id, #{userId}, NOW()
+        FROM system_notification n
+        WHERE n.status = 1
+          AND n.publish_time IS NOT NULL
+          AND (
+              n.target_type = 1
+              OR #{userId} MEMBER OF(n.target_users)
+          )
+          AND NOT EXISTS (
+              SELECT 1
+              FROM notification_read_records r
+              WHERE r.notification_id = n.notification_id
+                AND r.user_id = #{userId}
+          )
+    </insert>
+
+</mapper>

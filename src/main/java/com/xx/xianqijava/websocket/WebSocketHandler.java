@@ -56,8 +56,20 @@ public class WebSocketHandler extends TextWebSocketHandler {
         try {
             // 解析消息
             Map<String, Object> messageData = objectMapper.readValue(payload, Map.class);
+
+            // 兼容两种消息格式：{event: "..."} 和 {type: "..."}
             String event = (String) messageData.get("event");
+            if (event == null) {
+                event = (String) messageData.get("type");
+            }
+
             Object data = messageData.get("data");
+
+            // 检查事件类型是否为空
+            if (event == null) {
+                log.warn("消息格式错误，缺少 event 或 type 字段: {}", payload);
+                return;
+            }
 
             // 根据事件类型处理消息
             switch (event) {

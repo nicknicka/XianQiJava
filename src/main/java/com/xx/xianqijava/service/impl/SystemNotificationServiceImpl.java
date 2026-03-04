@@ -7,8 +7,10 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xx.xianqijava.common.ErrorCode;
+import com.xx.xianqijava.entity.NotificationReadRecord;
 import com.xx.xianqijava.entity.SystemNotification;
 import com.xx.xianqijava.exception.BusinessException;
+import com.xx.xianqijava.mapper.NotificationReadRecordMapper;
 import com.xx.xianqijava.mapper.SystemNotificationMapper;
 import com.xx.xianqijava.service.SystemNotificationService;
 import com.xx.xianqijava.vo.SystemNotificationVO;
@@ -28,9 +30,15 @@ import java.util.List;
 public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificationMapper, SystemNotification>
         implements SystemNotificationService {
 
+    private final NotificationReadRecordMapper notificationReadRecordMapper;
+
+    public SystemNotificationServiceImpl(NotificationReadRecordMapper notificationReadRecordMapper) {
+        this.notificationReadRecordMapper = notificationReadRecordMapper;
+    }
+
     @Override
-    public IPage<SystemNotificationVO> getNotificationList(Long userId, Page<SystemNotification> page) {
-        log.info("查询通知列表, userId={}", userId);
+    public IPage<SystemNotificationVO> getNotificationList(Long userId, Page<SystemNotification> page, Integer type) {
+        log.info("查询通知列表, userId={}, type={}", userId, type);
 
         // 查询已发布且目标包含该用户的通知
         LambdaQueryWrapper<SystemNotification> queryWrapper = new LambdaQueryWrapper<>();
@@ -39,9 +47,15 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
                 .and(wrapper -> wrapper
                         .eq(SystemNotification::getTargetType, 1) // 全部用户
                         .or()
-                        .apply("FIND_IN_SET({0}, target_users)", userId) // 指定用户
-                )
-                .orderByDesc(SystemNotification::getPriority)
+                        .apply("{0} MEMBER OF(target_users)", userId) // 指定用户
+                );
+
+        // 如果指定了类型，添加类型过滤
+        if (type != null) {
+            queryWrapper.eq(SystemNotification::getType, type);
+        }
+
+        queryWrapper.orderByDesc(SystemNotification::getPriority)
                 .orderByDesc(SystemNotification::getPublishTime);
 
         IPage<SystemNotification> notificationPage = page(page, queryWrapper);
@@ -70,57 +84,36 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
     public void markAsRead(Long notificationId, Long userId) {
         log.info("标记通知为已读, notificationId={}, userId={}", notificationId, userId);
 
+        // 检查通知是否存在
         SystemNotification notification = getById(notificationId);
         if (notification == null) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "通知不存在");
         }
 
-        // 使用SQL级别的更新避免并发问题
-        // 先检查是否已读
-        List<Long> readUsers = parseUserList(notification.getIsRead());
-        if (readUsers.contains(userId)) {
+        // 检查是否已读
+        int existingCount = notificationReadRecordMapper.countByNotificationIdAndUserId(notificationId, userId);
+        if (existingCount > 0) {
             log.info("通知已标记为已读，无需重复操作");
             return;
         }
 
-        // 使用FIND_IN_SET和CONCAT避免并发丢失更新
-        String updateSql = String.format(
-            "is_read = CASE " +
-            "WHEN is_read IS NULL THEN '[%d]' " +
-            "WHEN FIND_IN_SET(%d, is_read) = 0 THEN CONCAT(is_read, ',%d') " +
-            "ELSE is_read END",
-            userId, userId, userId
-        );
+        // 插入阅读记录（使用 INSERT IGNORE 避免重复）
+        NotificationReadRecord record = new NotificationReadRecord();
+        record.setNotificationId(notificationId);
+        record.setUserId(userId);
+        record.setReadTime(LocalDateTime.now());
 
-        // 使用LambdaUpdateWrapper进行条件更新
-        com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<SystemNotification> updateWrapper =
-            new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
-        updateWrapper.setSql(true, updateSql)
-                .eq(SystemNotification::getNotificationId, notificationId);
-
-        int updated = baseMapper.update(null, updateWrapper);
-        if (updated > 0) {
-            log.info("标记通知已读成功");
-        } else {
-            log.warn("标记通知已读失败，可能已被其他操作更新");
-        }
+        notificationReadRecordMapper.insert(record);
+        log.info("标记通知已读成功");
     }
 
     @Override
     public Integer getUnreadCount(Long userId) {
         log.info("查询未读通知数量, userId={}", userId);
 
-        LambdaQueryWrapper<SystemNotification> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(SystemNotification::getStatus, 1)
-                .isNotNull(SystemNotification::getPublishTime)
-                .and(wrapper -> wrapper
-                        .eq(SystemNotification::getTargetType, 1)
-                        .or()
-                        .apply("FIND_IN_SET({0}, target_users)", userId)
-                )
-                .apply("NOT FIND_IN_SET({0}, is_read)", userId);
-
-        return Math.toIntExact(count(queryWrapper));
+        // 使用 LEFT JOIN 查询未读通知
+        // 查询条件：通知已发布 + 目标用户包含当前用户 + 没有阅读记录
+        return baseMapper.countUnreadNotifications(userId);
     }
 
     @Override
@@ -128,29 +121,11 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
     public void markAllAsRead(Long userId) {
         log.info("标记所有通知为已读, userId={}", userId);
 
-        // 使用单条SQL批量更新，避免并发和性能问题
-        String updateSql = String.format(
-            "is_read = CASE " +
-            "WHEN is_read IS NULL THEN '[%d]' " +
-            "WHEN FIND_IN_SET(%d, is_read) = 0 THEN CONCAT(is_read, ',%d') " +
-            "ELSE is_read END",
-            userId, userId, userId
-        );
+        // 批量插入所有未读通知的阅读记录
+        // 使用 INSERT IGNORE 避免重复，单条 SQL 完成批量插入
+        baseMapper.batchInsertReadRecords(userId);
 
-        com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<SystemNotification> updateWrapper =
-                new com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper<>();
-        updateWrapper.setSql(true, updateSql)
-                .eq(SystemNotification::getStatus, 1)
-                .isNotNull(SystemNotification::getPublishTime)
-                .and(wrapper -> wrapper
-                        .eq(SystemNotification::getTargetType, 1)
-                        .or()
-                        .apply("FIND_IN_SET({0}, target_users)", userId)
-                )
-                .apply("NOT FIND_IN_SET({0}, is_read)", userId);
-
-        int updated = baseMapper.update(null, updateWrapper);
-        log.info("标记所有通知已读成功, count={}", updated);
+        log.info("标记所有通知已读成功");
     }
 
     /**
@@ -163,9 +138,10 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
         // 设置类型描述
         vo.setTypeDesc(getTypeDesc(notification.getType()));
 
-        // 设置是否已读
-        List<Long> readUsers = parseUserList(notification.getIsRead());
-        vo.setIsRead(readUsers.contains(userId));
+        // 从关联表查询是否已读
+        int readCount = notificationReadRecordMapper.countByNotificationIdAndUserId(
+                notification.getNotificationId(), userId);
+        vo.setIsRead(readCount > 0);
 
         return vo;
     }

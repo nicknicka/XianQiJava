@@ -33,12 +33,13 @@ public class SystemNotificationController {
     @Operation(summary = "获取通知列表")
     public Result<IPage<SystemNotificationVO>> getNotificationList(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
-            @Parameter(description = "页大小") @RequestParam(defaultValue = "20") Integer size) {
+            @Parameter(description = "页大小") @RequestParam(defaultValue = "20") Integer size,
+            @Parameter(description = "通知类型(1=系统公告,2=活动通知,3=账户提醒,4=交易提醒)") @RequestParam(required = false) Integer type) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("查询通知列表, userId={}, page={}, size={}", userId, page, size);
+        log.info("查询通知列表, userId={}, page={}, size={}, type={}", userId, page, size, type);
 
         Page<SystemNotification> pageParam = new Page<>(page, size);
-        IPage<SystemNotificationVO> notificationPage = systemNotificationService.getNotificationList(userId, pageParam);
+        IPage<SystemNotificationVO> notificationPage = systemNotificationService.getNotificationList(userId, pageParam, type);
 
         return Result.success(notificationPage);
     }
@@ -59,6 +60,20 @@ public class SystemNotificationController {
         systemNotificationService.markAsRead(notificationId, userId);
 
         return Result.success(notificationVO);
+    }
+
+    /**
+     * 标记单个通知为已读
+     */
+    @PutMapping("/{notificationId}/read")
+    @Operation(summary = "标记单个通知为已读")
+    public Result<Void> markAsRead(
+            @Parameter(description = "通知ID") @PathVariable("notificationId") Long notificationId) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("标记通知为已读, notificationId={}, userId={}", notificationId, userId);
+
+        systemNotificationService.markAsRead(notificationId, userId);
+        return Result.success("已标记为已读");
     }
 
     /**

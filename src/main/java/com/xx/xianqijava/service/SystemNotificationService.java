@@ -16,9 +16,10 @@ public interface SystemNotificationService extends IService<SystemNotification> 
      *
      * @param userId 用户ID
      * @param page   分页参数
+     * @param type   通知类型(1=系统公告,2=活动通知,3=账户提醒,4=交易提醒)，为null时查询全部
      * @return 通知列表
      */
-    IPage<SystemNotificationVO> getNotificationList(Long userId, Page<SystemNotification> page);
+    IPage<SystemNotificationVO> getNotificationList(Long userId, Page<SystemNotification> page, Integer type);
 
     /**
      * 获取通知详情
