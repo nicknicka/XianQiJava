@@ -61,8 +61,29 @@ public class Product extends BaseEntity {
     @Schema(description = "经度")
     private BigDecimal longitude;
 
-    @Schema(description = "状态：0-下架，1-在售，2-已售，3-预订")
+    @Schema(description = "状态：0-下架，1-在售，2-已售，3-预订，4-草稿")
     private Integer status;
+
+    // 状态常量
+    public static final int STATUS_OFFLINE = 0;
+    public static final int STATUS_ON_SALE = 1;
+    public static final int STATUS_SOLD_OUT = 2;
+    public static final int STATUS_RESERVED = 3;
+    public static final int STATUS_DRAFT = 4;
+
+    /**
+     * 判断是否为草稿状态
+     */
+    public boolean isDraft() {
+        return this.status != null && this.status == STATUS_DRAFT;
+    }
+
+    /**
+     * 设置为草稿状态
+     */
+    public void setAsDraft() {
+        this.status = STATUS_DRAFT;
+    }
 
     @Schema(description = "审核状态：0-待审核，1-审核通过，2-审核拒绝")
     private Integer auditStatus;

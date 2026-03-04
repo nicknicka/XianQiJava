@@ -4,9 +4,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.dto.ShareItemCreateDTO;
+import com.xx.xianqijava.dto.ShareItemDraftSaveDTO;
 import com.xx.xianqijava.entity.ShareItem;
 import com.xx.xianqijava.service.ShareItemService;
 import com.xx.xianqijava.util.SecurityUtil;
+import com.xx.xianqijava.vo.ShareItemDraftVO;
 import com.xx.xianqijava.vo.ShareItemVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -145,5 +147,86 @@ public class ShareItemController {
         IPage<ShareItemVO> shareItemPage = shareItemService.getNearbyShareItems(pageParam, userId);
 
         return Result.success(shareItemPage);
+    }
+
+    // ==================== 草稿相关接口 ====================
+
+    /**
+     * 保存共享物品草稿
+     */
+    @Operation(summary = "保存共享物品草稿")
+    @PostMapping("/draft")
+    public Result<ShareItemDraftVO> saveDraft(@Valid @RequestBody ShareItemDraftSaveDTO draftDTO) {
+        Long ownerId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("保存共享物品草稿, ownerId={}", ownerId);
+        ShareItemDraftVO draftVO = shareItemService.saveDraft(draftDTO, ownerId);
+        return Result.success("草稿保存成功", draftVO);
+    }
+
+    /**
+     * 获取草稿列表
+     */
+    @Operation(summary = "获取草稿列表")
+    @GetMapping("/draft")
+    public Result<IPage<ShareItemDraftVO>> getDraftList(
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(description = "页大小") @RequestParam(defaultValue = "10") Integer size) {
+        Long ownerId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取草稿列表, ownerId={}, page={}, size={}", ownerId, page, size);
+
+        Page<ShareItem> pageParam = new Page<>(page, size);
+        IPage<ShareItemDraftVO> draftPage = shareItemService.getDraftList(pageParam, ownerId);
+
+        return Result.success(draftPage);
+    }
+
+    /**
+     * 获取草稿详情
+     */
+    @Operation(summary = "获取草稿详情")
+    @GetMapping("/draft/{id}")
+    public Result<ShareItemDraftVO> getDraftDetail(
+            @Parameter(description = "草稿ID") @PathVariable("id") Long id) {
+        Long ownerId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取草稿详情, draftId={}, ownerId={}", id, ownerId);
+        ShareItemDraftVO draftVO = shareItemService.getDraftDetail(id, ownerId);
+        return Result.success(draftVO);
+    }
+
+    /**
+     * 从草稿发布共享物品
+     */
+    @Operation(summary = "从草稿发布共享物品")
+    @PostMapping("/draft/{id}/publish")
+    public Result<ShareItemVO> publishFromDraft(
+            @Parameter(description = "草稿ID") @PathVariable("id") Long id) {
+        Long ownerId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("从草稿发布共享物品, draftId={}, ownerId={}", id, ownerId);
+        ShareItemVO shareItemVO = shareItemService.publishFromDraft(id, ownerId);
+        return Result.success("共享物品发布成功", shareItemVO);
+    }
+
+    /**
+     * 删除草稿
+     */
+    @Operation(summary = "删除草稿")
+    @DeleteMapping("/draft/{id}")
+    public Result<Void> deleteDraft(
+            @Parameter(description = "草稿ID") @PathVariable("id") Long id) {
+        Long ownerId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("删除草稿, draftId={}, ownerId={}", id, ownerId);
+        shareItemService.deleteDraft(id, ownerId);
+        return Result.success("草稿删除成功");
+    }
+
+    /**
+     * 获取草稿数量
+     */
+    @Operation(summary = "获取草稿数量")
+    @GetMapping("/draft/count")
+    public Result<java.util.Map<String, Object>> getDraftCount() {
+        Long ownerId = SecurityUtil.getCurrentUserIdRequired();
+        int count = shareItemService.countUserDrafts(ownerId);
+        return Result.success(java.util.Map.of("count", count, "maxCount", 10));
     }
 }

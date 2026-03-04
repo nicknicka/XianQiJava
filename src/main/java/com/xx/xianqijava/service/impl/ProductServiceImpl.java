@@ -8,8 +8,11 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xx.xianqijava.common.ErrorCode;
 import com.xx.xianqijava.dto.ProductAuditDTO;
 import com.xx.xianqijava.dto.ProductCreateDTO;
+import com.xx.xianqijava.dto.ProductDraftSaveDTO;
 import com.xx.xianqijava.dto.ProductUpdateDTO;
 import com.xx.xianqijava.entity.Category;
+import com.xx.xianqijava.entity.FlashSaleProduct;
+import com.xx.xianqijava.entity.FlashSaleSession;
 import com.xx.xianqijava.entity.Product;
 import com.xx.xianqijava.entity.ProductFavorite;
 import com.xx.xianqijava.entity.ProductImage;
@@ -17,6 +20,8 @@ import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.entity.ProductStatistics;
 import com.xx.xianqijava.mapper.CategoryMapper;
+import com.xx.xianqijava.mapper.FlashSaleProductMapper;
+import com.xx.xianqijava.mapper.FlashSaleSessionMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.mapper.ProductImageMapper;
 import com.xx.xianqijava.mapper.ProductStatisticsMapper;
@@ -25,6 +30,7 @@ import com.xx.xianqijava.service.ProductService;
 import com.xx.xianqijava.service.ProductFavoriteService;
 import com.xx.xianqijava.service.ProductViewHistoryService;
 import com.xx.xianqijava.vo.ProductAuditVO;
+import com.xx.xianqijava.vo.ProductDraftVO;
 import com.xx.xianqijava.vo.ProductVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -53,16 +59,54 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private final ProductViewHistoryService productViewHistoryService;
     private final ProductImageMapper productImageMapper;
     private final ProductStatisticsMapper productStatisticsMapper;
+    private final FlashSaleProductMapper flashSaleProductMapper;
+    private final FlashSaleSessionMapper flashSaleSessionMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public ProductVO createProduct(ProductCreateDTO createDTO, Long userId) {
-        log.info("创建商品, userId={}, title={}", userId, createDTO.getTitle());
+        log.info("创建商品, userId={}, title={}, isFlashSale={}",
+                 userId, createDTO.getTitle(), createDTO.getIsFlashSale());
 
         // 校验分类是否存在
         Category category = categoryMapper.selectById(createDTO.getCategoryId());
         if (category == null || category.getDeleted() == 1) {
             throw new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
+        }
+
+        // 如果开启秒杀，校验秒杀配置
+        if (createDTO.getIsFlashSale() != null && createDTO.getIsFlashSale()) {
+            // 校验场次ID
+            if (createDTO.getSessionId() == null) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "秒杀场次不能为空");
+            }
+            FlashSaleSession session = flashSaleSessionMapper.selectById(createDTO.getSessionId());
+            if (session == null) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "秒杀场次不存在");
+            }
+            if (session.getEnabled() == null || session.getEnabled() != 1) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "秒杀场次未启用");
+            }
+
+            // 校验秒杀价格
+            if (createDTO.getFlashPrice() == null) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "秒杀价格不能为空");
+            }
+            if (createDTO.getFlashPrice().compareTo(createDTO.getPrice()) >= 0) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "秒杀价格必须低于商品价格");
+            }
+
+            // 校验秒杀库存
+            if (createDTO.getFlashSaleStock() == null || createDTO.getFlashSaleStock() <= 0) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "秒杀库存必须大于0");
+            }
+
+            // 如果选择"仅一次"，校验秒杀日期
+            if (createDTO.getRepeatType() != null && createDTO.getRepeatType() == 0) {
+                if (createDTO.getSaleDate() == null) {
+                    throw new BusinessException(ErrorCode.BAD_REQUEST, "选择'仅一次'时必须指定秒杀日期");
+                }
+            }
         }
 
         // 创建商品
@@ -80,7 +124,39 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
         log.info("商品创建成功, productId={}", product.getProductId());
 
+        // 如果开启秒杀，创建秒杀商品记录
+        if (createDTO.getIsFlashSale() != null && createDTO.getIsFlashSale()) {
+            createFlashSaleProduct(product.getProductId(), createDTO);
+        }
+
         return convertToVO(product, userId);
+    }
+
+    /**
+     * 创建秒杀商品记录
+     */
+    private void createFlashSaleProduct(Long productId, ProductCreateDTO createDTO) {
+        log.info("创建秒杀商品记录, productId={}, sessionId={}", productId, createDTO.getSessionId());
+
+        FlashSaleProduct flashProduct = new FlashSaleProduct();
+        flashProduct.setProductId(productId);
+        flashProduct.setSessionId(createDTO.getSessionId());
+        flashProduct.setFlashPrice(createDTO.getFlashPrice());
+        flashProduct.setStockCount(createDTO.getFlashSaleStock());
+        flashProduct.setSoldCount(0);
+        flashProduct.setLimitPerUser(createDTO.getLimitPerUser() != null ? createDTO.getLimitPerUser() : 1);
+        flashProduct.setRepeatType(createDTO.getRepeatType() != null ? createDTO.getRepeatType() : 1); // 默认每日重复
+        flashProduct.setSaleDate(createDTO.getSaleDate());
+        flashProduct.setStockStatus(0); // 在售
+        flashProduct.setSortOrder(0);
+        flashProduct.setDeleted(0);
+
+        boolean saved = flashSaleProductMapper.insert(flashProduct) > 0;
+        if (!saved) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "秒杀商品创建失败");
+        }
+
+        log.info("秒杀商品创建成功, id={}", flashProduct.getId());
     }
 
     @Override
@@ -659,5 +735,364 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
         IPage<Product> productPage = page(page, wrapper);
         return productPage.convert(product -> convertToVO(product, userId));
+    }
+
+    // ==================== 草稿相关方法实现 ====================
+
+    private static final int MAX_DRAFT_COUNT = 10;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ProductDraftVO saveDraft(ProductDraftSaveDTO draftDTO, Long userId) {
+        log.info("保存商品草稿, userId={}, draftId={}", userId, draftDTO.getDraftId());
+
+        // 1. 如果是新草稿，检查数量限制
+        if (draftDTO.getDraftId() == null) {
+            int currentDraftCount = countUserDrafts(userId);
+            if (currentDraftCount >= MAX_DRAFT_COUNT) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "草稿数量已达上限（" + MAX_DRAFT_COUNT + "个），请先发布或删除部分草稿");
+            }
+        }
+
+        // 2. 验证分类是否存在（如果提供了分类ID）
+        if (draftDTO.getCategoryId() != null) {
+            Category category = categoryMapper.selectById(draftDTO.getCategoryId());
+            if (category == null || category.getDeleted() == 1) {
+                throw new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
+            }
+        }
+
+        Product product;
+        boolean isUpdate = draftDTO.getDraftId() != null;
+
+        if (isUpdate) {
+            // 更新现有草稿
+            product = getById(draftDTO.getDraftId());
+            if (product == null) {
+                throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+            }
+            if (!product.getSellerId().equals(userId)) {
+                throw new BusinessException(ErrorCode.FORBIDDEN);
+            }
+            if (!product.isDraft()) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "只能修改草稿状态的记录");
+            }
+        } else {
+            // 创建新草稿
+            product = new Product();
+            product.setSellerId(userId);
+            product.setAsDraft();
+            product.setAuditStatus(0); // 待审核
+        }
+
+        // 3. 更新字段（只更新非空字段）
+        if (draftDTO.getTitle() != null) {
+            product.setTitle(draftDTO.getTitle());
+        }
+        if (draftDTO.getDescription() != null) {
+            product.setDescription(draftDTO.getDescription());
+        }
+        if (draftDTO.getCategoryId() != null) {
+            product.setCategoryId(draftDTO.getCategoryId().longValue());
+        }
+        if (draftDTO.getPrice() != null) {
+            product.setPrice(draftDTO.getPrice());
+        }
+        if (draftDTO.getOriginalPrice() != null) {
+            product.setOriginalPrice(draftDTO.getOriginalPrice());
+        }
+        if (draftDTO.getConditionLevel() != null) {
+            product.setConditionLevel(draftDTO.getConditionLevel());
+        }
+        if (draftDTO.getLocation() != null) {
+            product.setLocation(draftDTO.getLocation());
+        }
+        if (draftDTO.getLatitude() != null) {
+            product.setLatitude(draftDTO.getLatitude());
+        }
+        if (draftDTO.getLongitude() != null) {
+            product.setLongitude(draftDTO.getLongitude());
+        }
+
+        // 4. 保存商品
+        boolean saved = isUpdate ? updateById(product) : save(product);
+        if (!saved) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "草稿保存失败");
+        }
+
+        // 5. 处理图片（草稿也支持图片上传）
+        if (draftDTO.getImageUrls() != null && draftDTO.getImageUrls().length > 0) {
+            saveProductImages(product.getProductId(), draftDTO.getImageUrls());
+        }
+
+        log.info("草稿保存成功, productId={}", product.getProductId());
+        return convertToDraftVO(product);
+    }
+
+    @Override
+    public IPage<ProductDraftVO> getDraftList(Page<Product> page, Long userId) {
+        log.info("获取用户草稿列表, userId={}, page={}", userId, page.getCurrent());
+
+        LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(Product::getSellerId, userId);
+        wrapper.eq(Product::getStatus, Product.STATUS_DRAFT);
+        wrapper.eq(Product::getDeleted, 0);
+        wrapper.orderByDesc(Product::getUpdateTime);
+
+        IPage<Product> draftPage = page(page, wrapper);
+        return draftPage.convert(this::convertToDraftVO);
+    }
+
+    @Override
+    public ProductDraftVO getDraftDetail(Long draftId, Long userId) {
+        log.info("获取草稿详情, draftId={}, userId={}", draftId, userId);
+
+        Product product = getById(draftId);
+        if (product == null) {
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+        if (!product.getSellerId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+        if (!product.isDraft()) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "该记录不是草稿");
+        }
+
+        return convertToDraftVO(product);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ProductVO publishFromDraft(Long draftId, Long userId) {
+        log.info("从草稿发布商品, draftId={}, userId={}", draftId, userId);
+
+        Product product = getById(draftId);
+        if (product == null) {
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+        if (!product.getSellerId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+        if (!product.isDraft()) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "该记录不是草稿");
+        }
+
+        // 验证必填字段
+        validateRequiredFields(product);
+
+        // 更新状态为下架（待审核）
+        product.setStatus(Product.STATUS_OFFLINE);
+        product.setAuditStatus(0); // 待审核
+
+        boolean updated = updateById(product);
+        if (!updated) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "发布失败");
+        }
+
+        log.info("草稿发布成功, productId={}", draftId);
+        return convertToVO(product, userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteDraft(Long draftId, Long userId) {
+        log.info("删除草稿, draftId={}, userId={}", draftId, userId);
+
+        Product product = getById(draftId);
+        if (product == null) {
+            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+        }
+        if (!product.getSellerId().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+        if (!product.isDraft()) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "只能删除草稿状态的记录");
+        }
+
+        // 逻辑删除
+        boolean deleted = removeById(draftId);
+        if (!deleted) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "草稿删除失败");
+        }
+
+        // 删除关联图片
+        LambdaQueryWrapper<ProductImage> imageWrapper = new LambdaQueryWrapper<>();
+        imageWrapper.eq(ProductImage::getProductId, draftId);
+        productImageMapper.delete(imageWrapper);
+
+        log.info("草稿删除成功");
+    }
+
+    @Override
+    public int countUserDrafts(Long userId) {
+        return Math.toIntExact(lambdaQuery()
+                .eq(Product::getSellerId, userId)
+                .eq(Product::getStatus, Product.STATUS_DRAFT)
+                .eq(Product::getDeleted, 0)
+                .count());
+    }
+
+    /**
+     * 验证发布时的必填字段
+     */
+    private void validateRequiredFields(Product product) {
+        List<String> missingFields = new java.util.ArrayList<>();
+
+        if (product.getTitle() == null || product.getTitle().trim().isEmpty()) {
+            missingFields.add("商品标题");
+        }
+        if (product.getCategoryId() == null) {
+            missingFields.add("分类");
+        }
+        if (product.getPrice() == null) {
+            missingFields.add("价格");
+        }
+        if (product.getConditionLevel() == null) {
+            missingFields.add("成色");
+        }
+
+        if (!missingFields.isEmpty()) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                "发布前请完善以下必填信息：" + String.join("、", missingFields));
+        }
+    }
+
+    /**
+     * 保存商品图片
+     */
+    private void saveProductImages(Long productId, String[] imageUrls) {
+        // 删除旧图片
+        LambdaQueryWrapper<ProductImage> deleteWrapper = new LambdaQueryWrapper<>();
+        deleteWrapper.eq(ProductImage::getProductId, productId);
+        productImageMapper.delete(deleteWrapper);
+
+        // 保存新图片
+        for (int i = 0; i < imageUrls.length && i < 9; i++) {
+            ProductImage image = new ProductImage();
+            image.setProductId(productId);
+            image.setImageUrl(imageUrls[i]);
+            image.setSortOrder(i);
+            image.setIsCover(i == 0 ? 1 : 0); // 第一张为封面
+            image.setStatus(0);
+            productImageMapper.insert(image);
+        }
+    }
+
+    /**
+     * 转换为草稿VO
+     */
+    private ProductDraftVO convertToDraftVO(Product product) {
+        ProductDraftVO vo = new ProductDraftVO();
+        BeanUtil.copyProperties(product, vo);
+        vo.setDraftId(product.getProductId());
+        vo.setProductId(product.getProductId());
+
+        // 格式化时间
+        if (product.getCreateTime() != null) {
+            vo.setCreateTime(product.getCreateTime().toString());
+        }
+        if (product.getUpdateTime() != null) {
+            vo.setUpdateTime(product.getUpdateTime().toString());
+        }
+
+        // 获取分类名称
+        if (product.getCategoryId() != null) {
+            Category category = categoryMapper.selectById(product.getCategoryId());
+            if (category != null) {
+                vo.setCategoryName(category.getName());
+            }
+        }
+
+        // 获取图片
+        LambdaQueryWrapper<ProductImage> imageWrapper = new LambdaQueryWrapper<>();
+        imageWrapper.eq(ProductImage::getProductId, product.getProductId())
+                .eq(ProductImage::getStatus, 0)
+                .orderByAsc(ProductImage::getSortOrder);
+        List<ProductImage> images = productImageMapper.selectList(imageWrapper);
+
+        if (!images.isEmpty()) {
+            String[] imageUrls = images.stream()
+                    .map(ProductImage::getImageUrl)
+                    .toArray(String[]::new);
+            vo.setImages(imageUrls);
+            vo.setImageCount(images.size());
+            vo.setCoverImage(images.get(0).getImageUrl());
+        }
+
+        // 计算完成度和缺失字段
+        vo.setCompletion(calculateCompletion(product));
+        vo.setMissingFields(getMissingFields(product));
+
+        return vo;
+    }
+
+    /**
+     * 计算草稿完成度（0-100）
+     */
+    private Integer calculateCompletion(Product product) {
+        int totalFields = 6; // 标题、描述、分类、价格、成色、图片
+        int completedFields = 0;
+
+        if (product.getTitle() != null && !product.getTitle().trim().isEmpty()) {
+            completedFields++;
+        }
+        if (product.getDescription() != null && !product.getDescription().trim().isEmpty()) {
+            completedFields++;
+        }
+        if (product.getCategoryId() != null) {
+            completedFields++;
+        }
+        if (product.getPrice() != null) {
+            completedFields++;
+        }
+        if (product.getConditionLevel() != null) {
+            completedFields++;
+        }
+
+        // 检查是否有图片
+        LambdaQueryWrapper<ProductImage> imageWrapper = new LambdaQueryWrapper<>();
+        imageWrapper.eq(ProductImage::getProductId, product.getProductId())
+                .eq(ProductImage::getStatus, 0);
+        long imageCount = productImageMapper.selectCount(imageWrapper);
+        if (imageCount > 0) {
+            completedFields++;
+        }
+
+        return (completedFields * 100) / totalFields;
+    }
+
+    /**
+     * 获取缺失的必填字段列表
+     */
+    private String[] getMissingFields(Product product) {
+        List<String> missingFields = new java.util.ArrayList<>();
+
+        if (product.getTitle() == null || product.getTitle().trim().isEmpty()) {
+            missingFields.add("商品标题");
+        }
+        if (product.getDescription() == null || product.getDescription().trim().isEmpty()) {
+            missingFields.add("商品描述");
+        }
+        if (product.getCategoryId() == null) {
+            missingFields.add("分类");
+        }
+        if (product.getPrice() == null) {
+            missingFields.add("价格");
+        }
+        if (product.getConditionLevel() == null) {
+            missingFields.add("成色");
+        }
+
+        // 检查是否有图片
+        LambdaQueryWrapper<ProductImage> imageWrapper = new LambdaQueryWrapper<>();
+        imageWrapper.eq(ProductImage::getProductId, product.getProductId())
+                .eq(ProductImage::getStatus, 0);
+        long imageCount = productImageMapper.selectCount(imageWrapper);
+        if (imageCount == 0) {
+            missingFields.add("商品图片");
+        }
+
+        return missingFields.toArray(new String[0]);
     }
 }

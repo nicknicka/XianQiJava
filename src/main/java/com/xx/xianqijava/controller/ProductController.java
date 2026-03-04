@@ -4,10 +4,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.dto.ProductCreateDTO;
+import com.xx.xianqijava.dto.ProductDraftSaveDTO;
 import com.xx.xianqijava.dto.ProductUpdateDTO;
 import com.xx.xianqijava.entity.Product;
 import com.xx.xianqijava.service.ProductService;
 import com.xx.xianqijava.util.SecurityUtil;
+import com.xx.xianqijava.vo.ProductDraftVO;
 import com.xx.xianqijava.vo.ProductVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -205,5 +207,86 @@ public class ProductController {
         IPage<ProductVO> productPage = productService.getSellerProducts(pageParam, userId, excludeProductId);
 
         return Result.success(productPage);
+    }
+
+    // ==================== 草稿相关接口 ====================
+
+    /**
+     * 保存商品草稿
+     */
+    @Operation(summary = "保存商品草稿")
+    @PostMapping("/draft")
+    public Result<ProductDraftVO> saveDraft(@Valid @RequestBody ProductDraftSaveDTO draftDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("保存商品草稿, userId={}", userId);
+        ProductDraftVO draftVO = productService.saveDraft(draftDTO, userId);
+        return Result.success("草稿保存成功", draftVO);
+    }
+
+    /**
+     * 获取草稿列表
+     */
+    @Operation(summary = "获取草稿列表")
+    @GetMapping("/draft")
+    public Result<IPage<ProductDraftVO>> getDraftList(
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
+            @Parameter(description = "页大小") @RequestParam(defaultValue = "10") Integer size) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取草稿列表, userId={}, page={}, size={}", userId, page, size);
+
+        Page<Product> pageParam = new Page<>(page, size);
+        IPage<ProductDraftVO> draftPage = productService.getDraftList(pageParam, userId);
+
+        return Result.success(draftPage);
+    }
+
+    /**
+     * 获取草稿详情
+     */
+    @Operation(summary = "获取草稿详情")
+    @GetMapping("/draft/{id}")
+    public Result<ProductDraftVO> getDraftDetail(
+            @Parameter(description = "草稿ID") @PathVariable("id") Long id) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取草稿详情, draftId={}, userId={}", id, userId);
+        ProductDraftVO draftVO = productService.getDraftDetail(id, userId);
+        return Result.success(draftVO);
+    }
+
+    /**
+     * 从草稿发布商品
+     */
+    @Operation(summary = "从草稿发布商品")
+    @PostMapping("/draft/{id}/publish")
+    public Result<ProductVO> publishFromDraft(
+            @Parameter(description = "草稿ID") @PathVariable("id") Long id) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("从草稿发布商品, draftId={}, userId={}", id, userId);
+        ProductVO productVO = productService.publishFromDraft(id, userId);
+        return Result.success("商品发布成功，请等待审核", productVO);
+    }
+
+    /**
+     * 删除草稿
+     */
+    @Operation(summary = "删除草稿")
+    @DeleteMapping("/draft/{id}")
+    public Result<Void> deleteDraft(
+            @Parameter(description = "草稿ID") @PathVariable("id") Long id) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("删除草稿, draftId={}, userId={}", id, userId);
+        productService.deleteDraft(id, userId);
+        return Result.success("草稿删除成功");
+    }
+
+    /**
+     * 获取草稿数量
+     */
+    @Operation(summary = "获取草稿数量")
+    @GetMapping("/draft/count")
+    public Result<java.util.Map<String, Object>> getDraftCount() {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        int count = productService.countUserDrafts(userId);
+        return Result.success(java.util.Map.of("count", count, "maxCount", 10));
     }
 }

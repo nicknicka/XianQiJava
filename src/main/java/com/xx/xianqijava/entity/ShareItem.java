@@ -48,8 +48,28 @@ public class ShareItem extends BaseEntity {
     @Schema(description = "图片数量")
     private Integer imageCount;
 
-    @Schema(description = "状态：0-下架，1-可借用，2-借用中")
+    @Schema(description = "状态：0-下架，1-可借用，2-借用中，4-草稿")
     private Integer status;
+
+    // 状态常量
+    public static final int STATUS_OFFLINE = 0;
+    public static final int STATUS_AVAILABLE = 1;
+    public static final int STATUS_BORROWED = 2;
+    public static final int STATUS_DRAFT = 4;
+
+    /**
+     * 判断是否为草稿状态
+     */
+    public boolean isDraft() {
+        return this.status != null && this.status == STATUS_DRAFT;
+    }
+
+    /**
+     * 设置为草稿状态
+     */
+    public void setAsDraft() {
+        this.status = STATUS_DRAFT;
+    }
 
     @Schema(description = "可借用时间段（JSON）")
     private String availableTimes;

@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xx.xianqijava.common.ErrorCode;
 import com.xx.xianqijava.dto.ShareItemCreateDTO;
+import com.xx.xianqijava.dto.ShareItemDraftSaveDTO;
 import com.xx.xianqijava.entity.Category;
 import com.xx.xianqijava.entity.ShareItem;
 import com.xx.xianqijava.entity.ShareItemImage;
@@ -18,6 +19,7 @@ import com.xx.xianqijava.mapper.ShareItemImageMapper;
 import com.xx.xianqijava.mapper.ShareItemMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.ShareItemService;
+import com.xx.xianqijava.vo.ShareItemDraftVO;
 import com.xx.xianqijava.vo.ShareItemVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -362,5 +364,353 @@ public class ShareItemServiceImpl extends ServiceImpl<ShareItemMapper, ShareItem
 
         IPage<ShareItem> shareItemPage = page(page, queryWrapper);
         return shareItemPage.convert(this::convertToVO);
+    }
+
+    // ==================== 草稿相关方法实现 ====================
+
+    private static final int MAX_DRAFT_COUNT = 10;
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ShareItemDraftVO saveDraft(ShareItemDraftSaveDTO draftDTO, Long ownerId) {
+        log.info("保存共享物品草稿, ownerId={}, draftId={}", ownerId, draftDTO.getDraftId());
+
+        // 1. 如果是新草稿，检查数量限制
+        if (draftDTO.getDraftId() == null) {
+            int currentDraftCount = countUserDrafts(ownerId);
+            if (currentDraftCount >= MAX_DRAFT_COUNT) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST,
+                    "草稿数量已达上限（" + MAX_DRAFT_COUNT + "个），请先发布或删除部分草稿");
+            }
+        }
+
+        // 2. 验证分类是否存在（如果提供了分类ID）
+        if (draftDTO.getCategoryId() != null) {
+            Category category = categoryMapper.selectById(draftDTO.getCategoryId());
+            if (category == null || category.getDeleted() == 1) {
+                throw new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
+            }
+        }
+
+        ShareItem shareItem;
+        boolean isUpdate = draftDTO.getDraftId() != null;
+
+        if (isUpdate) {
+            // 更新现有草稿
+            shareItem = getById(draftDTO.getDraftId());
+            if (shareItem == null) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "共享物品不存在");
+            }
+            if (!shareItem.getOwnerId().equals(ownerId)) {
+                throw new BusinessException(ErrorCode.FORBIDDEN);
+            }
+            if (!shareItem.isDraft()) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "只能修改草稿状态的记录");
+            }
+        } else {
+            // 创建新草稿
+            shareItem = new ShareItem();
+            shareItem.setOwnerId(ownerId);
+            shareItem.setAsDraft();
+        }
+
+        // 3. 更新字段（只更新非空字段）
+        if (draftDTO.getTitle() != null) {
+            shareItem.setTitle(draftDTO.getTitle());
+        }
+        if (draftDTO.getDescription() != null) {
+            shareItem.setDescription(draftDTO.getDescription());
+        }
+        if (draftDTO.getCategoryId() != null) {
+            shareItem.setCategoryId(draftDTO.getCategoryId());
+        }
+        if (draftDTO.getDeposit() != null) {
+            shareItem.setDeposit(draftDTO.getDeposit());
+        }
+        if (draftDTO.getDailyRent() != null) {
+            shareItem.setDailyRent(draftDTO.getDailyRent());
+        }
+        if (draftDTO.getAvailableTimes() != null) {
+            shareItem.setAvailableTimes(draftDTO.getAvailableTimes());
+        }
+
+        // 4. 保存共享物品
+        boolean saved = isUpdate ? updateById(shareItem) : save(shareItem);
+        if (!saved) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "草稿保存失败");
+        }
+
+        // 5. 处理图片（草稿也支持图片上传）
+        if (draftDTO.getImageUrls() != null && !draftDTO.getImageUrls().isEmpty()) {
+            saveShareItemImages(shareItem.getShareId(), draftDTO.getImageUrls());
+        }
+
+        log.info("草稿保存成功, shareId={}", shareItem.getShareId());
+        return convertToDraftVO(shareItem);
+    }
+
+    @Override
+    public IPage<ShareItemDraftVO> getDraftList(Page<ShareItem> page, Long ownerId) {
+        log.info("获取用户草稿列表, ownerId={}, page={}", ownerId, page.getCurrent());
+
+        LambdaQueryWrapper<ShareItem> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ShareItem::getOwnerId, ownerId);
+        wrapper.eq(ShareItem::getStatus, ShareItem.STATUS_DRAFT);
+        wrapper.eq(ShareItem::getDeleted, 0);
+        wrapper.orderByDesc(ShareItem::getUpdateTime);
+
+        IPage<ShareItem> draftPage = page(page, wrapper);
+        return draftPage.convert(this::convertToDraftVO);
+    }
+
+    @Override
+    public ShareItemDraftVO getDraftDetail(Long draftId, Long ownerId) {
+        log.info("获取草稿详情, draftId={}, ownerId={}", draftId, ownerId);
+
+        ShareItem shareItem = getById(draftId);
+        if (shareItem == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "共享物品不存在");
+        }
+        if (!shareItem.getOwnerId().equals(ownerId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+        if (!shareItem.isDraft()) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "该记录不是草稿");
+        }
+
+        return convertToDraftVO(shareItem);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public ShareItemVO publishFromDraft(Long draftId, Long ownerId) {
+        log.info("从草稿发布共享物品, draftId={}, ownerId={}", draftId, ownerId);
+
+        ShareItem shareItem = getById(draftId);
+        if (shareItem == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "共享物品不存在");
+        }
+        if (!shareItem.getOwnerId().equals(ownerId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+        if (!shareItem.isDraft()) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "该记录不是草稿");
+        }
+
+        // 验证必填字段
+        validateRequiredFields(shareItem);
+
+        // 更新状态为可借用
+        shareItem.setStatus(ShareItem.STATUS_AVAILABLE);
+
+        boolean updated = updateById(shareItem);
+        if (!updated) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "发布失败");
+        }
+
+        log.info("草稿发布成功, shareId={}", draftId);
+        return convertToVO(shareItem);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteDraft(Long draftId, Long ownerId) {
+        log.info("删除草稿, draftId={}, ownerId={}", draftId, ownerId);
+
+        ShareItem shareItem = getById(draftId);
+        if (shareItem == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "共享物品不存在");
+        }
+        if (!shareItem.getOwnerId().equals(ownerId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN);
+        }
+        if (!shareItem.isDraft()) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "只能删除草稿状态的记录");
+        }
+
+        // 逻辑删除
+        boolean deleted = removeById(draftId);
+        if (!deleted) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "草稿删除失败");
+        }
+
+        // 删除关联图片
+        LambdaQueryWrapper<ShareItemImage> imageWrapper = new LambdaQueryWrapper<>();
+        imageWrapper.eq(ShareItemImage::getShareId, draftId);
+        shareItemImageMapper.delete(imageWrapper);
+
+        log.info("草稿删除成功");
+    }
+
+    @Override
+    public int countUserDrafts(Long ownerId) {
+        return Math.toIntExact(lambdaQuery()
+                .eq(ShareItem::getOwnerId, ownerId)
+                .eq(ShareItem::getStatus, ShareItem.STATUS_DRAFT)
+                .eq(ShareItem::getDeleted, 0)
+                .count());
+    }
+
+    /**
+     * 验证发布时的必填字段
+     */
+    private void validateRequiredFields(ShareItem shareItem) {
+        List<String> missingFields = new ArrayList<>();
+
+        if (shareItem.getTitle() == null || shareItem.getTitle().trim().isEmpty()) {
+            missingFields.add("物品标题");
+        }
+        if (shareItem.getCategoryId() == null) {
+            missingFields.add("分类");
+        }
+        if (shareItem.getDeposit() == null) {
+            missingFields.add("押金");
+        }
+        if (shareItem.getDailyRent() == null) {
+            missingFields.add("日租金");
+        }
+
+        if (!missingFields.isEmpty()) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST,
+                "发布前请完善以下必填信息：" + String.join("、", missingFields));
+        }
+    }
+
+    /**
+     * 保存共享物品图片
+     */
+    private void saveShareItemImages(Long shareId, List<String> imageUrls) {
+        // 删除旧图片
+        LambdaQueryWrapper<ShareItemImage> deleteWrapper = new LambdaQueryWrapper<>();
+        deleteWrapper.eq(ShareItemImage::getShareId, shareId);
+        shareItemImageMapper.delete(deleteWrapper);
+
+        // 保存新图片
+        for (int i = 0; i < imageUrls.size() && i < 9; i++) {
+            ShareItemImage image = new ShareItemImage();
+            image.setShareId(shareId);
+            image.setImageUrl(imageUrls.get(i));
+            image.setSortOrder(i);
+            image.setIsCover(i == 0 ? 1 : 0); // 第一张为封面
+            image.setStatus(0);
+            shareItemImageMapper.insert(image);
+        }
+    }
+
+    /**
+     * 转换为草稿VO
+     */
+    private ShareItemDraftVO convertToDraftVO(ShareItem shareItem) {
+        ShareItemDraftVO vo = new ShareItemDraftVO();
+        BeanUtil.copyProperties(shareItem, vo);
+        vo.setDraftId(shareItem.getShareId());
+        vo.setShareId(shareItem.getShareId());
+
+        // 格式化时间
+        if (shareItem.getCreateTime() != null) {
+            vo.setCreateTime(shareItem.getCreateTime().toString());
+        }
+        if (shareItem.getUpdateTime() != null) {
+            vo.setUpdateTime(shareItem.getUpdateTime().toString());
+        }
+
+        // 获取分类名称
+        if (shareItem.getCategoryId() != null) {
+            Category category = categoryMapper.selectById(shareItem.getCategoryId());
+            if (category != null) {
+                vo.setCategoryName(category.getName());
+            }
+        }
+
+        // 获取图片
+        LambdaQueryWrapper<ShareItemImage> imageWrapper = new LambdaQueryWrapper<>();
+        imageWrapper.eq(ShareItemImage::getShareId, shareItem.getShareId())
+                .eq(ShareItemImage::getStatus, 0)
+                .orderByAsc(ShareItemImage::getSortOrder);
+        List<ShareItemImage> images = shareItemImageMapper.selectList(imageWrapper);
+
+        if (!images.isEmpty()) {
+            String[] imageUrls = images.stream()
+                    .map(ShareItemImage::getImageUrl)
+                    .toArray(String[]::new);
+            vo.setImages(imageUrls);
+            vo.setImageCount(images.size());
+            vo.setCoverImage(images.get(0).getImageUrl());
+        }
+
+        // 计算完成度和缺失字段
+        vo.setCompletion(calculateCompletion(shareItem));
+        vo.setMissingFields(getMissingFields(shareItem));
+
+        return vo;
+    }
+
+    /**
+     * 计算草稿完成度（0-100）
+     */
+    private Integer calculateCompletion(ShareItem shareItem) {
+        int totalFields = 5; // 标题、描述、分类、押金、日租金、图片
+        int completedFields = 0;
+
+        if (shareItem.getTitle() != null && !shareItem.getTitle().trim().isEmpty()) {
+            completedFields++;
+        }
+        if (shareItem.getDescription() != null && !shareItem.getDescription().trim().isEmpty()) {
+            completedFields++;
+        }
+        if (shareItem.getCategoryId() != null) {
+            completedFields++;
+        }
+        if (shareItem.getDeposit() != null) {
+            completedFields++;
+        }
+        if (shareItem.getDailyRent() != null) {
+            completedFields++;
+        }
+
+        // 检查是否有图片
+        LambdaQueryWrapper<ShareItemImage> imageWrapper = new LambdaQueryWrapper<>();
+        imageWrapper.eq(ShareItemImage::getShareId, shareItem.getShareId())
+                .eq(ShareItemImage::getStatus, 0);
+        long imageCount = shareItemImageMapper.selectCount(imageWrapper);
+        if (imageCount > 0) {
+            completedFields++;
+        }
+
+        return (completedFields * 100) / totalFields;
+    }
+
+    /**
+     * 获取缺失的必填字段列表
+     */
+    private String[] getMissingFields(ShareItem shareItem) {
+        List<String> missingFields = new ArrayList<>();
+
+        if (shareItem.getTitle() == null || shareItem.getTitle().trim().isEmpty()) {
+            missingFields.add("物品标题");
+        }
+        if (shareItem.getDescription() == null || shareItem.getDescription().trim().isEmpty()) {
+            missingFields.add("物品描述");
+        }
+        if (shareItem.getCategoryId() == null) {
+            missingFields.add("分类");
+        }
+        if (shareItem.getDeposit() == null) {
+            missingFields.add("押金");
+        }
+        if (shareItem.getDailyRent() == null) {
+            missingFields.add("日租金");
+        }
+
+        // 检查是否有图片
+        LambdaQueryWrapper<ShareItemImage> imageWrapper = new LambdaQueryWrapper<>();
+        imageWrapper.eq(ShareItemImage::getShareId, shareItem.getShareId())
+                .eq(ShareItemImage::getStatus, 0);
+        long imageCount = shareItemImageMapper.selectCount(imageWrapper);
+        if (imageCount == 0) {
+            missingFields.add("物品图片");
+        }
+
+        return missingFields.toArray(new String[0]);
     }
 }

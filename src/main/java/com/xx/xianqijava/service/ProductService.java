@@ -5,9 +5,11 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xx.xianqijava.dto.ProductAuditDTO;
 import com.xx.xianqijava.dto.ProductCreateDTO;
+import com.xx.xianqijava.dto.ProductDraftSaveDTO;
 import com.xx.xianqijava.dto.ProductUpdateDTO;
 import com.xx.xianqijava.entity.Product;
 import com.xx.xianqijava.vo.ProductAuditVO;
+import com.xx.xianqijava.vo.ProductDraftVO;
 import com.xx.xianqijava.vo.ProductVO;
 
 import java.math.BigDecimal;
@@ -155,4 +157,58 @@ public interface ProductService extends IService<Product> {
      * @return 卖家的其他商品列表
      */
     IPage<ProductVO> getSellerProducts(Page<Product> page, Long userId, Long excludeProductId);
+
+    // ==================== 草稿相关方法 ====================
+
+    /**
+     * 保存商品草稿
+     *
+     * @param draftDTO 草稿数据
+     * @param userId   用户ID
+     * @return 草稿VO
+     */
+    ProductDraftVO saveDraft(ProductDraftSaveDTO draftDTO, Long userId);
+
+    /**
+     * 获取用户草稿列表
+     *
+     * @param page   分页参数
+     * @param userId 用户ID
+     * @return 草稿列表
+     */
+    IPage<ProductDraftVO> getDraftList(Page<Product> page, Long userId);
+
+    /**
+     * 获取草稿详情
+     *
+     * @param draftId 草稿ID
+     * @param userId  用户ID
+     * @return 草稿VO
+     */
+    ProductDraftVO getDraftDetail(Long draftId, Long userId);
+
+    /**
+     * 从草稿发布商品
+     *
+     * @param draftId 草稿ID
+     * @param userId  用户ID
+     * @return 商品VO
+     */
+    ProductVO publishFromDraft(Long draftId, Long userId);
+
+    /**
+     * 删除草稿
+     *
+     * @param draftId 草稿ID
+     * @param userId  用户ID
+     */
+    void deleteDraft(Long draftId, Long userId);
+
+    /**
+     * 统计用户草稿数量
+     *
+     * @param userId 用户ID
+     * @return 草稿数量
+     */
+    int countUserDrafts(Long userId);
 }

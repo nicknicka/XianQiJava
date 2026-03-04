@@ -46,6 +46,12 @@ public enum ErrorCode {
     SHARE_ITEM_BORROWED(21003, "共享物品借用中"),
     SHARE_DURATION_EXCEED_LIMIT(21004, "借用时长超过限制"),
 
+    // 草稿相关错误码 25xxx
+    DRAFT_NOT_FOUND(25001, "草稿不存在"),
+    DRAFT_COUNT_EXCEED(25002, "草稿数量超过限制"),
+    DRAFT_PUBLISH_ERROR(25003, "草稿发布失败，请完善必填信息"),
+    DRAFT_ALREADY_PUBLISHED(25004, "该草稿已发布"),
+
     // 订单相关错误码 30xxx
     ORDER_NOT_FOUND(30001, "订单不存在"),
     ORDER_STATUS_ERROR(30002, "订单状态错误"),

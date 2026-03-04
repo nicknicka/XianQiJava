@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.xx.xianqijava.dto.ShareItemCreateDTO;
+import com.xx.xianqijava.dto.ShareItemDraftSaveDTO;
 import com.xx.xianqijava.entity.ShareItem;
+import com.xx.xianqijava.vo.ShareItemDraftVO;
 import com.xx.xianqijava.vo.ShareItemVO;
 
 /**
@@ -84,4 +86,58 @@ public interface ShareItemService extends IService<ShareItem> {
      * @return 共享物品列表
      */
     IPage<ShareItemVO> getNearbyShareItems(Page<ShareItem> page, Long userId);
+
+    // ==================== 草稿相关方法 ====================
+
+    /**
+     * 保存共享物品草稿
+     *
+     * @param draftDTO 草稿数据
+     * @param ownerId  用户ID
+     * @return 草稿VO
+     */
+    ShareItemDraftVO saveDraft(ShareItemDraftSaveDTO draftDTO, Long ownerId);
+
+    /**
+     * 获取用户草稿列表
+     *
+     * @param page    分页参数
+     * @param ownerId 用户ID
+     * @return 草稿列表
+     */
+    IPage<ShareItemDraftVO> getDraftList(Page<ShareItem> page, Long ownerId);
+
+    /**
+     * 获取草稿详情
+     *
+     * @param draftId 草稿ID
+     * @param ownerId 用户ID
+     * @return 草稿VO
+     */
+    ShareItemDraftVO getDraftDetail(Long draftId, Long ownerId);
+
+    /**
+     * 从草稿发布共享物品
+     *
+     * @param draftId 草稿ID
+     * @param ownerId 用户ID
+     * @return 共享物品VO
+     */
+    ShareItemVO publishFromDraft(Long draftId, Long ownerId);
+
+    /**
+     * 删除草稿
+     *
+     * @param draftId 草稿ID
+     * @param ownerId 用户ID
+     */
+    void deleteDraft(Long draftId, Long ownerId);
+
+    /**
+     * 统计用户草稿数量
+     *
+     * @param ownerId 用户ID
+     * @return 草稿数量
+     */
+    int countUserDrafts(Long ownerId);
 }
