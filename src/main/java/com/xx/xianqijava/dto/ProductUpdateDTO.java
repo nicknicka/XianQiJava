@@ -3,6 +3,7 @@ package com.xx.xianqijava.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.DecimalMin;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import lombok.Data;
 
@@ -31,7 +32,11 @@ public class ProductUpdateDTO {
     @Schema(description = "商品价格")
     private BigDecimal price;
 
-    @Schema(description = "成色：1-10，10为全新")
+    @Schema(description = "成色（字符串格式）：new, almost_new, lightly_used, obviously_used, has_flaws")
+    @Pattern(regexp = "new|almost_new|lightly_used|obviously_used|has_flaws", message = "成色值无效")
+    private String condition;
+
+    @Schema(description = "成色等级（内部使用）：1-10，10为全新")
     private Integer conditionLevel;
 
     @Schema(description = "分类ID")

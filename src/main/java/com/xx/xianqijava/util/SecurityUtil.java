@@ -1,5 +1,7 @@
 package com.xx.xianqijava.util;
 
+import com.xx.xianqijava.common.ErrorCode;
+import com.xx.xianqijava.exception.BusinessException;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
@@ -28,7 +30,7 @@ public class SecurityUtil {
     public static Long getCurrentUserIdRequired() {
         Long userId = getCurrentUserId();
         if (userId == null) {
-            throw new RuntimeException("用户未登录");
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "用户未登录");
         }
         return userId;
     }

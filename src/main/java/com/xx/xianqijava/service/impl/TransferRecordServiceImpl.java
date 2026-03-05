@@ -9,10 +9,12 @@ import com.xx.xianqijava.common.ErrorCode;
 import com.xx.xianqijava.dto.TransferCreateDTO;
 import com.xx.xianqijava.dto.TransferRespondDTO;
 import com.xx.xianqijava.entity.ShareItem;
+import com.xx.xianqijava.entity.ShareItemBooking;
 import com.xx.xianqijava.entity.ShareItemImage;
 import com.xx.xianqijava.entity.TransferRecord;
 import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.exception.BusinessException;
+import com.xx.xianqijava.mapper.ShareItemBookingMapper;
 import com.xx.xianqijava.mapper.ShareItemMapper;
 import com.xx.xianqijava.mapper.ShareItemImageMapper;
 import com.xx.xianqijava.mapper.TransferRecordMapper;
@@ -40,6 +42,7 @@ public class TransferRecordServiceImpl extends ServiceImpl<TransferRecordMapper,
     private final ShareItemMapper shareItemMapper;
     private final ShareItemImageMapper shareItemImageMapper;
     private final UserMapper userMapper;
+    private final ShareItemBookingMapper shareItemBookingMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -84,7 +87,17 @@ public class TransferRecordServiceImpl extends ServiceImpl<TransferRecordMapper,
             throw new BusinessException(ErrorCode.BAD_REQUEST, "该物品已有待确认的转赠请求");
         }
 
-        // 6. 创建转赠记录
+        // 6. 检查是否有未完成的借用订单（待审批、已批准、借用中）
+        LambdaQueryWrapper<ShareItemBooking> bookingWrapper = new LambdaQueryWrapper<>();
+        bookingWrapper.eq(ShareItemBooking::getShareId, createDTO.getShareId())
+                .in(ShareItemBooking::getStatus, 0, 1, 4) // 待审批、已批准、借用中
+                .eq(ShareItemBooking::getDeleted, 0);
+        long activeBookingCount = shareItemBookingMapper.selectCount(bookingWrapper);
+        if (activeBookingCount > 0) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "该物品有未完成的借用订单，暂时不能转赠");
+        }
+
+        // 7. 创建转赠记录
         TransferRecord record = new TransferRecord();
         record.setShareId(createDTO.getShareId());
         record.setFromUserId(fromUserId);
@@ -140,6 +153,16 @@ public class TransferRecordServiceImpl extends ServiceImpl<TransferRecordMapper,
         ShareItem shareItem = shareItemMapper.selectById(record.getShareId());
         if (shareItem == null) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "共享物品不存在");
+        }
+
+        // 再次检查是否有未完成的借用订单（防止待审批状态被转赠）
+        LambdaQueryWrapper<ShareItemBooking> bookingWrapper = new LambdaQueryWrapper<>();
+        bookingWrapper.eq(ShareItemBooking::getShareId, record.getShareId())
+                .in(ShareItemBooking::getStatus, 0, 1, 4) // 待审批、已批准、借用中
+                .eq(ShareItemBooking::getDeleted, 0);
+        long activeBookingCount = shareItemBookingMapper.selectCount(bookingWrapper);
+        if (activeBookingCount > 0) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "该物品有未完成的借用订单，请先处理完订单后再接受转赠");
         }
 
         // 更新物品所有者

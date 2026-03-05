@@ -46,6 +46,12 @@ public class UserInfoVO {
     @Schema(description = "是否实名认证：0-否，1-是")
     private Integer isVerified;
 
+    @Schema(description = "实名认证状态：0-未认证 1-审核中 2-已认证 3-认证失败")
+    private Integer realNameStatus;
+
+    @Schema(description = "学生认证状态：0-未认证 1-审核中 2-已认证 3-认证失败")
+    private Integer studentStatus;
+
     @Schema(description = "创建时间")
     private String createTime;
 

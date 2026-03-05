@@ -30,6 +30,13 @@ public enum ErrorCode {
     VERIFICATION_CODE_ERROR(10009, "验证码错误"),
     VERIFICATION_CODE_EXPIRED(10010, "验证码已过期"),
 
+    // 认证相关错误码 11xxx
+    AUTH_NOT_EXISTS(11001, "认证记录不存在"),
+    AUTH_ALREADY_APPROVED(11002, "认证已通过，无需重复提交"),
+    AUTH_STATUS_ERROR(11003, "认证状态错误"),
+    REAL_NAME_ALREADY_EXISTS(11004, "该身份证号已认证"),
+    STUDENT_ID_ALREADY_EXISTS(11005, "该学号已认证"),
+
     // 商品相关错误码 20xxx
     PRODUCT_NOT_FOUND(20001, "商品不存在"),
     PRODUCT_OFFLINE(20002, "商品已下架"),

@@ -15,6 +15,7 @@ import com.xx.xianqijava.mapper.FlashSaleSessionMapper;
 import com.xx.xianqijava.mapper.OrderMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.service.FlashSaleService;
+import com.xx.xianqijava.util.ProductConditionUtil;
 import com.xx.xianqijava.vo.FlashSaleProductVO;
 import com.xx.xianqijava.vo.FlashSaleSessionVO;
 import com.xx.xianqijava.vo.ProductVO;
@@ -149,7 +150,7 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleSessionMapper, Fl
         vo.setLimitPerUser(flashProduct.getLimitPerUser() != null ? flashProduct.getLimitPerUser() : 1);
 
         // 设置成色兼容字段
-        vo.setCondition(vo.getConditionLevel());
+        vo.setCondition(ProductConditionUtil.levelToString(vo.getConditionLevel()));
 
         // 计算已抢百分比
         if (flashProduct.getStockCount() > 0) {

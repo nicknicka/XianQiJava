@@ -19,9 +19,10 @@ import com.xx.xianqijava.vo.UserCenterVO;
 import com.xx.xianqijava.vo.UserInfoVO;
 import com.xx.xianqijava.vo.UserLoginVO;
 import com.xx.xianqijava.vo.UserRegisterVO;
-import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Slf4j
 @Service
-@RequiredArgsConstructor
 public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
 
     private final PasswordEncoder passwordEncoder;
@@ -48,8 +48,35 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final com.xx.xianqijava.service.UserPreferenceService userPreferenceService;
     private final StringRedisTemplate redisTemplate;
 
+    @Autowired
+    @Lazy
+    private com.xx.xianqijava.service.UserRealNameAuthService userRealNameAuthService;
+
+    @Autowired
+    @Lazy
+    private com.xx.xianqijava.service.UserStudentAuthService userStudentAuthService;
+
     @Value("${jwt.expiration}")
     private Long jwtExpiration;
+
+    public UserServiceImpl(PasswordEncoder passwordEncoder, JwtUtil jwtUtil,
+                          com.xx.xianqijava.service.ProductService productService,
+                          com.xx.xianqijava.service.OrderService orderService,
+                          com.xx.xianqijava.service.EvaluationService evaluationService,
+                          com.xx.xianqijava.service.ProductFavoriteService productFavoriteService,
+                          com.xx.xianqijava.service.UserFollowService userFollowService,
+                          com.xx.xianqijava.service.UserPreferenceService userPreferenceService,
+                          StringRedisTemplate redisTemplate) {
+        this.passwordEncoder = passwordEncoder;
+        this.jwtUtil = jwtUtil;
+        this.productService = productService;
+        this.orderService = orderService;
+        this.evaluationService = evaluationService;
+        this.productFavoriteService = productFavoriteService;
+        this.userFollowService = userFollowService;
+        this.userPreferenceService = userPreferenceService;
+        this.redisTemplate = redisTemplate;
+    }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -115,6 +142,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userInfo.setCreditScore(user.getCreditScore());
         userInfo.setStatus(user.getStatus());
         userInfo.setIsVerified(user.getIsVerified());
+        userInfo.setRealNameStatus(0); // 新用户默认未认证
+        userInfo.setStudentStatus(0); // 新用户默认未认证
         userInfo.setCreateTime(user.getCreateTime().toString());
         userInfo.setUpdateTime(user.getUpdateTime().toString());
 
@@ -184,6 +213,18 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         BeanUtil.copyProperties(user, userInfoVO);
         userInfoVO.setCreateTime(user.getCreateTime().toString());
         userInfoVO.setUpdateTime(user.getUpdateTime().toString());
+
+        // 查询实名认证状态（从扩展表获取）
+        com.xx.xianqijava.entity.UserRealNameAuth realNameAuth =
+            userRealNameAuthService.getOne(new LambdaQueryWrapper<com.xx.xianqijava.entity.UserRealNameAuth>()
+                .eq(com.xx.xianqijava.entity.UserRealNameAuth::getUserId, userId));
+        userInfoVO.setRealNameStatus(realNameAuth != null ? realNameAuth.getStatus() : 0);
+
+        // 查询学生认证状态（从扩展表获取）
+        com.xx.xianqijava.entity.UserStudentAuth studentAuth =
+            userStudentAuthService.getOne(new LambdaQueryWrapper<com.xx.xianqijava.entity.UserStudentAuth>()
+                .eq(com.xx.xianqijava.entity.UserStudentAuth::getUserId, userId));
+        userInfoVO.setStudentStatus(studentAuth != null ? studentAuth.getStatus() : 0);
 
         return userInfoVO;
     }

@@ -20,7 +20,8 @@ public interface ProductMapper extends BaseMapper<Product> {
      * 分页查询商品列表
      */
     IPage<Product> selectProductPage(Page<Product> page, @Param("categoryId") Integer categoryId,
-                                     @Param("status") Integer status, @Param("keyword") String keyword);
+                                     @Param("status") Integer status, @Param("keyword") String keyword,
+                                     @Param("sortBy") String sortBy, @Param("priceAsc") Boolean priceAsc);
 
     /**
      * 查询商品的秒杀信息

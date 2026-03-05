@@ -20,6 +20,7 @@ import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.entity.ProductStatistics;
 import com.xx.xianqijava.mapper.CategoryMapper;
+import com.xx.xianqijava.util.ProductConditionUtil;
 import com.xx.xianqijava.mapper.FlashSaleProductMapper;
 import com.xx.xianqijava.mapper.FlashSaleSessionMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
@@ -116,6 +117,13 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         product.setStatus(0); // 默认下架（待审核）
         product.setAuditStatus(0); // 待审核
         // 注意：viewCount 和 favoriteCount 现在由 product_statistics 表维护，不需要在这里设置
+
+        // 将前端传入的成色字符串转换为整数等级
+        if (createDTO.getCondition() != null) {
+            product.setConditionLevel(ProductConditionUtil.stringToLevel(createDTO.getCondition()));
+        } else if (createDTO.getConditionLevel() != null) {
+            product.setConditionLevel(createDTO.getConditionLevel());
+        }
 
         boolean saved = save(product);
         if (!saved) {
@@ -247,9 +255,10 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     }
 
     @Override
-    public IPage<ProductVO> getProductList(Page<Product> page, Integer categoryId, String keyword) {
-        IPage<Product> productPage = baseMapper.selectProductPage(page, categoryId, 1, keyword);
-        
+    public IPage<ProductVO> getProductList(Page<Product> page, Integer categoryId, String keyword,
+                                             String sortBy, Boolean priceAsc) {
+        IPage<Product> productPage = baseMapper.selectProductPage(page, categoryId, 1, keyword, sortBy, priceAsc);
+
         return productPage.convert(product -> convertToVO(product, null));
     }
 
@@ -370,7 +379,13 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         product.setTitle(updateDTO.getTitle());
         product.setDescription(updateDTO.getDescription());
         product.setPrice(updateDTO.getPrice());
-        product.setConditionLevel(updateDTO.getConditionLevel());
+
+        // 将前端传入的成色字符串转换为整数等级
+        if (updateDTO.getCondition() != null) {
+            product.setConditionLevel(ProductConditionUtil.stringToLevel(updateDTO.getCondition()));
+        } else if (updateDTO.getConditionLevel() != null) {
+            product.setConditionLevel(updateDTO.getConditionLevel());
+        }
 
         if (updateDTO.getLocation() != null) {
             product.setLocation(updateDTO.getLocation());
@@ -398,6 +413,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         ProductVO vo = new ProductVO();
         BeanUtil.copyProperties(product, vo);
         vo.setCreateTime(product.getCreateTime().toString());
+
+        // 将成色等级转换为字符串供前端使用
+        if (product.getConditionLevel() != null) {
+            vo.setCondition(ProductConditionUtil.levelToString(product.getConditionLevel()));
+        }
 
         // 获取卖家信息
         User seller = userMapper.selectById(product.getSellerId());
@@ -662,17 +682,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      * 获取成色描述
      */
     private String getConditionDesc(Integer conditionLevel) {
-        if (conditionLevel == null) {
-            return "未描述";
-        }
-        return switch (conditionLevel) {
-            case 10 -> "全新";
-            case 9 -> "几乎全新";
-            case 8 -> "轻微使用痕迹";
-            case 7 -> "明显使用痕迹";
-            case 6 -> "外观成色一般";
-            default -> conditionLevel + "成新";
-        };
+        return ProductConditionUtil.getConditionDesc(conditionLevel);
     }
 
     @Override
@@ -831,9 +841,14 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         if (draftDTO.getOriginalPrice() != null) {
             product.setOriginalPrice(draftDTO.getOriginalPrice());
         }
-        if (draftDTO.getConditionLevel() != null) {
+
+        // 将前端传入的成色字符串转换为整数等级
+        if (draftDTO.getCondition() != null) {
+            product.setConditionLevel(ProductConditionUtil.stringToLevel(draftDTO.getCondition()));
+        } else if (draftDTO.getConditionLevel() != null) {
             product.setConditionLevel(draftDTO.getConditionLevel());
         }
+
         if (draftDTO.getLocation() != null) {
             product.setLocation(draftDTO.getLocation());
         }
@@ -1020,6 +1035,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         BeanUtil.copyProperties(product, vo);
         vo.setDraftId(product.getProductId());
         vo.setProductId(product.getProductId());
+
+        // 将成色等级转换为字符串供前端使用
+        if (product.getConditionLevel() != null) {
+            vo.setCondition(ProductConditionUtil.levelToString(product.getConditionLevel()));
+        }
 
         // 格式化时间
         if (product.getCreateTime() != null) {

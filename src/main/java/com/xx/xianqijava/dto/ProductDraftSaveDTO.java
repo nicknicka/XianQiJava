@@ -36,9 +36,11 @@ public class ProductDraftSaveDTO {
     @Schema(description = "原价（元）")
     private BigDecimal originalPrice;
 
-    @Schema(description = "成色：1-10，10为全新")
-    @Min(value = 1, message = "成色范围1-10")
-    @Max(value = 10, message = "成色范围1-10")
+    @Schema(description = "成色（字符串格式）：new, almost_new, lightly_used, obviously_used, has_flaws")
+    @Pattern(regexp = "new|almost_new|lightly_used|obviously_used|has_flaws", message = "成色值无效")
+    private String condition;
+
+    @Schema(description = "成色等级（内部使用）：1-10，10为全新")
     private Integer conditionLevel;
 
     @Schema(description = "商品图片URL列表（最多9张）")

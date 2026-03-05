@@ -64,11 +64,23 @@ public class WebMvcConfig implements WebMvcConfigurer {
         registry.addResourceHandler(pattern)
                 .addResourceLocations(location);
 
+        // 兼容旧格式的图片URL：/uploads/products/{filename}.jpg
+        // 映射 /uploads/products/** 到上传目录的 products 子目录
+        String productsPattern = "/uploads/products/**";
+        String productsLocation = location + "products/";
+        registry.addResourceHandler(productsPattern)
+                .addResourceLocations(productsLocation);
+
         System.out.println("========================================");
         System.out.println("静态资源映射已配置:");
         System.out.println("URL路径: " + pattern);
         System.out.println("文件路径: " + location);
         System.out.println("访问示例: http://localhost:8080/uploads/xxx.png");
+        System.out.println("");
+        System.out.println("旧格式兼容映射:");
+        System.out.println("URL路径: " + productsPattern);
+        System.out.println("文件路径: " + productsLocation);
+        System.out.println("访问示例: http://localhost:8080/uploads/products/2-book-1.jpg");
         System.out.println("========================================");
     }
 

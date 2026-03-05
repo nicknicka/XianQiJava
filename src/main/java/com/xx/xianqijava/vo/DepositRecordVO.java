@@ -24,6 +24,9 @@ public class DepositRecordVO {
     @Schema(description = "共享物品标题")
     private String shareItemTitle;
 
+    @Schema(description = "共享物品封面图")
+    private String shareItemCover;
+
     @Schema(description = "支付用户ID")
     private Long userId;
 

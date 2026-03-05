@@ -36,8 +36,11 @@ public class ProductDraftVO {
     @Schema(description = "原价")
     private BigDecimal originalPrice;
 
-    @Schema(description = "成色：1-10")
+    @Schema(description = "成色等级：1-10")
     private Integer conditionLevel;
+
+    @Schema(description = "成色字符串（new, almost_new, lightly_used, obviously_used, has_flaws）")
+    private String condition;
 
     @Schema(description = "封面图片")
     private String coverImage;

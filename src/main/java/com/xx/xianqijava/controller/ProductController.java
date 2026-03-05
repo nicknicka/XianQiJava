@@ -68,12 +68,15 @@ public class ProductController {
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
             @Parameter(description = "页大小") @RequestParam(defaultValue = "20") Integer size,
             @Parameter(description = "分类ID") @RequestParam(required = false) Integer categoryId,
-            @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword) {
-        log.info("查询商品列表, page={}, size={}, categoryId={}, keyword={}", page, size, categoryId, keyword);
-        
+            @Parameter(description = "搜索关键词") @RequestParam(required = false) String keyword,
+            @Parameter(description = "排序方式：latest-最新, price-价格, distance-距离") @RequestParam(required = false) String sortBy,
+            @Parameter(description = "价格升序（仅当sortBy=price时有效）") @RequestParam(required = false) Boolean priceAsc) {
+        log.info("查询商品列表, page={}, size={}, categoryId={}, keyword={}, sortBy={}, priceAsc={}",
+                 page, size, categoryId, keyword, sortBy, priceAsc);
+
         Page<Product> pageParam = new Page<>(page, size);
-        IPage<ProductVO> productPage = productService.getProductList(pageParam, categoryId, keyword);
-        
+        IPage<ProductVO> productPage = productService.getProductList(pageParam, categoryId, keyword, sortBy, priceAsc);
+
         return Result.success(productPage);
     }
 

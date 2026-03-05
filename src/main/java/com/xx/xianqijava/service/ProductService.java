@@ -37,7 +37,8 @@ public interface ProductService extends IService<Product> {
     /**
      * 分页查询商品列表
      */
-    IPage<ProductVO> getProductList(Page<Product> page, Integer categoryId, String keyword);
+    IPage<ProductVO> getProductList(Page<Product> page, Integer categoryId, String keyword,
+                                     String sortBy, Boolean priceAsc);
 
     /**
      * 搜索商品
