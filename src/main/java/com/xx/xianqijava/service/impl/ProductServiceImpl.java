@@ -414,6 +414,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         BeanUtil.copyProperties(product, vo);
         vo.setCreateTime(product.getCreateTime().toString());
 
+        // 设置前端兼容字段
+        vo.setId(product.getProductId());
+
         // 将成色等级转换为字符串供前端使用
         if (product.getConditionLevel() != null) {
             vo.setCondition(ProductConditionUtil.levelToString(product.getConditionLevel()));
@@ -425,6 +428,12 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             vo.setSellerNickname(seller.getNickname());
             vo.setSellerAvatar(seller.getAvatar());
             vo.setSellerCreditScore(seller.getCreditScore());
+
+            // 设置前端兼容字段
+            vo.setUserId(product.getSellerId());
+            vo.setUserName(seller.getNickname());
+            vo.setUserAvatar(seller.getAvatar());
+            vo.setCreditLevel(seller.getCreditScore());
         }
 
         // 获取分类信息

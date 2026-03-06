@@ -94,6 +94,19 @@ public class ShareItemBookingController {
     }
 
     /**
+     * 支付押金
+     */
+    @PostMapping("/{bookingId}/pay-deposit")
+    @Operation(summary = "支付押金")
+    public Result<ShareItemBookingVO> payDeposit(
+            @Parameter(description = "预约ID") @PathVariable("bookingId") Long bookingId) {
+        Long borrowerId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("支付押金, bookingId={}, borrowerId={}", bookingId, borrowerId);
+        ShareItemBookingVO bookingVO = shareItemBookingService.payDeposit(bookingId, borrowerId);
+        return Result.success("押金支付成功", bookingVO);
+    }
+
+    /**
      * 获取预约详情
      */
     @GetMapping("/{bookingId}")

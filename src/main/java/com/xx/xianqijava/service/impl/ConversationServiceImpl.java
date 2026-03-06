@@ -89,6 +89,95 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Long createOrUpdateConversation(Long userId, Long targetUserId, Long relatedProductId) {
+        if (userId.equals(targetUserId)) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "不能与自己创建会话");
+        }
+
+        // 确保 userId1 < userId2，保持一致性
+        Long smallerId = userId < targetUserId ? userId : targetUserId;
+        Long largerId = userId < targetUserId ? targetUserId : userId;
+
+        // 查询是否已存在相同（用户对 + 商品）的会话
+        LambdaQueryWrapper<Conversation> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Conversation::getUserId1, smallerId)
+                .eq(Conversation::getUserId2, largerId)
+                .eq(Conversation::getConversationType, 1);
+
+        // 如果指定了商品ID，则查找关联该商品的会话
+        if (relatedProductId != null) {
+            queryWrapper.eq(Conversation::getRelatedProductId, relatedProductId);
+        } else {
+            // 如果没有指定商品ID，查找没有关联商品的会话（普通聊天）
+            queryWrapper.isNull(Conversation::getRelatedProductId)
+                    .isNull(Conversation::getRelatedOrderId);
+        }
+
+        Conversation conversation = baseMapper.selectOne(queryWrapper);
+
+        if (conversation == null) {
+            // 创建新会话
+            conversation = new Conversation();
+            conversation.setUserId1(smallerId);
+            conversation.setUserId2(largerId);
+            conversation.setConversationType(1);
+            conversation.setRelatedProductId(relatedProductId);
+            conversation.setUnreadCountUser1(0);
+            conversation.setUnreadCountUser2(0);
+            conversation.setIsMutedUser1(0);
+            conversation.setIsMutedUser2(0);
+            conversation.setIsArchivedUser1(0);
+            conversation.setIsArchivedUser2(0);
+            conversation.setStatus(0);
+
+            baseMapper.insert(conversation);
+            log.info("创建新会话, conversationId={}, userId1={}, userId2={}, relatedProductId={}",
+                    conversation.getConversationId(), smallerId, largerId, relatedProductId);
+        } else {
+            log.info("使用已有会话, conversationId={}, relatedProductId={}",
+                    conversation.getConversationId(), relatedProductId);
+        }
+
+        return conversation.getConversationId();
+    }
+
+    @Override
+    public ConversationVO findConversationByUserAndProduct(Long userId, Long targetUserId, Long relatedProductId) {
+        if (userId.equals(targetUserId)) {
+            return null;
+        }
+
+        // 确保 userId1 < userId2
+        Long smallerId = userId < targetUserId ? userId : targetUserId;
+        Long largerId = userId < targetUserId ? targetUserId : userId;
+
+        // 查询会话
+        LambdaQueryWrapper<Conversation> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Conversation::getUserId1, smallerId)
+                .eq(Conversation::getUserId2, largerId)
+                .eq(Conversation::getConversationType, 1)
+                .eq(Conversation::getStatus, 0);
+
+        // 如果指定了商品ID，则查找关联该商品的会话
+        if (relatedProductId != null) {
+            queryWrapper.eq(Conversation::getRelatedProductId, relatedProductId);
+        } else {
+            // 如果没有指定商品ID，查找没有关联商品的会话
+            queryWrapper.isNull(Conversation::getRelatedProductId)
+                    .isNull(Conversation::getRelatedOrderId);
+        }
+
+        Conversation conversation = baseMapper.selectOne(queryWrapper);
+
+        if (conversation == null) {
+            return null;
+        }
+
+        return convertToVO(conversation, userId);
+    }
+
+    @Override
     public IPage<ConversationVO> getConversationList(Long userId, Page<Conversation> page) {
         // 查询用户参与的所有会话
         LambdaQueryWrapper<Conversation> queryWrapper = new LambdaQueryWrapper<>();

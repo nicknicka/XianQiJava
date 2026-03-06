@@ -42,67 +42,98 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
     public EvaluationVO createEvaluation(EvaluationCreateDTO createDTO, Long evaluatorId) {
         log.info("创建评价, evaluatorId={}, orderId={}, score={}", evaluatorId, createDTO.getOrderId(), createDTO.getRating());
 
-        // 1. 查询订单
-        Order order = orderMapper.selectById(createDTO.getOrderId());
-        if (order == null) {
-            throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
-        }
-
-        // 2. 检查订单状态，只有已完成的订单才能评价
-        if (order.getStatus() != 2) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST, "只能评价已完成的订单");
-        }
-
-        // 3. 确定评价人角色和被评价人
-        Long evaluatedUserId;
-        boolean isBuyer;
-
-        if (order.getBuyerId().equals(evaluatorId)) {
-            // 买家评价卖家
-            evaluatedUserId = order.getSellerId();
-            isBuyer = true;
-        } else if (order.getSellerId().equals(evaluatorId)) {
-            // 卖家评价买家
-            evaluatedUserId = order.getBuyerId();
-            isBuyer = false;
-        } else {
-            throw new BusinessException(ErrorCode.FORBIDDEN, "您无权评价该订单");
-        }
-
-        // 4. 检查是否已经评价过（order_id有唯一约束）
-        LambdaQueryWrapper<Evaluation> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Evaluation::getOrderId, createDTO.getOrderId());
-        if (count(wrapper) > 0) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST, "该订单已被评价");
-        }
-
-        // 5. 创建评价
-        Evaluation evaluation = new Evaluation();
-        evaluation.setOrderId(createDTO.getOrderId());
-        evaluation.setFromUserId(evaluatorId);
-        evaluation.setToUserId(evaluatedUserId);
-        evaluation.setScore(createDTO.getRating());
-        evaluation.setContent(createDTO.getContent());
-        // 将标签字符串转换为JSON数组格式存储
-        if (createDTO.getTags() != null && !createDTO.getTags().isEmpty()) {
-            String[] tagArray = createDTO.getTags().split(",");
-            StringBuilder jsonBuilder = new StringBuilder("[");
-            for (int i = 0; i < tagArray.length; i++) {
-                if (i > 0) jsonBuilder.append(",");
-                jsonBuilder.append("\"").append(tagArray[i].trim()).append("\"");
+        try {
+            // 参数校验
+            if (createDTO.getOrderId() == null) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "订单ID不能为空");
             }
-            jsonBuilder.append("]");
-            evaluation.setTags(jsonBuilder.toString());
+            if (createDTO.getRating() == null || createDTO.getRating() < 1 || createDTO.getRating() > 5) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "评分必须在1-5星之间");
+            }
+            String content = createDTO.getContent();
+            if (content == null || content.trim().isEmpty()) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "评价内容不能为空");
+            }
+            if (content.trim().length() > 500) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "评价内容长度不能超过500个字符");
+            }
+
+            // 1. 查询订单
+            Order order = orderMapper.selectById(createDTO.getOrderId());
+            if (order == null) {
+                log.warn("订单不存在, orderId={}", createDTO.getOrderId());
+                throw new BusinessException(ErrorCode.ORDER_NOT_FOUND, "订单不存在");
+            }
+
+            // 2. 检查订单状态，只有已完成的订单才能评价
+            if (order.getStatus() != 2) {
+                log.warn("订单状态不允许评价, orderId={}, status={}", createDTO.getOrderId(), order.getStatus());
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "只能评价已完成的订单");
+            }
+
+            // 3. 确定评价人角色和被评价人
+            Long evaluatedUserId;
+            boolean isBuyer;
+
+            if (order.getBuyerId().equals(evaluatorId)) {
+                // 买家评价卖家
+                evaluatedUserId = order.getSellerId();
+                isBuyer = true;
+            } else if (order.getSellerId().equals(evaluatorId)) {
+                // 卖家评价买家
+                evaluatedUserId = order.getBuyerId();
+                isBuyer = false;
+            } else {
+                log.warn("用户无权评价该订单, evaluatorId={}, orderId={}", evaluatorId, createDTO.getOrderId());
+                throw new BusinessException(ErrorCode.FORBIDDEN, "您无权评价该订单");
+            }
+
+            // 4. 检查是否已经评价过（order_id有唯一约束）
+            LambdaQueryWrapper<Evaluation> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(Evaluation::getOrderId, createDTO.getOrderId());
+            if (count(wrapper) > 0) {
+                log.warn("订单已被评价, orderId={}", createDTO.getOrderId());
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "该订单已被评价");
+            }
+
+            // 5. 创建评价
+            Evaluation evaluation = new Evaluation();
+            evaluation.setOrderId(createDTO.getOrderId());
+            evaluation.setFromUserId(evaluatorId);
+            evaluation.setToUserId(evaluatedUserId);
+            evaluation.setScore(createDTO.getRating());
+            evaluation.setContent(content.trim());
+            // 将标签字符串转换为JSON数组格式存储
+            String tags = createDTO.getTags();
+            if (tags != null && !tags.trim().isEmpty()) {
+                String[] tagArray = tags.split(",");
+                StringBuilder jsonBuilder = new StringBuilder("[");
+                for (int i = 0; i < tagArray.length; i++) {
+                    if (i > 0) jsonBuilder.append(",");
+                    jsonBuilder.append("\"").append(tagArray[i].trim()).append("\"");
+                }
+                jsonBuilder.append("]");
+                evaluation.setTags(jsonBuilder.toString());
+            }
+
+            save(evaluation);
+
+            // 6. 更新被评价人的信用积分
+            updateUserCreditScore(evaluatedUserId, createDTO.getRating());
+
+            log.info("评价创建成功, evalId={}", evaluation.getEvalId());
+
+            return convertToVO(evaluation, isBuyer);
+        } catch (BusinessException e) {
+            // 业务异常直接抛出
+            log.error("创建评价业务异常: {}", e.getMessage());
+            throw e;
+        } catch (Exception e) {
+            // 其他异常记录日志后抛出
+            log.error("创建评价失败, evaluatorId={}, orderId={}, error={}",
+                    evaluatorId, createDTO.getOrderId(), e.getMessage(), e);
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "创建评价失败，请稍后重试");
         }
-
-        save(evaluation);
-
-        // 6. 更新被评价人的信用积分
-        updateUserCreditScore(evaluatedUserId, createDTO.getRating());
-
-        log.info("评价创建成功, evalId={}", evaluation.getEvalId());
-
-        return convertToVO(evaluation, isBuyer);
     }
 
     @Override
@@ -122,15 +153,16 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
 
     @Override
     public IPage<EvaluationVO> getUserEvaluations(Long userId, Page<Evaluation> page) {
+        // 查询用户给出的评价（作为评价人）- 用于"我的评价"页面
         LambdaQueryWrapper<Evaluation> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Evaluation::getToUserId, userId)
+        wrapper.eq(Evaluation::getFromUserId, userId)
                 .orderByDesc(Evaluation::getCreateTime);
 
         IPage<Evaluation> evaluationPage = page(page, wrapper);
         return evaluationPage.convert(eval -> {
-            // Determine if the evaluator was buyer or seller
+            // 当前用户就是评价人，判断其角色
             Order order = orderMapper.selectById(eval.getOrderId());
-            boolean isBuyer = order != null && order.getBuyerId().equals(eval.getFromUserId());
+            boolean isBuyer = order != null && order.getBuyerId().equals(userId);
             return convertToVO(eval, isBuyer);
         });
     }

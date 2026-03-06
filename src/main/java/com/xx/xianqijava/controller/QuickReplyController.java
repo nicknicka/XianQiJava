@@ -37,7 +37,7 @@ public class QuickReplyController {
     @Operation(summary = "创建快捷回复")
     public Result<QuickReplyVO> createQuickReply(@Valid @RequestBody QuickReplyDTO dto) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("创建快捷回复, userId={}, title={}", userId, dto.getTitle());
+        log.info("创建快捷回复, userId={}, content={}", userId, dto.getContent());
         QuickReplyVO quickReplyVO = quickReplyService.createQuickReply(dto, userId);
         return Result.success("快捷回复创建成功", quickReplyVO);
     }

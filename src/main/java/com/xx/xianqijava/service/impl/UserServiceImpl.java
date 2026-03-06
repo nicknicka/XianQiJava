@@ -47,6 +47,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final com.xx.xianqijava.service.UserFollowService userFollowService;
     private final com.xx.xianqijava.service.UserPreferenceService userPreferenceService;
     private final StringRedisTemplate redisTemplate;
+    private final com.xx.xianqijava.service.LoginDeviceService loginDeviceService;
 
     @Autowired
     @Lazy
@@ -66,7 +67,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                           com.xx.xianqijava.service.ProductFavoriteService productFavoriteService,
                           com.xx.xianqijava.service.UserFollowService userFollowService,
                           com.xx.xianqijava.service.UserPreferenceService userPreferenceService,
-                          StringRedisTemplate redisTemplate) {
+                          StringRedisTemplate redisTemplate,
+                          com.xx.xianqijava.service.LoginDeviceService loginDeviceService) {
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.productService = productService;
@@ -76,6 +78,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         this.userFollowService = userFollowService;
         this.userPreferenceService = userPreferenceService;
         this.redisTemplate = redisTemplate;
+        this.loginDeviceService = loginDeviceService;
     }
 
     @Override
@@ -408,6 +411,46 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         return userCenterVO;
+    }
+
+    @Override
+    public com.xx.xianqijava.vo.UserStatsVO getUserStats(Long userId) {
+        log.info("获取用户统计数据, userId={}", userId);
+
+        // 验证用户存在性
+        if (getById(userId) == null) {
+            throw new BusinessException(ErrorCode.USER_NOT_FOUND);
+        }
+
+        com.xx.xianqijava.vo.UserStatsVO statsVO = new com.xx.xianqijava.vo.UserStatsVO();
+
+        try {
+            // 统计我的发布数量
+            int publishCount = productService.countByUserId(userId);
+            statsVO.setPublishCount(publishCount);
+
+            // 统计我的订单数量（作为买家和卖家）
+            int orderCount = orderService.countByUserId(userId);
+            statsVO.setOrderCount(orderCount);
+
+            // 统计我的收藏数量
+            int favoriteCount = productFavoriteService.countByUserId(userId);
+            statsVO.setFavoriteCount(favoriteCount);
+
+            // 统计收到的评价数量
+            int evaluationCount = evaluationService.countByEvaluatedUserId(userId);
+            statsVO.setEvaluationCount(evaluationCount);
+
+        } catch (Exception e) {
+            log.error("获取用户统计数据失败, userId={}", userId, e);
+            // 如果统计失败，设置默认值
+            statsVO.setPublishCount(0);
+            statsVO.setOrderCount(0);
+            statsVO.setFavoriteCount(0);
+            statsVO.setEvaluationCount(0);
+        }
+
+        return statsVO;
     }
 
     @Override

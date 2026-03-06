@@ -1,6 +1,8 @@
 package com.xx.xianqijava.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -36,16 +38,38 @@ public class UserFeedbackServiceImpl extends ServiceImpl<UserFeedbackMapper, Use
         UserFeedback feedback = new UserFeedback();
         feedback.setUserId(userId);
         feedback.setContact(dto.getContact());
-        feedback.setType(dto.getType());
-        feedback.setTitle(dto.getTitle());
+        feedback.setType(convertTypeToInt(dto.getType()));
+        // title字段允许为空，如果前端传入了值且不为空则使用，否则设置为null
+        feedback.setTitle(dto.getTitle() != null && !dto.getTitle().trim().isEmpty() ? dto.getTitle() : null);
         feedback.setContent(dto.getContent());
-        feedback.setImages(dto.getImages());
+        // 将图片URL列表转换为JSON数组字符串（数据库images字段为json类型）
+        if (dto.getImages() != null && !dto.getImages().isEmpty()) {
+            feedback.setImages(JSONUtil.toJsonStr(dto.getImages()));
+        }
         feedback.setStatus(0); // 待处理
 
         save(feedback);
         log.info("用户反馈创建成功, feedbackId={}", feedback.getFeedbackId());
 
         return convertToVO(feedback);
+    }
+
+    /**
+     * 将前端反馈类型字符串转换为数据库整型
+     * @param type 前端类型：bug-功能异常，suggestion-功能建议，other-其他问题
+     * @return 数据库类型：1-功能建议, 2-Bug反馈, 3-投诉, 4-其他
+     */
+    private Integer convertTypeToInt(String type) {
+        if (type == null) {
+            return 4; // 默认为"其他"
+        }
+        return switch (type.toLowerCase()) {
+            case "bug" -> 2;
+            case "suggestion" -> 1;
+            case "complaint" -> 3;
+            case "other" -> 4;
+            default -> 4;
+        };
     }
 
     @Override

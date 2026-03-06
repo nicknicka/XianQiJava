@@ -37,6 +37,10 @@ public class Conversation extends BaseEntity {
     @Schema(description = "关联订单ID")
     private Long relatedOrderId;
 
+    @Schema(description = "关联商品ID")
+    @TableField("related_product_id")
+    private Long relatedProductId;
+
     @Schema(description = "最后一条消息ID")
     private Long lastMessageId;
 

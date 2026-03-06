@@ -45,6 +45,41 @@ public class ConversationController {
     }
 
     /**
+     * 创建或获取基于商品的会话
+     */
+    @Operation(summary = "创建或获取基于商品的会话")
+    @PostMapping("/create-or-update")
+    public Result<Long> createOrUpdateConversation(
+            @Parameter(description = "对方用户ID") @RequestParam("targetId") Long targetUserId,
+            @Parameter(description = "关联商品ID（可选）") @RequestParam(value = "relatedProductId", required = false) Long relatedProductId) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("创建或获取基于商品的会话, userId={}, targetUserId={}, relatedProductId={}",
+                userId, targetUserId, relatedProductId);
+        Long conversationId = conversationService.createOrUpdateConversation(userId, targetUserId, relatedProductId);
+        return Result.success(conversationId);
+    }
+
+    /**
+     * 根据用户ID和商品ID查找会话
+     */
+    @Operation(summary = "根据用户ID和商品ID查找会话")
+    @GetMapping("/find")
+    public Result<ConversationVO> findConversationByUserAndProduct(
+            @Parameter(description = "对方用户ID") @RequestParam("targetId") Long targetUserId,
+            @Parameter(description = "关联商品ID（可选）") @RequestParam(value = "relatedProductId", required = false) Long relatedProductId) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("查找会话, userId={}, targetUserId={}, relatedProductId={}",
+                userId, targetUserId, relatedProductId);
+        ConversationVO conversationVO = conversationService.findConversationByUserAndProduct(userId, targetUserId, relatedProductId);
+
+        if (conversationVO == null) {
+            return Result.error(404, "会话不存在");
+        }
+
+        return Result.success(conversationVO);
+    }
+
+    /**
      * 获取会话列表
      */
     @Operation(summary = "获取会话列表")

@@ -50,6 +50,15 @@ public interface ShareItemBookingService extends IService<ShareItemBooking> {
     ShareItemBookingVO confirmReturn(BookingReturnDTO returnDTO, Long ownerId);
 
     /**
+     * 支付押金
+     *
+     * @param bookingId   预约ID
+     * @param borrowerId 借用者ID
+     * @return 预约借用VO
+     */
+    ShareItemBookingVO payDeposit(Long bookingId, Long borrowerId);
+
+    /**
      * 退还押金
      *
      * @param bookingId   预约ID

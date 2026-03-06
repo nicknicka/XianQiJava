@@ -75,6 +75,9 @@ public class ShareItemBooking extends BaseEntity {
     @Schema(description = "归还备注")
     private String returnRemark;
 
+    @Schema(description = "押金支付时间")
+    private java.time.LocalDateTime depositPaidTime;
+
     @Schema(description = "是否已归还押金：0-未退还，1-已退还")
     private Integer depositReturned;
 

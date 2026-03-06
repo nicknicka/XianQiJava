@@ -14,7 +14,7 @@ spring:
   # 数据源配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver
-    url: jdbc:mysql://localhost:3306/XianQi?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/XianQi?useUnicode=true&characterEncoding=UTF-8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true&connectionCollation=utf8mb4_unicode_ci
     username: root
     password: 123456
     hikari:
@@ -23,6 +23,8 @@ spring:
       connection-timeout: 30000
       idle-timeout: 600000
       max-lifetime: 1800000
+      connection-init-sql: SET NAMES utf8mb4
+      connection-test-query: SELECT 1
       connection-test-query: SELECT 1
 
   # Redis 配置
@@ -95,8 +97,8 @@ springdoc:
 # JWT 配置
 jwt:
   secret: XianQiJavaSecretKey2026CampusTradePlatformSecretKeyMustBeLongEnough
-  expiration: 604800000  # 7天，单位毫秒
-  refresh-expiration: 2592000000  # 30天，单位毫秒
+  expiration: 21600000  # 6小时，单位毫秒
+  refresh-expiration: 604800000  # 7天，单位毫秒
   header: Authorization
   token-prefix: Bearer
 

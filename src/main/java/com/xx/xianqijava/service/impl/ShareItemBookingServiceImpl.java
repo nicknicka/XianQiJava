@@ -253,6 +253,47 @@ public class ShareItemBookingServiceImpl extends ServiceImpl<ShareItemBookingMap
 
     @Override
     @Transactional(rollbackFor = Exception.class)
+    public ShareItemBookingVO payDeposit(Long bookingId, Long borrowerId) {
+        log.info("支付押金, bookingId={}, borrowerId={}", bookingId, borrowerId);
+
+        ShareItemBooking booking = getById(bookingId);
+        if (booking == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "预约记录不存在");
+        }
+
+        // 验证权限
+        if (!booking.getBorrowerId().equals(borrowerId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "无权限支付押金");
+        }
+
+        // 验证状态 - 只有已批准(1)的预约才能支付押金
+        if (booking.getStatus() != 1) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "该预约状态不允许支付押金");
+        }
+
+        // 检查是否已支付押金（这里假设支付押金后状态变为借用中）
+        // 更新预约状态为借用中
+        booking.setStatus(4); // 借用中
+        booking.setDepositPaidTime(java.time.LocalDateTime.now());
+
+        boolean updated = updateById(booking);
+        if (!updated) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "支付押金失败");
+        }
+
+        // 更新共享物品状态为借用中
+        ShareItem shareItem = shareItemMapper.selectById(booking.getShareId());
+        if (shareItem != null) {
+            shareItem.setStatus(2); // 借用中
+            shareItemMapper.updateById(shareItem);
+        }
+
+        log.info("押金支付成功, bookingId={}", bookingId);
+        return convertToVO(booking);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
     public void returnDeposit(Long bookingId, Long ownerId) {
         log.info("退还押金, bookingId={}, ownerId={}", bookingId, ownerId);
 

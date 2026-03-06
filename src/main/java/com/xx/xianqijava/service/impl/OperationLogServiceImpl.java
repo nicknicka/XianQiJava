@@ -106,6 +106,21 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, Ope
     }
 
     @Override
+    public java.util.List<OperationLogVO> getOrderLogs(Long orderId) {
+        log.info("查询订单操作日志, orderId={}", orderId);
+
+        LambdaQueryWrapper<OperationLog> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(OperationLog::getBizId, orderId)
+                .eq(OperationLog::getBizType, "order")
+                .orderByAsc(OperationLog::getCreateTime);
+
+        java.util.List<OperationLog> logs = list(wrapper);
+        return logs.stream()
+                .map(this::convertToOrderLogVO)
+                .collect(java.util.stream.Collectors.toList());
+    }
+
+    @Override
     public int cleanExpiredLogs(int days) {
         log.info("清理{}天前的操作日志", days);
 
@@ -137,5 +152,47 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, Ope
         }
 
         return vo;
+    }
+
+    /**
+     * 转换为订单日志VO
+     */
+    private OperationLogVO convertToOrderLogVO(OperationLog log) {
+        OperationLogVO vo = new OperationLogVO();
+        BeanUtil.copyProperties(log, vo);
+
+        // 设置订单ID
+        if ("order".equals(log.getBizType())) {
+            vo.setOrderId(log.getBizId());
+        }
+
+        // 设置操作文本
+        vo.setActionText(getActionText(log.getAction()));
+
+        // 设置时间
+        if (log.getCreateTime() != null) {
+            vo.setCreateTime(log.getCreateTime().toString());
+        }
+
+        return vo;
+    }
+
+    /**
+     * 获取操作文本
+     */
+    private String getActionText(String action) {
+        if (action == null) {
+            return "未知操作";
+        }
+        return switch (action) {
+            case "create" -> "创建订单";
+            case "confirm" -> "确认订单";
+            case "cancel" -> "取消订单";
+            case "complete" -> "完成订单";
+            case "refund_request" -> "申请退款";
+            case "refund_approve" -> "同意退款";
+            case "refund_reject" -> "拒绝退款";
+            default -> action;
+        };
     }
 }

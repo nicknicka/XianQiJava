@@ -58,6 +58,14 @@ public interface OperationLogService extends IService<OperationLog> {
     IPage<OperationLogVO> getMyLogs(Page<OperationLog> page, Long userId);
 
     /**
+     * 获取订单操作日志
+     *
+     * @param orderId 订单ID
+     * @return 订单操作日志列表
+     */
+    java.util.List<OperationLogVO> getOrderLogs(Long orderId);
+
+    /**
      * 清理过期日志
      *
      * @param days 保留天数

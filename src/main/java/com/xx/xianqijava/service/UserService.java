@@ -101,6 +101,14 @@ public interface UserService extends IService<User> {
     UserCenterVO getUserCenterData(Long userId);
 
     /**
+     * 获取用户统计数据
+     *
+     * @param userId 用户ID
+     * @return 用户统计数据
+     */
+    com.xx.xianqijava.vo.UserStatsVO getUserStats(Long userId);
+
+    /**
      * 获取用户信用积分
      *
      * @param userId 用户ID

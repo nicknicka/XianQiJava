@@ -26,6 +26,12 @@ public class OperationLog {
     @Schema(description = "用户名")
     private String username;
 
+    @Schema(description = "业务对象ID（如订单ID、商品ID等）")
+    private Long bizId;
+
+    @Schema(description = "业务对象类型（如order、product等）")
+    private String bizType;
+
     @Schema(description = "操作模块：user/product/order/share_item/system等")
     private String module;
 

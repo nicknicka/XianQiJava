@@ -17,6 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 /**
  * 商品浏览历史服务实现类
@@ -76,14 +77,20 @@ public class ProductViewHistoryServiceImpl extends ServiceImpl<ProductViewHistor
                         .eq(ProductViewHistory::getUserId, userId)
                         .orderByDesc(ProductViewHistory::getViewTime));
 
-        // 转换为ProductVO，过滤掉已删除的商品
+        // 日期时间格式化器
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        // 转换为ProductVO，过滤掉已删除的商品，并添加浏览时间
         java.util.List<ProductVO> validProducts = historyPage.getRecords().stream()
                 .map(history -> {
                     Product product = productMapper.selectById(history.getProductId());
                     if (product == null || product.getDeleted() == 1) {
                         return null;
                     }
-                    return productService.convertToVO(product, userId);
+                    ProductVO productVO = productService.convertToVO(product, userId);
+                    // 设置浏览时间
+                    productVO.setViewTime(history.getViewTime().format(formatter));
+                    return productVO;
                 })
                 .filter(java.util.Objects::nonNull)
                 .collect(java.util.stream.Collectors.toList());

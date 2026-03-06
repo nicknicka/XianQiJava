@@ -40,6 +40,9 @@ public class ConversationVO {
     @Schema(description = "关联的订单ID")
     private Long relatedOrderId;
 
+    @Schema(description = "关联的商品ID")
+    private Long relatedProductId;
+
     @Schema(description = "是否置顶")
     private Integer isTop;
 

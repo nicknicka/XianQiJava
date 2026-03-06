@@ -23,9 +23,6 @@ public class QuickReply {
     @Schema(description = "用户ID（0表示系统预设）")
     private Long userId;
 
-    @Schema(description = "模板标题")
-    private String title;
-
     @Schema(description = "回复内容")
     private String content;
 

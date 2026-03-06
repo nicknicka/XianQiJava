@@ -30,7 +30,7 @@ public class QuickReplyServiceImpl extends ServiceImpl<QuickReplyMapper, QuickRe
     @Override
     @Transactional(rollbackFor = Exception.class)
     public QuickReplyVO createQuickReply(QuickReplyDTO dto, Long userId) {
-        log.info("创建快捷回复, userId={}, title={}", userId, dto.getTitle());
+        log.info("创建快捷回复, userId={}, content={}", userId, dto.getContent());
 
         // 检查用户创建的快捷回复数量限制（最多20个）
         LambdaQueryWrapper<QuickReply> countWrapper = new LambdaQueryWrapper<>();
@@ -43,7 +43,6 @@ public class QuickReplyServiceImpl extends ServiceImpl<QuickReplyMapper, QuickRe
         // 创建快捷回复
         QuickReply quickReply = new QuickReply();
         quickReply.setUserId(userId);
-        quickReply.setTitle(dto.getTitle());
         quickReply.setContent(dto.getContent());
         quickReply.setCategory(dto.getCategory());
         quickReply.setSortOrder(dto.getSortOrder() != null ? dto.getSortOrder() : 0);
@@ -76,7 +75,6 @@ public class QuickReplyServiceImpl extends ServiceImpl<QuickReplyMapper, QuickRe
         }
 
         // 更新快捷回复
-        quickReply.setTitle(dto.getTitle());
         quickReply.setContent(dto.getContent());
         quickReply.setCategory(dto.getCategory());
         if (dto.getSortOrder() != null) {

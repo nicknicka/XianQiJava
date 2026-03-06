@@ -42,16 +42,16 @@ public class ImageController {
     private String uploadPath;
 
     /**
-     * 通过UUID访问图片
-     * 前端请求: GET /api/image/{uuid}.jpg
-     * 后端验证权限后返回真实图片数据
+     * 通过UUID直接访问文件（不检查数据库）
+     * 用于反馈图片、头像等不需要数据库记录的文件
+     * 前端请求: GET /api/image/file/{uuid}.jpg
      */
-    @GetMapping("/{filename}**")
-    @Operation(summary = "获取图片", description = "通过UUID获取图片，隐藏真实路径")
-    public ResponseEntity<Resource> getImage(
+    @GetMapping("/file/{filename}**")
+    @Operation(summary = "直接获取文件", description = "通过UUID直接获取文件，不检查数据库记录")
+    public ResponseEntity<Resource> getFileDirect(
             @Parameter(description = "文件名（UUID.扩展名）") @PathVariable String filename) {
 
-        log.info("图片访问请求: filename={}", filename);
+        log.info("文件直接访问请求: filename={}", filename);
 
         try {
             // 解析UUID和扩展名
@@ -61,18 +61,6 @@ public class ImageController {
             if (!StringUtils.hasText(uuid) || !StringUtils.hasText(extension)) {
                 log.warn("无效的文件名格式: {}", filename);
                 return ResponseEntity.badRequest().build();
-            }
-
-            // 查询数据库验证图片是否存在
-            ProductImage imageInfo = productImageMapper.selectOne(
-                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ProductImage>()
-                            .eq(ProductImage::getImageUuid, uuid)
-                            .eq(ProductImage::getStatus, 0)
-            );
-
-            if (imageInfo == null) {
-                log.warn("图片不存在或已删除: uuid={}", uuid);
-                return ResponseEntity.notFound().build();
             }
 
             // 构建文件路径
@@ -96,8 +84,83 @@ public class ImageController {
             headers.setContentLength(resource.contentLength());
 
             // 记录访问日志
-            log.info("图片访问成功: uuid={}, productId={}, size={}",
-                    uuid, imageInfo.getProductId(), resource.contentLength());
+            log.info("文件直接访问成功: filename={}", actualFilename);
+
+            return ResponseEntity.ok()
+                    .headers(headers)
+                    .body(resource);
+
+        } catch (Exception e) {
+            log.error("获取文件失败: filename={}", filename, e);
+            return ResponseEntity.internalServerError().build();
+        }
+    }
+
+    /**
+     * 通过UUID访问图片
+     * 前端请求: GET /api/image/{uuid}.jpg
+     * 后端验证权限后返回真实图片数据
+     *
+     * 优先从数据库查询，如果找不到则直接从文件系统返回
+     */
+    @GetMapping("/{filename}**")
+    @Operation(summary = "获取图片", description = "通过UUID获取图片，隐藏真实路径")
+    public ResponseEntity<Resource> getImage(
+            @Parameter(description = "文件名（UUID.扩展名）") @PathVariable String filename) {
+
+        log.info("图片访问请求: filename={}", filename);
+
+        try {
+            // 解析UUID和扩展名
+            String uuid = extractUuid(filename);
+            String extension = extractExtension(filename);
+
+            if (!StringUtils.hasText(uuid) || !StringUtils.hasText(extension)) {
+                log.warn("无效的文件名格式: {}", filename);
+                return ResponseEntity.badRequest().build();
+            }
+
+            // 构建文件路径
+            String actualFilename = uuid + "." + extension;
+            Path filePath = Paths.get(uploadPath, actualFilename);
+
+            // 检查文件是否存在
+            if (!Files.exists(filePath)) {
+                log.warn("文件不存在: {}", filePath);
+                return ResponseEntity.notFound().build();
+            }
+
+            // 尝试从数据库查询（用于商品图片）
+            ProductImage imageInfo = productImageMapper.selectOne(
+                    new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<ProductImage>()
+                            .eq(ProductImage::getImageUuid, uuid)
+                            .eq(ProductImage::getStatus, 0)
+            );
+
+            // 如果数据库中不存在，直接返回文件（用于反馈图片、头像等）
+            if (imageInfo == null) {
+                log.info("数据库中无记录，直接返回文件: uuid={}", uuid);
+            }
+
+            // 读取文件
+            Resource resource = new FileSystemResource(filePath);
+
+            // 根据扩展名确定Content-Type
+            MediaType mediaType = getMediaType(extension);
+
+            // 设置响应头
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(mediaType);
+            headers.setContentLength(resource.contentLength());
+
+            // 记录访问日志
+            if (imageInfo != null) {
+                log.info("图片访问成功: uuid={}, productId={}, size={}",
+                        uuid, imageInfo.getProductId(), resource.contentLength());
+            } else {
+                log.info("图片访问成功（无数据库记录）: uuid={}, size={}",
+                        uuid, resource.contentLength());
+            }
 
             return ResponseEntity.ok()
                     .headers(headers)

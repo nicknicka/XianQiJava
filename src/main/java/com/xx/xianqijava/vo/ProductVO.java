@@ -90,6 +90,9 @@ public class ProductVO {
     @Schema(description = "创建时间")
     private String createTime;
 
+    @Schema(description = "浏览时间（用于浏览历史）")
+    private String viewTime;
+
     @Schema(description = "是否已收藏")
     private Boolean isFavorite;
 

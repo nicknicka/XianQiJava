@@ -23,6 +23,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
 
@@ -56,9 +57,33 @@ public class UserController {
      */
     @Operation(summary = "用户登录")
     @PostMapping("/login")
-    public Result<UserLoginVO> login(@Valid @RequestBody UserLoginDTO loginDTO) {
+    public Result<UserLoginVO> login(@Valid @RequestBody UserLoginDTO loginDTO,
+                                     HttpServletRequest request) {
         log.info("用户登录请求, username={}", loginDTO.getUsername());
         UserLoginVO result = userService.login(loginDTO);
+
+        // 记录登录设备信息
+        try {
+            String deviceIdentifier = getDeviceIdentifier(request);
+            String deviceName = getDeviceName(request);
+            String deviceType = getDeviceType(request);
+            String platform = getPlatform(request);
+            String ip = getClientIP(request);
+
+            loginDeviceService.recordOrUpdateLoginDevice(
+                result.getUserId(),
+                deviceIdentifier,
+                deviceName,
+                deviceType,
+                platform,
+                ip
+            );
+            log.info("登录设备记录成功, userId={}, deviceType={}", result.getUserId(), deviceType);
+        } catch (Exception e) {
+            log.error("记录登录设备失败, userId={}", result.getUserId(), e);
+            // 不影响登录流程，只记录错误日志
+        }
+
         return Result.success("登录成功", result);
     }
 
@@ -143,6 +168,18 @@ public class UserController {
     }
 
     /**
+     * 获取用户统计数据
+     */
+    @Operation(summary = "获取用户统计数据")
+    @GetMapping("/stats")
+    public Result<com.xx.xianqijava.vo.UserStatsVO> getUserStats() {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取用户统计数据, userId={}", userId);
+        com.xx.xianqijava.vo.UserStatsVO result = userService.getUserStats(userId);
+        return Result.success(result);
+    }
+
+    /**
      * 获取用户信用积分
      */
     @GetMapping("/{userId}/credit")
@@ -220,9 +257,33 @@ public class UserController {
     @Operation(summary = "手机号验证码登录")
     @PostMapping("/login/phone")
     public Result<UserLoginVO> loginByPhone(@RequestParam("phone") String phone,
-                                            @RequestParam("code") String code) {
+                                            @RequestParam("code") String code,
+                                            HttpServletRequest request) {
         log.info("手机号验证码登录请求, phone={}", phone);
         UserLoginVO result = userService.loginByPhone(phone, code);
+
+        // 记录登录设备信息
+        try {
+            String deviceIdentifier = getDeviceIdentifier(request);
+            String deviceName = getDeviceName(request);
+            String deviceType = getDeviceType(request);
+            String platform = getPlatform(request);
+            String ip = getClientIP(request);
+
+            loginDeviceService.recordOrUpdateLoginDevice(
+                result.getUserId(),
+                deviceIdentifier,
+                deviceName,
+                deviceType,
+                platform,
+                ip
+            );
+            log.info("登录设备记录成功, userId={}, deviceType={}", result.getUserId(), deviceType);
+        } catch (Exception e) {
+            log.error("记录登录设备失败, userId={}", result.getUserId(), e);
+            // 不影响登录流程，只记录错误日志
+        }
+
         return Result.success("登录成功", result);
     }
 
@@ -449,5 +510,142 @@ public class UserController {
         log.info("更新用户主题设置, userId={}, theme={}, autoDarkMode={}, fontSize={}", userId, theme, autoDarkMode, fontSize);
         userService.updateUserThemeConfig(userId, theme, autoDarkMode, fontSize);
         return Result.success("主题设置已更新");
+    }
+
+    // ==================== 设备信息提取辅助方法 ====================
+
+    /**
+     * 获取客户端IP地址
+     */
+    private String getClientIP(HttpServletRequest request) {
+        String ip = request.getHeader("X-Forwarded-For");
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("X-Real-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getHeader("WL-Proxy-Client-IP");
+        }
+        if (ip == null || ip.isEmpty() || "unknown".equalsIgnoreCase(ip)) {
+            ip = request.getRemoteAddr();
+        }
+        // 处理多个IP的情况，取第一个
+        if (ip != null && ip.contains(",")) {
+            ip = ip.split(",")[0].trim();
+        }
+        return ip;
+    }
+
+    /**
+     * 获取设备唯一标识
+     */
+    private String getDeviceIdentifier(HttpServletRequest request) {
+        // 优先使用请求头中的设备ID
+        String deviceId = request.getHeader("X-Device-ID");
+        if (deviceId != null && !deviceId.isEmpty()) {
+            return deviceId;
+        }
+
+        // 使用 User-Agent 作为备用标识
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent != null) {
+            // 简单的哈希处理
+            return String.valueOf(userAgent.hashCode());
+        }
+
+        // 最后使用 IP 作为标识
+        return getClientIP(request);
+    }
+
+    /**
+     * 获取设备名称
+     */
+    private String getDeviceName(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent == null) {
+            return "未知设备";
+        }
+
+        // 解析 User-Agent 获取设备名称
+        if (userAgent.contains("iPhone")) {
+            return "iPhone";
+        } else if (userAgent.contains("iPad")) {
+            return "iPad";
+        } else if (userAgent.contains("Android")) {
+            // 尝试提取Android设备型号
+            int start = userAgent.indexOf("Android");
+            if (start != -1) {
+                int end = userAgent.indexOf(";", start);
+                if (end != -1) {
+                    String model = userAgent.substring(start, end);
+                    return model.replace("Android ", "Android ");
+                }
+            }
+            return "Android设备";
+        } else if (userAgent.contains("Mac")) {
+            return "Mac电脑";
+        } else if (userAgent.contains("Windows")) {
+            return "Windows电脑";
+        } else if (userAgent.contains("Linux")) {
+            return "Linux电脑";
+        } else if (userAgent.contains("microMessenger")) {
+            return "微信浏览器";
+        } else if (userAgent.contains("MiniProgram")) {
+            return "小程序";
+        }
+
+        return "未知设备";
+    }
+
+    /**
+     * 获取设备类型
+     */
+    private String getDeviceType(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent == null) {
+            return "web";
+        }
+
+        if (userAgent.contains("iPhone") || userAgent.contains("iPad")) {
+            return "ios";
+        } else if (userAgent.contains("Android")) {
+            return "android";
+        } else if (userAgent.contains("MiniProgram") || userAgent.contains("miniProgram")) {
+            return "miniapp";
+        }
+
+        return "web";
+    }
+
+    /**
+     * 获取平台信息
+     */
+    private String getPlatform(HttpServletRequest request) {
+        String userAgent = request.getHeader("User-Agent");
+        if (userAgent == null) {
+            return "Web";
+        }
+
+        if (userAgent.contains("iPhone")) {
+            return "iOS";
+        } else if (userAgent.contains("iPad")) {
+            return "iOS";
+        } else if (userAgent.contains("Android")) {
+            return "Android";
+        } else if (userAgent.contains("Mac")) {
+            return "macOS";
+        } else if (userAgent.contains("Windows")) {
+            return "Windows";
+        } else if (userAgent.contains("Linux")) {
+            return "Linux";
+        } else if (userAgent.contains("microMessenger")) {
+            return "微信";
+        } else if (userAgent.contains("MiniProgram")) {
+            return "小程序";
+        }
+
+        return "Web";
     }
 }

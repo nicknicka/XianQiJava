@@ -12,10 +12,6 @@ import lombok.Data;
 @Schema(description = "快捷回复请求")
 public class QuickReplyDTO {
 
-    @NotBlank(message = "模板标题不能为空")
-    @Schema(description = "模板标题", required = true)
-    private String title;
-
     @NotBlank(message = "回复内容不能为空")
     @Schema(description = "回复内容", required = true)
     private String content;
