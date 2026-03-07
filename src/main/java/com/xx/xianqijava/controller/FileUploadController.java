@@ -34,19 +34,36 @@ public class FileUploadController {
     @PostMapping("/image")
     public Result<FileUploadVO> uploadImage(@RequestParam("file") MultipartFile file) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("用户 {} 上传图片: {}", userId, file.getOriginalFilename());
+        String originalFilename = file.getOriginalFilename();
+        long fileSize = file.getSize();
 
-        FileUploadResultDTO uploadResult = fileUploadService.uploadImage(file);
+        log.info("========== 图片上传开始 ==========");
+        log.info("用户ID: {}, 原始文件名: {}, 文件大小: {} bytes ({} KB)",
+            userId, originalFilename, fileSize, String.format("%.2f", fileSize / 1024.0));
+        log.info("文件ContentType: {}", file.getContentType());
 
-        FileUploadVO uploadVO = new FileUploadVO();
-        uploadVO.setUuid(uploadResult.getUuid());
-        uploadVO.setUrl(uploadResult.getUrl());
-        uploadVO.setFilename(uploadResult.getFilename());
-        uploadVO.setOriginalFilename(file.getOriginalFilename());
-        uploadVO.setSize(uploadResult.getSize());
-        uploadVO.setExtension(uploadResult.getExtension());
+        try {
+            FileUploadResultDTO uploadResult = fileUploadService.uploadImage(file);
 
-        return Result.success("上传成功", uploadVO);
+            FileUploadVO uploadVO = new FileUploadVO();
+            uploadVO.setUuid(uploadResult.getUuid());
+            uploadVO.setUrl(uploadResult.getUrl());
+            uploadVO.setFilename(uploadResult.getFilename());
+            uploadVO.setOriginalFilename(originalFilename);
+            uploadVO.setSize(uploadResult.getSize());
+            uploadVO.setExtension(uploadResult.getExtension());
+
+            log.info("图片上传成功 - UUID: {}, 访问URL: {}, 文件大小: {} bytes",
+                uploadVO.getUuid(), uploadVO.getUrl(), uploadVO.getSize());
+            log.info("========== 图片上传完成 ==========");
+
+            return Result.success("上传成功", uploadVO);
+        } catch (Exception e) {
+            log.error("========== 图片上传失败 ==========");
+            log.error("用户ID: {}, 文件名: {}, 错误信息: {}", userId, originalFilename, e.getMessage(), e);
+            log.error("====================================");
+            throw e;
+        }
     }
 
     /**
@@ -56,24 +73,40 @@ public class FileUploadController {
     @PostMapping("/images")
     public Result<List<FileUploadVO>> uploadImages(@RequestParam("files") MultipartFile[] files) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("用户 {} 批量上传图片，数量: {}", userId, files.length);
 
-        FileUploadResultDTO[] uploadResults = fileUploadService.uploadImages(files);
+        log.info("========== 批量图片上传开始 ==========");
+        log.info("用户ID: {}, 请求数量: {}", userId, files.length);
 
-        List<FileUploadVO> uploadVOs = new ArrayList<>();
-        for (int i = 0; i < uploadResults.length; i++) {
-            FileUploadResultDTO uploadResult = uploadResults[i];
-            FileUploadVO uploadVO = new FileUploadVO();
-            uploadVO.setUuid(uploadResult.getUuid());
-            uploadVO.setUrl(uploadResult.getUrl());
-            uploadVO.setFilename(uploadResult.getFilename());
-            uploadVO.setOriginalFilename(files[i].getOriginalFilename());
-            uploadVO.setSize(uploadResult.getSize());
-            uploadVO.setExtension(uploadResult.getExtension());
-            uploadVOs.add(uploadVO);
+        try {
+            FileUploadResultDTO[] uploadResults = fileUploadService.uploadImages(files);
+
+            List<FileUploadVO> uploadVOs = new ArrayList<>();
+            for (int i = 0; i < uploadResults.length; i++) {
+                FileUploadResultDTO uploadResult = uploadResults[i];
+                FileUploadVO uploadVO = new FileUploadVO();
+                uploadVO.setUuid(uploadResult.getUuid());
+                uploadVO.setUrl(uploadResult.getUrl());
+                uploadVO.setFilename(uploadResult.getFilename());
+                uploadVO.setOriginalFilename(files[i].getOriginalFilename());
+                uploadVO.setSize(uploadResult.getSize());
+                uploadVO.setExtension(uploadResult.getExtension());
+                uploadVOs.add(uploadVO);
+
+                log.info("文件 [{}/{}] 上传成功 - 原文件名: {}, UUID: {}, URL: {}",
+                    i + 1, files.length, uploadVO.getOriginalFilename(),
+                    uploadVO.getUuid(), uploadVO.getUrl());
+            }
+
+            log.info("批量图片上传全部完成 - 成功: {}/{}", uploadVOs.size(), files.length);
+            log.info("========================================");
+
+            return Result.success("上传成功", uploadVOs);
+        } catch (Exception e) {
+            log.error("========== 批量图片上传失败 ==========");
+            log.error("用户ID: {}, 请求数量: {}, 错误信息: {}", userId, files.length, e.getMessage(), e);
+            log.error("=========================================");
+            throw e;
         }
-
-        return Result.success("上传成功", uploadVOs);
     }
 
     /**

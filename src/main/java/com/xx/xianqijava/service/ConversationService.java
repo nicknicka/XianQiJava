@@ -129,4 +129,12 @@ public interface ConversationService extends IService<Conversation> {
      * @return 消息VO
      */
     MessageVO sendImageMessage(ImageMessageSendDTO sendDTO, Long userId);
+
+    /**
+     * 清空聊天记录
+     *
+     * @param conversationId 会话ID
+     * @param userId        当前用户ID
+     */
+    void clearMessages(Long conversationId, Long userId);
 }

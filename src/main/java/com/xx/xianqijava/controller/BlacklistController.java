@@ -54,6 +54,19 @@ public class BlacklistController {
     }
 
     /**
+     * 通过被拉黑用户ID移除黑名单
+     */
+    @Operation(summary = "通过被拉黑用户ID移除黑名单")
+    @DeleteMapping("/blocked-user/{blockedUserId}")
+    public Result<Void> removeFromBlacklistByBlockedUserId(
+            @Parameter(description = "被拉黑的用户ID") @PathVariable("blockedUserId") Long blockedUserId) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("通过被拉黑用户ID移除黑名单, userId={}, blockedUserId={}", userId, blockedUserId);
+        blacklistService.removeFromBlacklistByBlockedUserId(userId, blockedUserId);
+        return Result.success("已移出黑名单");
+    }
+
+    /**
      * 获取黑名单列表
      */
     @Operation(summary = "获取黑名单列表")
@@ -80,5 +93,17 @@ public class BlacklistController {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
         boolean inBlacklist = blacklistService.isInBlacklist(userId, targetUserId);
         return Result.success(inBlacklist);
+    }
+
+    /**
+     * 检查当前用户是否被对方拉黑
+     */
+    @Operation(summary = "检查当前用户是否被对方拉黑")
+    @GetMapping("/check-blocked-by/{targetUserId}")
+    public Result<Boolean> isBlockedBy(
+            @Parameter(description = "对方用户ID") @PathVariable("targetUserId") Long targetUserId) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        boolean blockedBy = blacklistService.isBlockedBy(userId, targetUserId);
+        return Result.success(blockedBy);
     }
 }

@@ -19,6 +19,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Map;
+
 /**
  * 会话控制器
  */
@@ -49,10 +51,21 @@ public class ConversationController {
      */
     @Operation(summary = "创建或获取基于商品的会话")
     @PostMapping("/create-or-update")
-    public Result<ConversationVO> createOrUpdateConversation(
-            @Parameter(description = "对方用户ID") @RequestParam("targetId") Long targetUserId,
-            @Parameter(description = "关联商品ID（可选）") @RequestParam(value = "relatedProductId", required = false) Long relatedProductId) {
+    public Result<ConversationVO> createOrUpdateConversation(@RequestBody Map<String, Object> requestBody) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
+
+        // 从请求体中获取参数
+        Long targetUserId = requestBody.get("targetId") != null
+            ? Long.valueOf(requestBody.get("targetId").toString())
+            : null;
+        Long relatedProductId = requestBody.get("relatedProductId") != null
+            ? Long.valueOf(requestBody.get("relatedProductId").toString())
+            : null;
+
+        if (targetUserId == null) {
+            return Result.error(400, "缺少必要参数: targetId");
+        }
+
         log.info("创建或获取基于商品的会话, userId={}, targetUserId={}, relatedProductId={}",
                 userId, targetUserId, relatedProductId);
         ConversationVO conversationVO = conversationService.createOrUpdateConversation(userId, targetUserId, relatedProductId);
@@ -215,5 +228,18 @@ public class ConversationController {
                 userId, sendDTO.getConversationId(), sendDTO.getImageUrl());
         MessageVO messageVO = conversationService.sendImageMessage(sendDTO, userId);
         return Result.success("图片消息发送成功", messageVO);
+    }
+
+    /**
+     * 清空聊天记录
+     */
+    @Operation(summary = "清空聊天记录")
+    @DeleteMapping("/{id}/messages")
+    public Result<Void> clearMessages(
+            @Parameter(description = "会话ID") @PathVariable("id") Long id) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("清空聊天记录, conversationId={}, userId={}", id, userId);
+        conversationService.clearMessages(id, userId);
+        return Result.success("聊天记录已清空");
     }
 }

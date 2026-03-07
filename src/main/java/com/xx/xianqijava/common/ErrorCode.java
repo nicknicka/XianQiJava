@@ -13,10 +13,12 @@ public enum ErrorCode {
     BAD_REQUEST(400, "请求参数错误"),
     UNAUTHORIZED(401, "未登录或Token无效"),
     FORBIDDEN(403, "无权限访问"),
+    NO_PERMISSION(40301, "无权限执行此操作"),
     NOT_FOUND(404, "资源不存在"),
     REQUEST_TIMEOUT(408, "请求超时"),
     INTERNAL_ERROR(500, "服务器内部错误"),
     NOT_IMPLEMENTED(501, "功能暂未实现"),
+    OPERATION_FAILED(50001, "操作失败"),
 
     // 用户相关错误码 10xxx
     USER_NOT_FOUND(10001, "用户不存在"),

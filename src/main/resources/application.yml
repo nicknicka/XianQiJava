@@ -62,7 +62,7 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
     cache-enabled: false
-    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    # log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 注释掉，隐藏 SQL 日志
   global-config:
     db-config:
       id-type: auto
@@ -142,8 +142,9 @@ business:
 # 日志配置
 logging:
   level:
-    com.xx.xianqijava: debug
-    com.baomidou.mybatisplus: debug
+    com.xx.xianqijava: info  # 改为 info，隐藏所有 DEBUG 日志
+    com.baomidou.mybatisplus: info
+    com.xx.xianqijava.websocket: info
   pattern:
     console: '%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] %-5level %logger{50} - %msg%n'
   file:
@@ -160,8 +161,8 @@ file:
 
 # 应用配置
 app:
-  base-url: http://localhost:8080  # 应用基础URL（生产环境改为实际域名）
-  image-url-prefix: /api/image  # 图片访问URL前缀（伪地址）
+  base-url: http://localhost:8080  # 应用基础URL（开发环境）
+  image-url-prefix: /api/image  # 图片访问URL前缀（包含/api前缀）
 
 # 推荐系统配置
 recommendation:

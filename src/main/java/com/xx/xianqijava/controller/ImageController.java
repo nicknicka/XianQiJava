@@ -51,7 +51,8 @@ public class ImageController {
     public ResponseEntity<Resource> getFileDirect(
             @Parameter(description = "文件名（UUID.扩展名）") @PathVariable String filename) {
 
-        log.info("文件直接访问请求: filename={}", filename);
+        log.debug("========== 图片访问请求（直接模式）==========");
+        log.debug("请求文件名: {}", filename);
 
         try {
             // 解析UUID和扩展名
@@ -59,21 +60,24 @@ public class ImageController {
             String extension = extractExtension(filename);
 
             if (!StringUtils.hasText(uuid) || !StringUtils.hasText(extension)) {
-                log.warn("无效的文件名格式: {}", filename);
+                log.warn("✗ 无效的文件名格式: {}", filename);
                 return ResponseEntity.badRequest().build();
             }
+
+            log.debug("解析结果 - UUID: {}, 扩展名: {}", uuid, extension);
 
             // 构建文件路径
             String actualFilename = uuid + "." + extension;
             Path filePath = Paths.get(uploadPath, actualFilename);
 
             if (!Files.exists(filePath)) {
-                log.warn("文件不存在: {}", filePath);
+                log.warn("✗ 文件不存在: {}", filePath.toAbsolutePath());
                 return ResponseEntity.notFound().build();
             }
 
             // 读取文件
             Resource resource = new FileSystemResource(filePath);
+            long fileSize = resource.contentLength();
 
             // 根据扩展名确定Content-Type
             MediaType mediaType = getMediaType(extension);
@@ -81,17 +85,20 @@ public class ImageController {
             // 设置响应头
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(mediaType);
-            headers.setContentLength(resource.contentLength());
+            headers.setContentLength(fileSize);
 
             // 记录访问日志
-            log.info("文件直接访问成功: filename={}", actualFilename);
+            log.info("✓ 文件访问成功（直接模式）- 文件名: {}, 大小: {} bytes ({} KB), 类型: {}",
+                actualFilename, fileSize, String.format("%.2f", fileSize / 1024.0), mediaType);
+            log.debug("============================================");
 
             return ResponseEntity.ok()
                     .headers(headers)
                     .body(resource);
 
         } catch (Exception e) {
-            log.error("获取文件失败: filename={}", filename, e);
+            log.error("✗ 获取文件失败 - 文件名: {}, 错误: {}", filename, e.getMessage(), e);
+            log.debug("============================================");
             return ResponseEntity.internalServerError().build();
         }
     }
@@ -108,7 +115,8 @@ public class ImageController {
     public ResponseEntity<Resource> getImage(
             @Parameter(description = "文件名（UUID.扩展名）") @PathVariable String filename) {
 
-        log.info("图片访问请求: filename={}", filename);
+        log.debug("========== 图片访问请求（数据库模式）==========");
+        log.debug("请求文件名: {}", filename);
 
         try {
             // 解析UUID和扩展名
@@ -116,9 +124,11 @@ public class ImageController {
             String extension = extractExtension(filename);
 
             if (!StringUtils.hasText(uuid) || !StringUtils.hasText(extension)) {
-                log.warn("无效的文件名格式: {}", filename);
+                log.warn("✗ 无效的文件名格式: {}", filename);
                 return ResponseEntity.badRequest().build();
             }
+
+            log.debug("解析结果 - UUID: {}, 扩展名: {}", uuid, extension);
 
             // 构建文件路径
             String actualFilename = uuid + "." + extension;
@@ -126,7 +136,7 @@ public class ImageController {
 
             // 检查文件是否存在
             if (!Files.exists(filePath)) {
-                log.warn("文件不存在: {}", filePath);
+                log.warn("✗ 文件不存在: {}", filePath.toAbsolutePath());
                 return ResponseEntity.notFound().build();
             }
 
@@ -139,11 +149,14 @@ public class ImageController {
 
             // 如果数据库中不存在，直接返回文件（用于反馈图片、头像等）
             if (imageInfo == null) {
-                log.info("数据库中无记录，直接返回文件: uuid={}", uuid);
+                log.debug("数据库中无记录，直接返回文件: uuid={}", uuid);
+            } else {
+                log.debug("数据库记录存在 - 商品ID: {}, 图片状态: {}", imageInfo.getProductId(), imageInfo.getStatus());
             }
 
             // 读取文件
             Resource resource = new FileSystemResource(filePath);
+            long fileSize = resource.contentLength();
 
             // 根据扩展名确定Content-Type
             MediaType mediaType = getMediaType(extension);
@@ -151,23 +164,25 @@ public class ImageController {
             // 设置响应头
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(mediaType);
-            headers.setContentLength(resource.contentLength());
+            headers.setContentLength(fileSize);
 
             // 记录访问日志
             if (imageInfo != null) {
-                log.info("图片访问成功: uuid={}, productId={}, size={}",
-                        uuid, imageInfo.getProductId(), resource.contentLength());
+                log.info("✓ 图片访问成功（数据库模式）- UUID: {}, 商品ID: {}, 大小: {} bytes ({} KB)",
+                    uuid, imageInfo.getProductId(), fileSize, String.format("%.2f", fileSize / 1024.0));
             } else {
-                log.info("图片访问成功（无数据库记录）: uuid={}, size={}",
-                        uuid, resource.contentLength());
+                log.info("✓ 图片访问成功（无数据库记录）- UUID: {}, 大小: {} bytes ({} KB)",
+                    uuid, fileSize, String.format("%.2f", fileSize / 1024.0));
             }
+            log.debug("==============================================");
 
             return ResponseEntity.ok()
                     .headers(headers)
                     .body(resource);
 
         } catch (Exception e) {
-            log.error("获取图片失败: filename={}", filename, e);
+            log.error("✗ 获取图片失败 - 文件名: {}, 错误: {}", filename, e.getMessage(), e);
+            log.debug("==============================================");
             return ResponseEntity.internalServerError().build();
         }
     }

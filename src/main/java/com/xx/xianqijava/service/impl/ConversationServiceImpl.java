@@ -421,7 +421,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
         webSocketHandler.sendMessageToUser(toUserId, "new_message",
                 Map.of(
                         "conversationId", conversation.getConversationId(),
-                        "message", convertMessageToVO(message, userId)
+                        "message", convertMessageToVO(message, toUserId)
                 ));
 
         log.info("发送消息成功, messageId={}, conversationId={}, from={}, to={}",
@@ -565,7 +565,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
         webSocketHandler.sendMessageToUser(toUserId, "new_message",
                 Map.of(
                         "conversationId", conversation.getConversationId(),
-                        "message", convertMessageToVO(message, userId)
+                        "message", convertMessageToVO(message, toUserId)
                 ));
 
         log.info("发送图片消息成功, messageId={}, conversationId={}, from={}, to={}",
@@ -615,6 +615,63 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
         }
 
         return vo;
+    }
+
+    /**
+     * 清空聊天记录
+     *
+     * @param conversationId 会话ID
+     * @param userId        当前用户ID
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void clearMessages(Long conversationId, Long userId) {
+        log.info("清空聊天记录, conversationId={}, userId={}", conversationId, userId);
+
+        // 1. 验证会话是否存在且用户有权操作
+        Conversation conversation = this.getById(conversationId);
+        if (conversation == null || conversation.getStatus() == 1) {
+            log.error("会话不存在或已删除, conversationId={}", conversationId);
+            throw new BusinessException(ErrorCode.CONVERSATION_NOT_FOUND);
+        }
+
+        // 检查用户是否是会话参与者
+        if (!conversation.getUserId1().equals(userId) &&
+            !conversation.getUserId2().equals(userId)) {
+            log.error("用户无权操作此会话, conversationId={}, userId={}", conversationId, userId);
+            throw new BusinessException(ErrorCode.NO_PERMISSION);
+        }
+
+        try {
+            // 2. 逻辑删除所有消息（设置status=2）
+            LambdaUpdateWrapper<Message> updateWrapper = new LambdaUpdateWrapper<>();
+            updateWrapper.eq(Message::getConversationId, conversationId)
+                        .eq(Message::getStatus, 0)  // 只删除正常状态的消息
+                        .set(Message::getStatus, 2); // 设置为已删除
+            int affectedRows = messageMapper.update(null, updateWrapper);
+            log.info("清空聊天记录成功, conversationId={}, affectedRows={}", conversationId, affectedRows);
+
+            // 3. 更新会话的最后消息信息
+            conversation.setLastMessageId(null);
+            conversation.setLastMessageContent(null);
+            conversation.setLastMessageTime(null);
+
+            // 4. 重置未读数（根据是哪个用户）
+            if (conversation.getUserId1().equals(userId)) {
+                conversation.setUnreadCountUser1(0);
+            }
+            if (conversation.getUserId2().equals(userId)) {
+                conversation.setUnreadCountUser2(0);
+            }
+
+            this.updateById(conversation);
+            log.info("清空聊天记录成功, conversationId={}", conversationId);
+
+        } catch (Exception e) {
+            log.error("清空聊天记录失败, conversationId={}, userId={}, error={}",
+                     conversationId, userId, e.getMessage(), e);
+            throw new BusinessException(ErrorCode.OPERATION_FAILED);
+        }
     }
 
     /**

@@ -29,6 +29,14 @@ public interface BlacklistService extends IService<Blacklist> {
     void removeFromBlacklist(Long userId, Long blacklistId);
 
     /**
+     * 通过被拉黑用户ID移除黑名单
+     *
+     * @param userId         用户ID
+     * @param blockedUserId 被拉黑的用户ID
+     */
+    void removeFromBlacklistByBlockedUserId(Long userId, Long blockedUserId);
+
+    /**
      * 获取黑名单列表
      *
      * @param userId 用户ID
@@ -45,4 +53,13 @@ public interface BlacklistService extends IService<Blacklist> {
      * @return 是否在黑名单中
      */
     boolean isInBlacklist(Long userId, Long targetUserId);
+
+    /**
+     * 检查当前用户是否被对方拉黑
+     *
+     * @param userId       当前用户ID
+     * @param targetUserId 对方用户ID
+     * @return 是否被对方拉黑
+     */
+    boolean isBlockedBy(Long userId, Long targetUserId);
 }

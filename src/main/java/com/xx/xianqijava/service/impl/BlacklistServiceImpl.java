@@ -81,6 +81,26 @@ public class BlacklistServiceImpl extends ServiceImpl<BlacklistMapper, Blacklist
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void removeFromBlacklistByBlockedUserId(Long userId, Long blockedUserId) {
+        log.info("通过被拉黑用户ID移除黑名单, userId={}, blockedUserId={}", userId, blockedUserId);
+
+        // 查找黑名单记录
+        LambdaQueryWrapper<Blacklist> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Blacklist::getUserId, userId)
+                .eq(Blacklist::getBlockedUserId, blockedUserId);
+
+        Blacklist blacklist = getOne(queryWrapper);
+        if (blacklist == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "黑名单记录不存在");
+        }
+
+        // 删除黑名单记录
+        removeById(blacklist.getBlacklistId());
+        log.info("通过被拉黑用户ID移除黑名单成功, blacklistId={}", blacklist.getBlacklistId());
+    }
+
+    @Override
     public IPage<UserInfoVO> getBlacklist(Long userId, Page<Blacklist> page) {
         log.info("查询黑名单列表, userId={}", userId);
 
@@ -127,6 +147,15 @@ public class BlacklistServiceImpl extends ServiceImpl<BlacklistMapper, Blacklist
         LambdaQueryWrapper<Blacklist> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Blacklist::getUserId, userId)
                 .eq(Blacklist::getBlockedUserId, targetUserId);
+        return count(queryWrapper) > 0;
+    }
+
+    @Override
+    public boolean isBlockedBy(Long userId, Long targetUserId) {
+        // 检查对方是否将当前用户拉黑（即对方的黑名单中是否有当前用户）
+        LambdaQueryWrapper<Blacklist> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(Blacklist::getUserId, targetUserId)
+                .eq(Blacklist::getBlockedUserId, userId);
         return count(queryWrapper) > 0;
     }
 }
