@@ -97,8 +97,10 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleSessionMapper, Fl
         List<FlashSaleProduct> flashProducts = flashProductMapper.selectList(wrapper);
 
         // 转换为 ProductVO，包含秒杀价
+        // 过滤掉 null 值（商品已被删除或不存在的情况）
         return flashProducts.stream()
                 .map(this::convertToProductVO)
+                .filter(vo -> vo != null)
                 .collect(Collectors.toList());
     }
 
