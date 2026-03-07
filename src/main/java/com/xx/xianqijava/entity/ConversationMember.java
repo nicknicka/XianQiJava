@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Schema(description = "会话成员")
 public class ConversationMember {
 
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "成员ID")
     private Long memberId;
 

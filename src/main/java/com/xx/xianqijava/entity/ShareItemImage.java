@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Schema(description = "共享物品图片")
 public class ShareItemImage {
 
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "图片ID")
     private Long imageId;
 

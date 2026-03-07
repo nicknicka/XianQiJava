@@ -18,7 +18,7 @@ public class Category extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "分类ID")
     private Long categoryId;
 

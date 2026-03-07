@@ -21,7 +21,7 @@ public class RefundRecord extends BaseEntity {
 
     private static final long serialVersionUID = 1L;
 
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "退款记录ID")
     private Long refundId;
 

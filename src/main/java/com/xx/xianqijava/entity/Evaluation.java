@@ -16,7 +16,7 @@ import java.time.LocalDateTime;
 @Schema(description = "评价")
 public class Evaluation {
 
-    @TableId(type = IdType.AUTO)
+    @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "评价ID")
     private Long evalId;
 
