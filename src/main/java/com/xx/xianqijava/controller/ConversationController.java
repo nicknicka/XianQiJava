@@ -49,14 +49,14 @@ public class ConversationController {
      */
     @Operation(summary = "创建或获取基于商品的会话")
     @PostMapping("/create-or-update")
-    public Result<Long> createOrUpdateConversation(
+    public Result<ConversationVO> createOrUpdateConversation(
             @Parameter(description = "对方用户ID") @RequestParam("targetId") Long targetUserId,
             @Parameter(description = "关联商品ID（可选）") @RequestParam(value = "relatedProductId", required = false) Long relatedProductId) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
         log.info("创建或获取基于商品的会话, userId={}, targetUserId={}, relatedProductId={}",
                 userId, targetUserId, relatedProductId);
-        Long conversationId = conversationService.createOrUpdateConversation(userId, targetUserId, relatedProductId);
-        return Result.success(conversationId);
+        ConversationVO conversationVO = conversationService.createOrUpdateConversation(userId, targetUserId, relatedProductId);
+        return Result.success(conversationVO);
     }
 
     /**

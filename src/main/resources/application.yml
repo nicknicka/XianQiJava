@@ -25,7 +25,6 @@ spring:
       max-lifetime: 1800000
       connection-init-sql: SET NAMES utf8mb4
       connection-test-query: SELECT 1
-      connection-test-query: SELECT 1
 
   # Redis 配置
   data:
@@ -97,7 +96,7 @@ springdoc:
 # JWT 配置
 jwt:
   secret: XianQiJavaSecretKey2026CampusTradePlatformSecretKeyMustBeLongEnough
-  expiration: 21600000  # 6小时，单位毫秒
+  expiration: 86400000  # 24小时，单位毫秒
   refresh-expiration: 604800000  # 7天，单位毫秒
   header: Authorization
   token-prefix: Bearer

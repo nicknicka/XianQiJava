@@ -128,6 +128,18 @@ public class SystemNotificationServiceImpl extends ServiceImpl<SystemNotificatio
         log.info("标记所有通知已读成功");
     }
 
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void clearAllNotifications(Long userId) {
+        log.info("清空所有通知, userId={}", userId);
+
+        // 清空通知 = 标记所有通知为已读
+        // 这样用户在通知列表中就不会看到这些通知（如果前端过滤已读通知）
+        markAllAsRead(userId);
+
+        log.info("清空所有通知成功");
+    }
+
     /**
      * 转换为VO
      */

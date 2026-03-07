@@ -52,4 +52,11 @@ public interface SystemNotificationService extends IService<SystemNotification> 
      * @param userId 用户ID
      */
     void markAllAsRead(Long userId);
+
+    /**
+     * 清空所有通知（标记所有通知为已读）
+     *
+     * @param userId 用户ID
+     */
+    void clearAllNotifications(Long userId);
 }

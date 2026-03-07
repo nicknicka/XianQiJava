@@ -107,4 +107,17 @@ public class SystemNotificationController {
         systemNotificationService.markAllAsRead(userId);
         return Result.success("已标记所有通知为已读");
     }
+
+    /**
+     * 清空所有通知
+     */
+    @RequestMapping(value = "/clear-all", method = RequestMethod.DELETE)
+    @Operation(summary = "清空所有通知")
+    public Result<Void> clearAllNotifications() {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("清空所有通知, userId={}", userId);
+
+        systemNotificationService.clearAllNotifications(userId);
+        return Result.success("已清空所有通知");
+    }
 }

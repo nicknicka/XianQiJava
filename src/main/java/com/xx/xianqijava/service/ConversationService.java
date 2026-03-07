@@ -30,9 +30,9 @@ public interface ConversationService extends IService<Conversation> {
      * @param userId         当前用户ID
      * @param targetUserId   对方用户ID
      * @param relatedProductId 关联的商品ID（可选）
-     * @return 会话ID
+     * @return 会话VO
      */
-    Long createOrUpdateConversation(Long userId, Long targetUserId, Long relatedProductId);
+    ConversationVO createOrUpdateConversation(Long userId, Long targetUserId, Long relatedProductId);
 
     /**
      * 根据用户ID和商品ID查找会话

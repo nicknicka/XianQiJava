@@ -90,7 +90,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public Long createOrUpdateConversation(Long userId, Long targetUserId, Long relatedProductId) {
+    public ConversationVO createOrUpdateConversation(Long userId, Long targetUserId, Long relatedProductId) {
         if (userId.equals(targetUserId)) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "不能与自己创建会话");
         }
@@ -139,7 +139,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
                     conversation.getConversationId(), relatedProductId);
         }
 
-        return conversation.getConversationId();
+        return convertToVO(conversation, userId);
     }
 
     @Override
