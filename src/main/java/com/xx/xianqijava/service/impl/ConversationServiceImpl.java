@@ -405,7 +405,10 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
 
         // 更新会话的最后消息信息
         conversation.setLastMessageId(message.getMessageId());
-        conversation.setLastMessageContent(message.getContent());
+        // 根据消息类型设置友好的显示内容
+        String displayContent = getMessageDisplayContent(message.getType(), message.getContent());
+        conversation.setLastMessageContent(displayContent);
+        conversation.setLastMessageType(message.getType());
         conversation.setLastMessageTime(message.getCreateTime());
 
         // 增加接收者的未读数
@@ -549,7 +552,10 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
 
         // 更新会话的最后消息信息
         conversation.setLastMessageId(message.getMessageId());
-        conversation.setLastMessageContent("[图片]");
+        // 根据消息类型设置友好的显示内容
+        String displayContent = getMessageDisplayContent(message.getType(), message.getContent());
+        conversation.setLastMessageContent(displayContent);
+        conversation.setLastMessageType(message.getType());
         conversation.setLastMessageTime(message.getCreateTime());
 
         // 增加接收者的未读数
@@ -614,7 +620,47 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
             vo.setLastMessageTime(conversation.getLastMessageTime().toString());
         }
 
+        // 转换消息类型为前端期望的字符串格式
+        vo.setLastMessageType(getMessageTypeString(conversation.getLastMessageType()));
+
         return vo;
+    }
+
+    /**
+     * 将消息类型数字转换为字符串类型
+     */
+    private String getMessageTypeString(Integer type) {
+        if (type == null) {
+            return "text";
+        }
+        return switch (type) {
+            case 1 -> "text";
+            case 2 -> "image";
+            case 3 -> "product";
+            case 4 -> "order";
+            case 5 -> "system";
+            case 6 -> "quote";
+            default -> "text";
+        };
+    }
+
+    /**
+     * 根据消息类型获取友好的显示内容
+     * 用于会话列表中显示最后一条消息
+     */
+    private String getMessageDisplayContent(Integer type, String content) {
+        if (type == null) {
+            return content;
+        }
+        return switch (type) {
+            case 1 -> content; // 文本消息，直接返回内容
+            case 2 -> "[图片]"; // 图片消息
+            case 3 -> "[商品]"; // 商品卡片
+            case 4 -> "[订单]"; // 订单卡片
+            case 5 -> "[系统通知]"; // 系统通知
+            case 6 -> "[引用消息]"; // 引用消息
+            default -> content;
+        };
     }
 
     /**

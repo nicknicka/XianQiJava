@@ -168,6 +168,37 @@ public class UserController {
     }
 
     /**
+     * 根据用户ID获取用户中心数据（用于查看他人主页）
+     */
+    @Operation(summary = "根据用户ID获取用户中心数据")
+    @GetMapping("/{userId}/center")
+    public Result<UserCenterVO> getUserCenterById(
+            @Parameter(description = "用户ID") @PathVariable("userId") Long userId) {
+        log.info("获取指定用户的中心数据, userId={}", userId);
+        UserCenterVO result = userService.getUserCenterData(userId);
+        return Result.success(result);
+    }
+
+    /**
+     * 获取指定用户的基本信息（用于查看他人主页）
+     */
+    @Operation(summary = "获取指定用户的基本信息")
+    @GetMapping("/{userId}")
+    public Result<UserInfoVO> getUserById(
+            @Parameter(description = "用户ID") @PathVariable("userId") Long userId) {
+        log.info("========== Controller getUserById 开始 ==========");
+        log.info("请求参数: userId={}", userId);
+
+        UserInfoVO result = userService.getUserInfo(userId);
+
+        log.info("Controller 返回结果: userId={}, username={}, nickname={}, avatar={}",
+            result.getId(), result.getUsername(), result.getNickname(), result.getAvatar());
+        log.info("========== Controller getUserById 结束 ==========");
+
+        return Result.success(result);
+    }
+
+    /**
      * 获取用户统计数据
      */
     @Operation(summary = "获取用户统计数据")
@@ -175,6 +206,18 @@ public class UserController {
     public Result<com.xx.xianqijava.vo.UserStatsVO> getUserStats() {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
         log.info("获取用户统计数据, userId={}", userId);
+        com.xx.xianqijava.vo.UserStatsVO result = userService.getUserStats(userId);
+        return Result.success(result);
+    }
+
+    /**
+     * 根据用户ID获取用户统计数据（用于查看他人主页）
+     */
+    @Operation(summary = "根据用户ID获取用户统计数据")
+    @GetMapping("/{userId}/stats")
+    public Result<com.xx.xianqijava.vo.UserStatsVO> getUserStatsById(
+            @Parameter(description = "用户ID") @PathVariable("userId") Long userId) {
+        log.info("获取指定用户的统计数据, userId={}", userId);
         com.xx.xianqijava.vo.UserStatsVO result = userService.getUserStats(userId);
         return Result.success(result);
     }

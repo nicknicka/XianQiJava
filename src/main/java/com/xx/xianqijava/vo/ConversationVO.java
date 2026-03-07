@@ -34,6 +34,9 @@ public class ConversationVO {
     @Schema(description = "最后消息时间")
     private String lastMessageTime;
 
+    @Schema(description = "最后一条消息类型：text-文本，image-图片，product-商品卡片，order-订单卡片，system-系统通知，quote-引用消息")
+    private String lastMessageType;
+
     @Schema(description = "未读消息数")
     private Integer unreadCount;
 

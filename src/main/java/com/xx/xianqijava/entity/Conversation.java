@@ -50,6 +50,9 @@ public class Conversation extends BaseEntity {
     @Schema(description = "最后消息时间")
     private java.time.LocalDateTime lastMessageTime;
 
+    @Schema(description = "最后一条消息类型：1-文本，2-图片，3-商品卡片，4-订单卡片，5-系统通知，6-引用消息")
+    private Integer lastMessageType;
+
     @Schema(description = "用户1的未读消息数")
     private Integer unreadCountUser1;
 

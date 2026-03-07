@@ -207,13 +207,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Override
     public UserInfoVO getUserInfo(Long userId) {
+        log.info("========== getUserInfo 开始 ==========");
+        log.info("请求参数: userId={}", userId);
+
         User user = getById(userId);
         if (user == null) {
+            log.error("用户不存在: userId={}", userId);
             throw new BusinessException(ErrorCode.USER_NOT_FOUND);
         }
 
+        log.info("查询到用户基本信息: userId={}, username={}, nickname={}, avatar={}",
+            user.getUserId(), user.getUsername(), user.getNickname(), user.getAvatar());
+
         UserInfoVO userInfoVO = new UserInfoVO();
         BeanUtil.copyProperties(user, userInfoVO);
+
+        // 手动设置ID（因为字段名不同：User.userId -> UserInfoVO.id）
+        userInfoVO.setId(user.getUserId());
+
+        // 手动设置头像URL（如果为空，设置默认头像）
+        if (user.getAvatar() == null || user.getAvatar().isEmpty()) {
+            userInfoVO.setAvatar("/static/images/user.png");
+        } else {
+            userInfoVO.setAvatar(user.getAvatar());
+        }
+
         userInfoVO.setCreateTime(user.getCreateTime().toString());
         userInfoVO.setUpdateTime(user.getUpdateTime().toString());
 
@@ -222,12 +240,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             userRealNameAuthService.getOne(new LambdaQueryWrapper<com.xx.xianqijava.entity.UserRealNameAuth>()
                 .eq(com.xx.xianqijava.entity.UserRealNameAuth::getUserId, userId));
         userInfoVO.setRealNameStatus(realNameAuth != null ? realNameAuth.getStatus() : 0);
+        log.info("实名认证状态: realNameStatus={}", userInfoVO.getRealNameStatus());
 
         // 查询学生认证状态（从扩展表获取）
         com.xx.xianqijava.entity.UserStudentAuth studentAuth =
             userStudentAuthService.getOne(new LambdaQueryWrapper<com.xx.xianqijava.entity.UserStudentAuth>()
                 .eq(com.xx.xianqijava.entity.UserStudentAuth::getUserId, userId));
         userInfoVO.setStudentStatus(studentAuth != null ? studentAuth.getStatus() : 0);
+        log.info("学生认证状态: studentStatus={}", userInfoVO.getStudentStatus());
+
+        log.info("返回 UserInfoVO: userId={}, username={}, nickname={}, avatar={}, creditScore={}",
+            userInfoVO.getId(), userInfoVO.getUsername(), userInfoVO.getNickname(),
+            userInfoVO.getAvatar(), userInfoVO.getCreditScore());
+        log.info("========== getUserInfo 结束 ==========");
 
         return userInfoVO;
     }
