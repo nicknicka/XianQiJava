@@ -98,6 +98,7 @@ jwt:
   secret: XianQiJavaSecretKey2026CampusTradePlatformSecretKeyMustBeLongEnough
   expiration: 86400000  # 24小时，单位毫秒
   refresh-expiration: 604800000  # 7天，单位毫秒
+  admin-expiration: 86400  # 24小时，单位秒（管理员Token）
   header: Authorization
   token-prefix: Bearer
 

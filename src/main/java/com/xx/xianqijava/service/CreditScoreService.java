@@ -1,0 +1,598 @@
+package com.xx.xianqijava.service;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.xx.xianqijava.config.CreditScoreConfig;
+import com.xx.xianqijava.dto.CreditChangeDTO;
+import com.xx.xianqijava.dto.CreditDetailVO;
+import com.xx.xianqijava.entity.*;
+import com.xx.xianqijava.mapper.*;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.stream.Collectors;
+
+/**
+ * 信用分服务
+ */
+@Slf4j
+@Service
+public class CreditScoreService {
+
+    @Autowired
+    private CreditScoreConfig config;
+
+    @Autowired
+    private UserMapper userMapper;
+
+    @Autowired
+    private CreditRecordMapper creditRecordMapper;
+
+    @Autowired
+    private CreditDailyStatMapper creditDailyStatMapper;
+
+    @Autowired
+    private OrderMapper orderMapper;
+
+    @Autowired
+    private EvaluationMapper evaluationMapper;
+
+    @Autowired
+    private UserCreditExtMapper userCreditExtMapper;
+
+    /**
+     * 处理交易完成后的信用分变化
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void handleTransactionComplete(String orderId) {
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            log.warn("订单不存在: {}", orderId);
+            return;
+        }
+
+        // 卖家获得信用分
+        CreditChangeDTO sellerChange = calculateTransactionCredit(order.getSellerId(), order);
+        if (sellerChange.getSuccess()) {
+            applyCreditChange(order.getSellerId(), sellerChange,
+                CreditRecord.RelatedType.ORDER.getCode(), orderId);
+        }
+
+        log.info("订单 {} 完成处理，卖家信用分变化: {}", orderId, sellerChange);
+    }
+
+    /**
+     * 计算交易加分（防刷版）
+     */
+    public CreditChangeDTO calculateTransactionCredit(String userId, Order order) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            return CreditChangeDTO.fail("用户不存在");
+        }
+
+        // 1. 检查每日加分上限
+        BigDecimal todayGain = getTodayGain(userId);
+        if (todayGain.compareTo(BigDecimal.valueOf(config.getDailyMaxGain())) >= 0) {
+            return CreditChangeDTO.noop("已达到每日加分上限");
+        }
+
+        // 2. 检查刷分嫌疑
+        if (isSuspiciousActivity(userId, order)) {
+            log.warn("用户 {} 存在刷分嫌疑，订单: {}", userId, order.getId());
+            return CreditChangeDTO.noop("存在异常行为");
+        }
+
+        // 3. 根据交易金额计算基础分
+        BigDecimal baseScore = calculateByAmount(order.getTotalAmount());
+
+        // 4. 应用每日上限
+        BigDecimal remaining = BigDecimal.valueOf(config.getDailyMaxGain()).subtract(todayGain);
+        BigDecimal actualScore = baseScore.min(remaining);
+
+        // 5. 最低0.1分
+        actualScore = actualScore.max(BigDecimal.valueOf(0.1));
+
+        // 6. 应用单次交易上限
+        actualScore = actualScore.min(BigDecimal.valueOf(config.getSingleTransactionMax()));
+
+        return CreditChangeDTO.success(actualScore, "完成交易");
+    }
+
+    /**
+     * 根据交易金额计算加分
+     */
+    private BigDecimal calculateByAmount(BigDecimal amount) {
+        double amountVal = amount.doubleValue();
+
+        if (amountVal < config.getTransaction().getSmallMax()) {
+            return BigDecimal.valueOf(config.getTransaction().getSmallScore());
+        } else if (amountVal < config.getTransaction().getMediumMax()) {
+            return BigDecimal.valueOf(config.getTransaction().getMediumScore());
+        } else if (amountVal < config.getTransaction().getLargeMax()) {
+            return BigDecimal.valueOf(config.getTransaction().getLargeScore());
+        } else {
+            return BigDecimal.valueOf(config.getTransaction().getHugeScore());
+        }
+    }
+
+    /**
+     * 检测刷分嫌疑
+     */
+    private boolean isSuspiciousActivity(String userId, Order order) {
+        LocalDateTime sevenDaysAgo = LocalDateTime.now().minusDays(7);
+
+        // 1. 检查与同一人的交易频率
+        String counterpartyId = order.getBuyerId().equals(userId) ?
+            order.getSellerId() : order.getBuyerId();
+
+        long sameCounterpartyCount = orderMapper.selectCount(
+            new LambdaQueryWrapper<Order>()
+                .eq(Order::getSellerId, userId)
+                .eq(Order::getBuyerId, counterpartyId)
+                .ge(Order::getCreatedAt, sevenDaysAgo)
+                .in(Order::getStatus, List.of("completed", "in_transaction"))
+        );
+
+        if (sameCounterpartyCount >= config.getAntiSpam().getSameCounterpartyThreshold()) {
+            log.warn("用户 {} 在7天内与同一用户交易 {} 次", userId, sameCounterpartyCount);
+            return true;
+        }
+
+        // 2. 检查小额高频交易
+        long smallAmountCount = orderMapper.selectCount(
+            new LambdaQueryWrapper<Order>()
+                .eq(Order::getSellerId, userId)
+                .lt(Order::getTotalAmount, config.getAntiSpam().getSmallAmountLimit())
+                .ge(Order::getCreatedAt, sevenDaysAgo)
+                .in(Order::getStatus, List.of("completed", "in_transaction"))
+        );
+
+        if (smallAmountCount >= config.getAntiSpam().getSmallAmountThreshold()) {
+            log.warn("用户 {} 在7天内小额交易次数: {}", userId, smallAmountCount);
+            return true;
+        }
+
+        // 3. 检查单日交易次数
+        LocalDateTime todayStart = LocalDate.now().atStartOfDay();
+        long todayCount = orderMapper.selectCount(
+            new LambdaQueryWrapper<Order>()
+                .eq(Order::getSellerId, userId)
+                .ge(Order::getCreatedAt, todayStart)
+                .in(Order::getStatus, List.of("pending_confirm", "in_transaction", "completed"))
+        );
+
+        if (todayCount >= config.getAntiSpam().getDailyTransactionThreshold()) {
+            log.warn("用户 {} 今日交易次数: {}", userId, todayCount);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * 处理评价后的信用分变化
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void handleEvaluationCreated(String evaluationId) {
+        Evaluation evaluation = evaluationMapper.selectById(evaluationId);
+        if (evaluation == null) {
+            log.warn("评价不存在: {}", evaluationId);
+            return;
+        }
+
+        // 被评价者（卖家）信用分变化
+        CreditChangeDTO change = calculateEvaluationCredit(evaluation);
+        if (change.getSuccess()) {
+            applyCreditChange(evaluation.getToUserId(), change,
+                CreditRecord.RelatedType.EVALUATION.getCode(), evaluationId);
+        }
+
+        // 更新用户评价统计
+        updateUserEvaluationStats(evaluation.getToUserId());
+
+        log.info("评价 {} 处理完成，信用分变化: {}", evaluationId, change);
+    }
+
+    /**
+     * 计算评价加分（防刷版）
+     */
+    public CreditChangeDTO calculateEvaluationCredit(Evaluation evaluation) {
+        int rating = evaluation.getRating();
+        String userId = evaluation.getToUserId();
+
+        // 评分说明：1星=差评(-5分), 2星=较差(-3分), 3星=中评(-1分), 4-5星=好评(+1~2分)
+
+        // 1. 差评直接扣分，不受上限限制（1-2星）
+        if (rating <= 2) {
+            // 1星和2星都是差评，扣分不同
+            BigDecimal penalty = BigDecimal.valueOf(
+                rating == 1 ? 5.0 : 3.0   // 1星扣5分，2星扣3分
+            ).negate();  // 转为负数
+
+            return CreditChangeDTO.builder()
+                .success(true)
+                .scoreChange(penalty)
+                .reason("收到差评")
+                .reasonDetail(rating == 1 ? "1星评价" : "2星评价")
+                .build();
+        }
+
+        // 2. 中评（3星）
+        if (rating == 3) {
+            return CreditChangeDTO.builder()
+                .success(true)
+                .scoreChange(BigDecimal.valueOf(config.getEvaluation().getNeutral()))
+                .reason("收到中评")
+                .reasonDetail("3星评价")
+                .build();
+        }
+
+        // 3. 好评检查防刷（4-5星）
+        if (rating >= 4) {
+            // 检查是否互刷好评
+            if (isMutualEvaluationSpam(evaluation)) {
+                log.warn("疑似互刷好评: 评价者 {}, 被评价者 {}",
+                    evaluation.getFromUserId(), evaluation.getToUserId());
+                return CreditChangeDTO.noop("疑似互刷好评");
+            }
+
+            // 检查每日上限
+            BigDecimal todayGain = getTodayGain(userId);
+            if (todayGain.compareTo(BigDecimal.valueOf(config.getDailyMaxGain())) >= 0) {
+                return CreditChangeDTO.noop("已达到每日加分上限");
+            }
+
+            // 计算评价质量分数
+            BigDecimal qualityScore = evaluateQuality(evaluation);
+
+            // 基础分 + 质量加成
+            BigDecimal baseScore = BigDecimal.valueOf(config.getEvaluation().getGoodBase());
+            BigDecimal bonus = qualityScore.multiply(BigDecimal.valueOf(0.5)); // 最多加0.5分
+            BigDecimal totalScore = baseScore.add(bonus);
+
+            // 应用每日上限
+            BigDecimal remaining = BigDecimal.valueOf(config.getDailyMaxGain()).subtract(todayGain);
+            BigDecimal actualScore = totalScore.min(remaining);
+
+            // 应用单次上限
+            actualScore = actualScore.min(BigDecimal.valueOf(config.getEvaluation().getGoodMax()));
+
+            return CreditChangeDTO.builder()
+                .success(true)
+                .scoreChange(actualScore)
+                .reason("收到好评")
+                .reasonDetail("评价质量加成: " + bonus)
+                .build();
+        }
+
+        // 不应该到这里，评分必须是1-5
+        log.error("无效的评分: {}", rating);
+        return CreditChangeDTO.fail("无效的评分");
+    }
+
+    /**
+     * 检查是否互刷好评
+     */
+    private boolean isMutualEvaluationSpam(Evaluation evaluation) {
+        String evaluatorId = evaluation.getFromUserId();
+        String evaluatedId = evaluation.getToUserId();
+
+        LocalDateTime checkTime = LocalDateTime.now().minusDays(
+            config.getAntiSpam().getMutualEvaluationDays()
+        );
+
+        // 检查被评价者是否也给评价者评过分
+        long count = evaluationMapper.selectCount(
+            new LambdaQueryWrapper<Evaluation>()
+                .eq(Evaluation::getFromUserId, evaluatedId)
+                .eq(Evaluation::getToUserId, evaluatorId)
+                .ge(Evaluation::getCreatedAt, checkTime)
+        );
+
+        if (count == 0) {
+            return false;
+        }
+
+        // 检查是否有实际交易
+        long transactionCount = orderMapper.selectCount(
+            new LambdaQueryWrapper<Order>()
+                .and(wrapper -> wrapper
+                    .eq(Order::getSellerId, evaluatorId)
+                    .eq(Order::getBuyerId, evaluatedId)
+                )
+                .or(wrapper -> wrapper
+                    .eq(Order::getSellerId, evaluatedId)
+                    .eq(Order::getBuyerId, evaluatorId)
+                )
+                .ge(Order::getCreatedAt, checkTime)
+                .in(Order::getStatus, List.of("completed", "in_transaction"))
+        );
+
+        // 互评但没有交易 = 疑似刷分
+        return transactionCount == 0;
+    }
+
+    /**
+     * 评价质量评分（0-1）
+     */
+    private BigDecimal evaluateQuality(Evaluation evaluation) {
+        double score = 0.0;
+
+        // 有图片 +0.3
+        if (evaluation.getImages() != null && !evaluation.getImages().isEmpty()) {
+            score += 0.3;
+        }
+
+        // 有标签 +0.2
+        if (evaluation.getTags() != null && !evaluation.getTags().isEmpty()) {
+            score += 0.2;
+        }
+
+        // 文字长度超过20字 +0.3
+        if (evaluation.getContent() != null && evaluation.getContent().length() >= 20) {
+            score += 0.3;
+        }
+
+        // 文字长度超过50字 +0.2
+        if (evaluation.getContent() != null && evaluation.getContent().length() >= 50) {
+            score += 0.2;
+        }
+
+        return BigDecimal.valueOf(Math.min(score, 1.0))
+            .setScale(2, RoundingMode.HALF_UP);
+    }
+
+    /**
+     * 应用信用分变化
+     */
+    @Transactional(rollbackFor = Exception.class)
+    public void applyCreditChange(String userId, CreditChangeDTO change,
+                                  String relatedType, String relatedId) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        Integer scoreBefore = user.getCreditScore();
+        BigDecimal scoreChange = change.getScoreChange();
+        Integer scoreAfter = scoreBefore + scoreChange.intValue();
+
+        // 限制分数范围
+        scoreAfter = Math.max(config.getMinScore(),
+            Math.min(config.getMaxScore(), scoreAfter));
+
+        // 更新用户信用分
+        user.setCreditScore(scoreAfter);
+        userMapper.updateById(user);
+
+        // 更新扩展表的信用等级
+        String creditLevel = calculateCreditLevel(scoreAfter);
+        userCreditExtMapper.updateCreditLevel(userId, creditLevel);
+
+        // 记录变化
+        CreditRecord record = new CreditRecord();
+        record.setUserId(userId);
+        record.setScoreBefore(scoreBefore);
+        record.setScoreChange(scoreChange);
+        record.setScoreAfter(scoreAfter);
+        record.setReason(change.getReason());
+        record.setReasonDetail(change.getReasonDetail());
+        record.setRelatedId(relatedId);
+        record.setRelatedType(relatedType);
+        record.setCreatedAt(LocalDateTime.now());
+        creditRecordMapper.insert(record);
+
+        // 更新每日统计
+        updateDailyStat(userId, scoreChange, change.getReason());
+
+        log.info("用户 {} 信用分变化: {} -> {} ({})",
+            userId, scoreBefore, scoreAfter, scoreChange);
+    }
+
+    /**
+     * 计算信用等级
+     */
+    private String calculateCreditLevel(Integer score) {
+        if (score >= 90) return "excellent";
+        if (score >= 80) return "good";
+        if (score >= 70) return "normal";
+        return "poor";
+    }
+
+    /**
+     * 更新每日统计
+     */
+    private void updateDailyStat(String userId, BigDecimal scoreChange, String reason) {
+        LocalDate today = LocalDate.now();
+        CreditDailyStat stat = creditDailyStatMapper.getByUserAndDate(userId, today);
+
+        if (stat == null) {
+            stat = new CreditDailyStat();
+            stat.setUserId(userId);
+            stat.setStatDate(today);
+            stat.setTransactionGain(BigDecimal.ZERO);
+            stat.setTransactionCount(0);
+            stat.setEvaluationGain(BigDecimal.ZERO);
+            stat.setEvaluationCount(0);
+            stat.setOtherGain(BigDecimal.ZERO);
+            stat.setTotalGain(BigDecimal.ZERO);
+        }
+
+        // 根据原因分类统计
+        if (reason.contains("交易")) {
+            stat.setTransactionGain(stat.getTransactionGain().add(scoreChange));
+            stat.setTransactionCount(stat.getTransactionCount() + 1);
+        } else if (reason.contains("评价")) {
+            stat.setEvaluationGain(stat.getEvaluationGain().add(scoreChange));
+            stat.setEvaluationCount(stat.getEvaluationCount() + 1);
+        } else {
+            stat.setOtherGain(stat.getOtherGain().add(scoreChange));
+        }
+
+        stat.setTotalGain(
+            stat.getTransactionGain()
+                .add(stat.getEvaluationGain())
+                .add(stat.getOtherGain())
+        );
+        stat.setUpdatedAt(LocalDateTime.now());
+
+        if (stat.getId() == null) {
+            stat.setCreatedAt(LocalDateTime.now());
+            creditDailyStatMapper.insert(stat);
+        } else {
+            creditDailyStatMapper.updateById(stat);
+        }
+    }
+
+    /**
+     * 获取今日已获得分数
+     */
+    public BigDecimal getTodayGain(String userId) {
+        LocalDate today = LocalDate.now();
+        BigDecimal gain = creditRecordMapper.sumGainByDate(userId, today);
+        return gain != null ? gain : BigDecimal.ZERO;
+    }
+
+    /**
+     * 获取本周已获得分数
+     */
+    public BigDecimal getWeekGain(String userId) {
+        LocalDate today = LocalDate.now();
+        LocalDate weekStart = today.minusDays(today.getDayOfWeek().getValue() - 1);
+
+        BigDecimal gain = creditRecordMapper.sumGainByDateRange(
+            userId,
+            weekStart.atStartOfDay(),
+            today.plusDays(1).atStartOfDay()
+        );
+        return gain != null ? gain : BigDecimal.ZERO;
+    }
+
+    /**
+     * 更新用户评价统计（使用扩展表）
+     */
+    private void updateUserEvaluationStats(String userId) {
+        // 统计各等级评价数
+        long positiveCount = evaluationMapper.selectCount(
+            new LambdaQueryWrapper<Evaluation>()
+                .eq(Evaluation::getToUserId, userId)
+                .ge(Evaluation::getRating, 4)
+        );
+
+        long neutralCount = evaluationMapper.selectCount(
+            new LambdaQueryWrapper<Evaluation>()
+                .eq(Evaluation::getToUserId, userId)
+                .eq(Evaluation::getRating, 3)
+        );
+
+        long negativeCount = evaluationMapper.selectCount(
+            new LambdaQueryWrapper<Evaluation>()
+                .eq(Evaluation::getToUserId, userId)
+                .le(Evaluation::getRating, 2)
+        );
+
+        // 更新扩展表的评价统计
+        userCreditExtMapper.updateEvaluationStats(
+            Long.parseLong(userId),
+            (int) positiveCount,
+            (int) neutralCount,
+            (int) negativeCount
+        );
+    }
+
+    /**
+     * 获取信用分详情（使用扩展表）
+     */
+    public CreditDetailVO getCreditDetail(String userId) {
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+
+        // 获取扩展表信息
+        UserCreditExt creditExt = userCreditExtMapper.getByUserId(Long.parseLong(userId));
+
+        CreditDetailVO detail = new CreditDetailVO();
+        detail.setCreditScore(user.getCreditScore());
+        detail.setCreditLevel(creditExt != null ? creditExt.getCreditLevel() : "normal");
+        detail.setCreditLevelText(getCreditLevelText(user.getCreditScore()));
+
+        // 评价统计（从扩展表获取）
+        detail.setPositiveCount(creditExt != null ? creditExt.getTotalPositiveEvaluations() : 0);
+        detail.setNeutralCount(creditExt != null ? creditExt.getTotalNeutralEvaluations() : 0);
+        detail.setNegativeCount(creditExt != null ? creditExt.getTotalNegativeEvaluations() : 0);
+        int totalEvaluations = detail.getPositiveCount() +
+            detail.getNeutralCount() + detail.getNegativeCount();
+        detail.setTotalEvaluations(totalEvaluations);
+
+        // 好评率
+        if (totalEvaluations > 0) {
+            BigDecimal goodRate = BigDecimal.valueOf(detail.getPositiveCount())
+                .multiply(BigDecimal.valueOf(100))
+                .divide(BigDecimal.valueOf(totalEvaluations), 1, RoundingMode.HALF_UP);
+            detail.setGoodRate(goodRate);
+        } else {
+            detail.setGoodRate(BigDecimal.ZERO);
+        }
+
+        // 完成交易数
+        long transactionCount = orderMapper.selectCount(
+            new LambdaQueryWrapper<Order>()
+                .eq(Order::getSellerId, userId)
+                .eq(Order::getStatus, "completed")
+        );
+        detail.setTransactionCount((int) transactionCount);
+
+        // 最近变化记录
+        List<CreditRecord> records = creditRecordMapper.getRecentRecords(userId, 10);
+        List<CreditDetailVO.CreditRecordVO> recordVOs = records.stream()
+            .map(r -> {
+                CreditDetailVO.CreditRecordVO vo = new CreditDetailVO.CreditRecordVO();
+                vo.setScoreChange(r.getScoreChange());
+                vo.setScoreAfter(r.getScoreAfter());
+                vo.setReason(r.getReason());
+                vo.setReasonDetail(r.getReasonDetail());
+                vo.setCreatedAt(r.getCreatedAt());
+                return vo;
+            })
+            .collect(Collectors.toList());
+        detail.setScoreHistory(recordVOs);
+
+        // 距离下一等级
+        detail.setNextLevelGap(calculateNextLevelGap(user.getCreditScore()));
+
+        // 今日分数
+        detail.setTodayGain(getTodayGain(userId));
+        detail.setTodayRemaining(
+            BigDecimal.valueOf(config.getDailyMaxGain()).subtract(detail.getTodayGain())
+        );
+
+        return detail;
+    }
+
+    /**
+     * 获取信用等级文本
+     */
+    private String getCreditLevelText(Integer score) {
+        if (score >= 90) return "优秀";
+        if (score >= 80) return "良好";
+        if (score >= 70) return "一般";
+        return "较差";
+    }
+
+    /**
+     * 计算距离下一等级所需分数
+     */
+    private Integer calculateNextLevelGap(Integer currentScore) {
+        if (currentScore >= 90) return 0;
+        if (currentScore >= 80) return 90 - currentScore;
+        if (currentScore >= 70) return 80 - currentScore;
+        return 70 - currentScore;
+    }
+}

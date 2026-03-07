@@ -1,10 +1,14 @@
 package com.xx.xianqijava.config;
 
+import com.xx.xianqijava.interceptor.UserActiveInterceptor;
+import com.xx.xianqijava.security.AdminAuthInterceptor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.StringHttpMessageConverter;
 import org.springframework.http.converter.json.MappingJackson2HttpMessageConverter;
+import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.PathMatchConfigurer;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
@@ -18,6 +22,12 @@ import java.util.List;
  */
 @Configuration
 public class WebMvcConfig implements WebMvcConfigurer {
+
+    @Autowired
+    private UserActiveInterceptor userActiveInterceptor;
+
+    @Autowired
+    private AdminAuthInterceptor adminAuthInterceptor;
 
     @Value("${file.upload.path:/tmp/uploads}")
     private String uploadPath;
@@ -82,6 +92,37 @@ public class WebMvcConfig implements WebMvcConfigurer {
         System.out.println("文件路径: " + productsLocation);
         System.out.println("访问示例: http://localhost:8080/uploads/products/2-book-1.jpg");
         System.out.println("========================================");
+    }
+
+    /**
+     * 配置拦截器
+     */
+    @Override
+    public void addInterceptors(InterceptorRegistry registry) {
+        // 用户活跃时间拦截器
+        registry.addInterceptor(userActiveInterceptor)
+                .addPathPatterns("/api/**")           // 拦截所有API路径
+                .excludePathPatterns(
+                        "/api/public/**",     // 公开接口不拦截
+                        "/api/doc/**",        // API文档不拦截
+                        "/swagger-ui/**",    // Swagger UI不拦截
+                        "/swagger-resources/**", // Swagger资源不拦截
+                        "/v3/api-docs/**",    // OpenAPI文档不拦截
+                        "/webjars/**"         // Webjars资源不拦截
+                )
+                .order(1);  // 设置优先级
+
+        // 管理员认证拦截器
+        registry.addInterceptor(adminAuthInterceptor)
+                .addPathPatterns("/admin/**")         // 拦截所有管理员路径
+                .excludePathPatterns(
+                        "/admin/auth/login",          // 登录接口不拦截
+                        "/admin/doc.html",            // API文档不拦截
+                        "/admin/swagger/**",          // Swagger不拦截
+                        "/admin/webjars/**",          // Webjars资源不拦截
+                        "/admin/v3/api-docs/**"       // OpenAPI文档不拦截
+                )
+                .order(0);  // 设置优先级，比用户拦截器先执行
     }
 
     /**
