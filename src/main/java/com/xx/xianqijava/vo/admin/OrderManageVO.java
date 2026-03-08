@@ -32,9 +32,6 @@ public class OrderManageVO {
     @Schema(description = "商品价格")
     private BigDecimal productPrice;
 
-    @Schema(description = "数量")
-    private Integer quantity;
-
     @Schema(description = "总金额")
     private BigDecimal totalAmount;
 
@@ -58,9 +55,6 @@ public class OrderManageVO {
 
     @Schema(description = "卖家手机号")
     private String sellerPhone;
-
-    @Schema(description = "交易地点")
-    private String tradeLocation;
 
     @Schema(description = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
@@ -103,6 +97,9 @@ public class OrderManageVO {
 
     @Schema(description = "订单状态描述")
     public String getStatusDesc() {
+        if (status == null) {
+            return "未知";
+        }
         switch (status) {
             case 0:
                 return "待确认";
@@ -121,6 +118,9 @@ public class OrderManageVO {
 
     @Schema(description = "退款状态描述")
     public String getRefundStatusDesc() {
+        if (refundStatus == null) {
+            return "无退款";
+        }
         switch (refundStatus) {
             case 0:
                 return "无退款";

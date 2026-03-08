@@ -346,9 +346,6 @@ public class OrderManageServiceImpl implements OrderManageService {
         // 设置总金额
         vo.setTotalAmount(order.getAmount());
 
-        // 设置数量（默认为1）
-        vo.setQuantity(1);
-
         // 设置各种时间（使用现有的字段）
         // 注意：Order实体只有createTime、updateTime、finishTime
         // 其他时间字段需要从RefundRecord等表中获取
