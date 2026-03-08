@@ -7,11 +7,16 @@ import lombok.Getter;
  */
 @Getter
 public enum OrderStatus {
-    PENDING_CONFIRM(0, "待确认"),
-    IN_PROGRESS(1, "进行中"),
-    COMPLETED(2, "已完成"),
-    CANCELLED(3, "已取消"),
-    REFUNDING(4, "退款中");
+    PENDING(0, "待支付"),
+    PENDING_CONFIRM(1, "待确认"),
+    PAID(2, "已支付"),
+    SHIPPED(3, "已发货"),
+    DELIVERED(4, "已送达"),
+    IN_PROGRESS(5, "进行中"),
+    COMPLETED(6, "已完成"),
+    CANCELLED(7, "已取消"),
+    REFUNDING(8, "退款中"),
+    REFUNDED(9, "已退款");
 
     private final Integer code;
     private final String desc;

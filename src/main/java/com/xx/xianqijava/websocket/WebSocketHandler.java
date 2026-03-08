@@ -1,5 +1,6 @@
 package com.xx.xianqijava.websocket;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
@@ -38,7 +39,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
             log.info("WebSocket 连接建立成功: userId={}, sessionId={}", userId, session.getId());
 
             // 发送连接成功消息
-            sendMessageToSession(session, createMessage("connected", Map.of(
+            sendMessageToSession(session, createMessage("connected", Map.<String, Object>of(
                     "userId", userId,
                     "message", "连接成功"
             )));
@@ -56,7 +57,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
 
         try {
             // 解析消息
-            Map<String, Object> messageData = objectMapper.readValue(payload, Map.class);
+            Map<String, Object> messageData = objectMapper.readValue(payload, new TypeReference<Map<String, Object>>() {});
 
             // 兼容两种消息格式：{event: "..."} 和 {type: "..."}
             String event = (String) messageData.get("event");
@@ -150,9 +151,9 @@ public class WebSocketHandler extends TextWebSocketHandler {
      */
     private String createMessage(String event, Object data) {
         try {
-            Map<String, Object> message = Map.of(
+            Map<String, Object> message = Map.<String, Object>of(
                     "event", event,
-                    "data", data != null ? data : Map.of(),
+                    "data", data != null ? data : Map.<String, Object>of(),
                     "timestamp", System.currentTimeMillis()
             );
             return objectMapper.writeValueAsString(message);

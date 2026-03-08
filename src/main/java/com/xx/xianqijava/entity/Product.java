@@ -43,6 +43,9 @@ public class Product extends BaseEntity {
     @Schema(description = "原价")
     private BigDecimal originalPrice;
 
+    @Schema(description = "库存数量")
+    private Integer stock;
+
     @Schema(description = "成色：1-10（10全新）")
     private Integer conditionLevel;
 

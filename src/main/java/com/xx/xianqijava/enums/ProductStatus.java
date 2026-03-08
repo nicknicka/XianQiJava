@@ -10,7 +10,9 @@ public enum ProductStatus {
     OFFLINE(0, "下架"),
     ON_SALE(1, "在售"),
     SOLD(2, "已售"),
-    RESERVED(3, "预订");
+    RESERVED(3, "预订"),
+    EXPIRED(4, "已过期"),
+    SOLD_OUT(5, "售罄");
 
     private final Integer code;
     private final String desc;

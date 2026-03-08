@@ -147,6 +147,18 @@ public class ProductImageServiceImpl extends ServiceImpl<ProductImageMapper, Pro
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public String getCoverImage(Long productId) {
+        LambdaQueryWrapper<ProductImage> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(ProductImage::getProductId, productId)
+                .eq(ProductImage::getStatus, 0)
+                .eq(ProductImage::getIsCover, 1)
+                .last("LIMIT 1");
+
+        ProductImage coverImage = baseMapper.selectOne(queryWrapper);
+        return coverImage != null ? coverImage.getImageUrl() : null;
+    }
+
     /**
      * 转换为VO
      */

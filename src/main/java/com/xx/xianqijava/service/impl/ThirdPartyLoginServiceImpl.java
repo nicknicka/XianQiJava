@@ -1,6 +1,7 @@
 package com.xx.xianqijava.service.impl;
 
 import cn.hutool.crypto.digest.DigestUtil;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.xx.xianqijava.common.ErrorCode;
 import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.exception.BusinessException;
@@ -27,6 +28,7 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
 
     private final UserMapper userMapper;
     private final RestTemplate restTemplate = new RestTemplate();
+    private final JwtUtil jwtUtil;
 
     @Value("${third-party.wechat.app-id:}")
     private String wechatAppId;
@@ -62,6 +64,7 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
                     wechatAppId, wechatAppSecret, code
             );
 
+            @SuppressWarnings("unchecked")
             Map<String, Object> tokenResponse = restTemplate.getForObject(tokenUrl, Map.class);
             if (tokenResponse == null || tokenResponse.containsKey("errcode")) {
                 throw new BusinessException(ErrorCode.BAD_REQUEST, "微信授权失败，请重试");
@@ -76,6 +79,7 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
                     accessToken, openid
             );
 
+            @SuppressWarnings("unchecked")
             Map<String, Object> userInfo = restTemplate.getForObject(userInfoUrl, Map.class);
             if (userInfo == null || userInfo.containsKey("errcode")) {
                 throw new BusinessException(ErrorCode.BAD_REQUEST, "获取微信用户信息失败");
@@ -114,7 +118,7 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
             }
 
             // 4. 生成 JWT token
-            String token = JwtUtil.createToken(user.getUserId().toString());
+            String token = jwtUtil.generateToken(user.getUserId(), user.getUsername());
 
             // 5. 构建 VO
             UserLoginVO vo = new UserLoginVO();
@@ -131,7 +135,7 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
             throw e;
         } catch (Exception e) {
             log.error("微信登录失败, code={}, error={}", code, e.getMessage(), e);
-            throw new BusinessException(ErrorCode.SERVER_ERROR, "微信登录失败，请稍后重试");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "微信登录失败，请稍后重试");
         }
     }
 
@@ -180,6 +184,7 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
                     accessToken, qqAppId, openid
             );
 
+            @SuppressWarnings("unchecked")
             Map<String, Object> userInfo = restTemplate.getForObject(userInfoUrl, Map.class);
             if (userInfo == null || userInfo.containsKey("ret") && !userInfo.get("ret").equals(0)) {
                 throw new BusinessException(ErrorCode.BAD_REQUEST, "获取QQ用户信息失败");
@@ -213,7 +218,7 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
             }
 
             // 5. 生成 JWT token
-            String token = JwtUtil.createToken(user.getUserId().toString());
+            String token = jwtUtil.generateToken(user.getUserId(), user.getUsername());
 
             // 6. 构建 VO
             UserLoginVO vo = new UserLoginVO();
@@ -230,7 +235,7 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
             throw e;
         } catch (Exception e) {
             log.error("QQ登录失败, code={}, error={}", code, e.getMessage(), e);
-            throw new BusinessException(ErrorCode.SERVER_ERROR, "QQ登录失败，请稍后重试");
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "QQ登录失败，请稍后重试");
         }
     }
 
@@ -287,7 +292,8 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
 
         // 解析JSON
         try {
-            Map<String, Object> map = new com.fasterxml.jackson.databind.ObjectMapper().readValue(response, Map.class);
+            com.fasterxml.jackson.databind.ObjectMapper mapper = new com.fasterxml.jackson.databind.ObjectMapper();
+            Map<String, Object> map = mapper.readValue(response, new TypeReference<Map<String, Object>>() {});
             return (String) map.get(key);
         } catch (Exception e) {
             log.error("解析QQ响应失败, response={}", response, e);

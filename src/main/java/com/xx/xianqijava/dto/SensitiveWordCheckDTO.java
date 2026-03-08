@@ -12,7 +12,7 @@ import lombok.Data;
 public class SensitiveWordCheckDTO {
 
     @NotBlank(message = "检测内容不能为空")
-    @Schema(description = "待检测的内容", required = true)
+    @Schema(description = "待检测的内容")
     private String content;
 
     @Schema(description = "检测类型：1-商品发布，2-消息发送，3-评论")

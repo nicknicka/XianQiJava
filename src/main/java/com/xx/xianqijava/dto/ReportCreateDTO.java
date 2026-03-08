@@ -13,7 +13,7 @@ import lombok.Data;
 public class ReportCreateDTO {
 
     @NotNull(message = "被举报人ID不能为空")
-    @Schema(description = "被举报人ID", required = true)
+    @Schema(description = "被举报人ID")
     private Long reportedUserId;
 
     @Schema(description = "会话ID")
@@ -23,7 +23,7 @@ public class ReportCreateDTO {
     private Long messageId;
 
     @NotBlank(message = "举报原因不能为空")
-    @Schema(description = "举报原因：欺诈/骚扰/虚假信息/其他", required = true)
+    @Schema(description = "举报原因：欺诈/骚扰/虚假信息/其他")
     private String reason;
 
     @Schema(description = "详细描述")

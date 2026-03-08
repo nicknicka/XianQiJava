@@ -55,6 +55,18 @@ public class Order extends BaseEntity {
     @Schema(description = "备注")
     private String remark;
 
+    @Schema(description = "取消原因")
+    private String cancelReason;
+
+    @Schema(description = "支付时间")
+    private LocalDateTime payTime;
+
+    @Schema(description = "发货时间")
+    private LocalDateTime shipTime;
+
+    @Schema(description = "送达时间")
+    private LocalDateTime deliverTime;
+
     @Schema(description = "完成时间")
     private LocalDateTime finishTime;
 }

@@ -12,12 +12,12 @@ import lombok.Data;
 @Schema(description = "填写退货物流请求")
 public class RefundLogisticsDTO {
 
-    @Schema(description = "物流公司", required = true)
+    @Schema(description = "物流公司")
     @NotBlank(message = "物流公司不能为空")
     @Size(max = 100, message = "物流公司名称长度不能超过100个字符")
     private String logisticsCompany;
 
-    @Schema(description = "物流单号", required = true)
+    @Schema(description = "物流单号")
     @NotBlank(message = "物流单号不能为空")
     @Size(max = 50, message = "物流单号长度不能超过50个字符")
     private String logisticsNo;

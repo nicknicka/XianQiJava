@@ -13,11 +13,11 @@ import java.math.BigDecimal;
 @Schema(description = "创建订单请求")
 public class OrderCreateDTO {
 
-    @Schema(description = "商品ID", required = true)
+    @Schema(description = "商品ID")
     @NotNull(message = "商品ID不能为空")
     private Long productId;
 
-    @Schema(description = "购买数量", required = true)
+    @Schema(description = "购买数量")
     @NotNull(message = "购买数量不能为空")
     @Min(value = 1, message = "购买数量不能小于1")
     @Max(value = 99, message = "购买数量不能超过99")

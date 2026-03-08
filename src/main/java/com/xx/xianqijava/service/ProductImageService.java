@@ -45,4 +45,12 @@ public interface ProductImageService extends IService<ProductImage> {
      * @return 图片列表
      */
     List<ProductImageVO> getProductImages(Long productId);
+
+    /**
+     * 获取商品封面图URL
+     *
+     * @param productId 商品ID
+     * @return 封面图URL
+     */
+    String getCoverImage(Long productId);
 }

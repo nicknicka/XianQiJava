@@ -53,7 +53,7 @@ public class SystemNotificationManageController {
         }
 
         log.info("系统通知创建成功, notificationId={}", notification.getNotificationId());
-        return Result.success(notification, "创建通知成功");
+        return Result.success("创建通知成功", notification);
     }
 
     /**
@@ -87,7 +87,7 @@ public class SystemNotificationManageController {
         }
 
         log.info("系统通知更新成功, notificationId={}", notificationId);
-        return Result.success(notification, "更新通知成功");
+        return Result.success("更新通知成功", notification);
     }
 
     /**

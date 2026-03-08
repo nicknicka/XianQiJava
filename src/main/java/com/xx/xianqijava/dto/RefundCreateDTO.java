@@ -14,21 +14,21 @@ import java.util.List;
 @Schema(description = "创建退款申请请求")
 public class RefundCreateDTO {
 
-    @Schema(description = "订单ID", required = true)
+    @Schema(description = "订单ID")
     @NotNull(message = "订单ID不能为空")
     private Long orderId;
 
-    @Schema(description = "退款金额", required = true)
+    @Schema(description = "退款金额")
     @NotNull(message = "退款金额不能为空")
     @DecimalMin(value = "0.01", message = "退款金额必须大于0")
     private BigDecimal refundAmount;
 
-    @Schema(description = "退款原因", required = true)
+    @Schema(description = "退款原因")
     @NotBlank(message = "退款原因不能为空")
     @Size(max = 500, message = "退款原因长度不能超过500个字符")
     private String refundReason;
 
-    @Schema(description = "退款类型：1-仅退款 2-退货退款", required = true)
+    @Schema(description = "退款类型：1-仅退款 2-退货退款")
     @NotNull(message = "退款类型不能为空")
     private Integer refundType;
 

@@ -2,6 +2,8 @@ package com.xx.xianqijava.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.xx.xianqijava.entity.User;
+import com.xx.xianqijava.entity.UserAddress;
+import com.xx.xianqijava.mapper.UserAddressMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.MapService;
 import lombok.RequiredArgsConstructor;
@@ -22,6 +24,7 @@ import java.util.stream.Collectors;
 public class MapServiceImpl implements MapService {
 
     private final UserMapper userMapper;
+    private final UserAddressMapper userAddressMapper;
 
     @Value("${map.enabled:false}")
     private boolean mapEnabled;
@@ -188,17 +191,23 @@ public class MapServiceImpl implements MapService {
                 latitude, longitude, radius, limit);
 
         try {
-            // 查询所有有位置信息的用户
-            LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
-            wrapper.isNotNull(User::getLatitude)
-                    .isNotNull(User::getLongitude)
-                    .eq(User::getStatus, 0); // 只查询正常状态的用户
+            // 查询所有有位置信息的用户地址
+            LambdaQueryWrapper<UserAddress> wrapper = new LambdaQueryWrapper<>();
+            wrapper.isNotNull(UserAddress::getLatitude)
+                    .isNotNull(UserAddress::getLongitude)
+                    .eq(UserAddress::getStatus, 0); // 只查询正常状态的地址
 
-            List<User> users = userMapper.selectList(wrapper);
+            List<UserAddress> addresses = userAddressMapper.selectList(wrapper);
 
             // 计算每个用户的距离
-            List<Map<String, Object>> nearbyUsers = users.stream()
-                    .map(user -> {
+            List<Map<String, Object>> nearbyUsers = addresses.stream()
+                    .map(address -> {
+                        // 根据userId查询用户信息
+                        User user = userMapper.selectById(address.getUserId());
+                        if (user == null || user.getStatus() != 0) {
+                            return null;
+                        }
+
                         Map<String, Object> userInfo = new HashMap<>();
                         userInfo.put("userId", user.getUserId());
                         userInfo.put("username", user.getUsername());
@@ -207,14 +216,15 @@ public class MapServiceImpl implements MapService {
 
                         double distance = calculateDistance(
                                 latitude, longitude,
-                                user.getLatitude(), user.getLongitude()
+                                address.getLatitude(), address.getLongitude()
                         );
                         userInfo.put("distance", distance);
-                        userInfo.put("latitude", user.getLatitude());
-                        userInfo.put("longitude", user.getLongitude());
+                        userInfo.put("latitude", address.getLatitude());
+                        userInfo.put("longitude", address.getLongitude());
 
                         return userInfo;
                     })
+                    .filter(Objects::nonNull)
                     .filter(userInfo -> (Double) userInfo.get("distance") <= radius)
                     .sorted(Comparator.comparingDouble(userInfo -> (Double) userInfo.get("distance")))
                     .limit(limit)

@@ -13,7 +13,7 @@ import lombok.Data;
 public class QuickReplyDTO {
 
     @NotBlank(message = "回复内容不能为空")
-    @Schema(description = "回复内容", required = true)
+    @Schema(description = "回复内容")
     private String content;
 
     @Schema(description = "分类：交易-询问/交易-确认/其他")
