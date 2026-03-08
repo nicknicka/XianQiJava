@@ -96,28 +96,7 @@ public class UserStudentAuthServiceImpl extends ServiceImpl<UserStudentAuthMappe
         }
 
         // 3. 转换为VO
-        StudentAuthVO vo = new StudentAuthVO();
-        vo.setId(auth.getId());
-        vo.setUserId(auth.getUserId());
-        vo.setStudentId(auth.getStudentId());
-        vo.setCollege(auth.getCollege());
-        vo.setMajor(auth.getMajor());
-        // 解析JSON图片列表
-        if (auth.getStudentCardImages() != null) {
-            List<String> images = JSONUtil.toList(auth.getStudentCardImages(), String.class);
-            vo.setStudentCardImages(images);
-        }
-        vo.setStatus(auth.getStatus());
-        vo.setRejectReason(auth.getRejectReason());
-        vo.setEnrollmentYear(auth.getEnrollmentYear());
-        vo.setGraduationYear(auth.getGraduationYear());
-        vo.setEducationLevel(auth.getEducationLevel());
-        vo.setAuditedAt(auth.getAuditedAt() != null ?
-            auth.getAuditedAt().format(FORMATTER) : null);
-        vo.setCreatedAt(auth.getCreateTime() != null ?
-            auth.getCreateTime().format(FORMATTER) : null);
-
-        return vo;
+        return convertToVO(auth);
     }
 
     @Override
@@ -190,9 +169,20 @@ public class UserStudentAuthServiceImpl extends ServiceImpl<UserStudentAuthMappe
      * 转换为VO
      */
     private StudentAuthVO convertToVO(UserStudentAuth auth) {
+        // 查询用户信息
+        User user = userService.getById(auth.getUserId());
+
         StudentAuthVO vo = new StudentAuthVO();
         vo.setId(auth.getId());
         vo.setUserId(auth.getUserId());
+
+        // 添加用户信息
+        if (user != null) {
+            vo.setUsername(user.getUsername());
+            vo.setNickname(user.getNickname());
+            vo.setRealName(user.getRealName());
+        }
+
         vo.setStudentId(auth.getStudentId());
         vo.setCollege(auth.getCollege());
         vo.setMajor(auth.getMajor());

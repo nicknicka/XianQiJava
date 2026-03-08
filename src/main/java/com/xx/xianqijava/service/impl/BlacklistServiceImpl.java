@@ -158,4 +158,36 @@ public class BlacklistServiceImpl extends ServiceImpl<BlacklistMapper, Blacklist
                 .eq(Blacklist::getBlockedUserId, userId);
         return count(queryWrapper) > 0;
     }
+
+    @Override
+    public IPage<Blacklist> getBlacklistList(Page<Blacklist> page, Long userId, Long blockedUserId,
+                                             String keyword, String startTime, String endTime) {
+        log.info("查询黑名单列表（管理员）, userId={}, blockedUserId={}, keyword={}",
+                userId, blockedUserId, keyword);
+
+        LambdaQueryWrapper<Blacklist> queryWrapper = new LambdaQueryWrapper<>();
+
+        // 按用户ID筛选
+        if (userId != null) {
+            queryWrapper.eq(Blacklist::getUserId, userId);
+        }
+
+        // 按被拉黑用户ID筛选
+        if (blockedUserId != null) {
+            queryWrapper.eq(Blacklist::getBlockedUserId, blockedUserId);
+        }
+
+        // 按时间范围筛选
+        if (startTime != null && !startTime.isEmpty() && endTime != null && !endTime.isEmpty()) {
+            queryWrapper.between(Blacklist::getCreateTime, startTime, endTime);
+        }
+
+        // 按关键词筛选（需要在用户表中搜索昵称或手机号）
+        // 关键词搜索暂时不支持，因为需要JOIN用户表
+        // 如果需要支持，可以改用自定义SQL或QueryWrapper的嵌套查询
+
+        queryWrapper.orderByDesc(Blacklist::getCreateTime);
+
+        return page(page, queryWrapper);
+    }
 }

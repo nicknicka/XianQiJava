@@ -90,11 +90,15 @@ public class AuthManageController {
     @Operation(summary = "审核实名认证")
     public Result<Void> auditRealNameAuth(@Valid @RequestBody AuthAuditDTO auditDTO) {
         Long auditorId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("管理员审核实名认证, authId={}, status={}, auditorId={}",
-                auditDTO.getAuthId(), auditDTO.getStatus(), auditorId);
+
+        // 将action转换为status
+        int status = "approve".equals(auditDTO.getAction()) ? 2 : 3;
+
+        log.info("管理员审核实名认证, authId={}, action={}, status={}, auditorId={}",
+                auditDTO.getAuthId(), auditDTO.getAction(), status, auditorId);
 
         realNameAuthService.auditAuth(auditDTO.getAuthId(), auditorId,
-                auditDTO.getStatus(), auditDTO.getRejectReason());
+                status, auditDTO.getRejectReason());
         return Result.success("审核完成");
     }
 
@@ -151,11 +155,15 @@ public class AuthManageController {
     @Operation(summary = "审核学生认证")
     public Result<Void> auditStudentAuth(@Valid @RequestBody AuthAuditDTO auditDTO) {
         Long auditorId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("管理员审核学生认证, authId={}, status={}, auditorId={}",
-                auditDTO.getAuthId(), auditDTO.getStatus(), auditorId);
+
+        // 将action转换为status
+        int status = "approve".equals(auditDTO.getAction()) ? 2 : 3;
+
+        log.info("管理员审核学生认证, authId={}, action={}, status={}, auditorId={}",
+                auditDTO.getAuthId(), auditDTO.getAction(), status, auditorId);
 
         studentAuthService.auditAuth(auditDTO.getAuthId(), auditorId,
-                auditDTO.getStatus(), auditDTO.getRejectReason());
+                status, auditDTO.getRejectReason());
         return Result.success("审核完成");
     }
 
@@ -204,8 +212,8 @@ public class AuthManageController {
         @NotNull(message = "认证ID不能为空")
         private Long authId;
 
-        @NotNull(message = "审核状态不能为空")
-        private Integer status; // 2-通过, 3-拒绝
+        @NotNull(message = "审核操作不能为空")
+        private String action; // approve-通过, reject-拒绝
 
         private String rejectReason;
     }

@@ -110,14 +110,12 @@ public class EvaluationManageController {
         double avgScore = evaluationService.getAverageScore();
         statistics.put("averageScore", avgScore);
 
-        // 评分分布统计
-        Map<String, Long> scoreDistribution = new HashMap<>();
-        scoreDistribution.put("fiveStarCount", countByScore(5));
-        scoreDistribution.put("fourStarCount", countByScore(4));
-        scoreDistribution.put("threeStarCount", countByScore(3));
-        scoreDistribution.put("twoStarCount", countByScore(2));
-        scoreDistribution.put("oneStarCount", countByScore(1));
-        statistics.put("scoreDistribution", scoreDistribution);
+        // 评分分布统计（直接放在根级别）
+        statistics.put("fiveStarCount", countByScore(5));
+        statistics.put("fourStarCount", countByScore(4));
+        statistics.put("threeStarCount", countByScore(3));
+        statistics.put("twoStarCount", countByScore(2));
+        statistics.put("oneStarCount", countByScore(1));
 
         // 时间统计
         LocalDateTime now = LocalDateTime.now();

@@ -181,9 +181,19 @@ public class UserRealNameAuthServiceImpl extends ServiceImpl<UserRealNameAuthMap
      * 转换为VO
      */
     private RealNameAuthVO convertToVO(UserRealNameAuth auth) {
+        // 查询用户信息
+        User user = userService.getById(auth.getUserId());
+
         RealNameAuthVO vo = new RealNameAuthVO();
         vo.setId(auth.getId());
         vo.setUserId(auth.getUserId());
+
+        // 添加用户信息
+        if (user != null) {
+            vo.setUsername(user.getUsername());
+            vo.setNickname(user.getNickname());
+        }
+
         vo.setRealName(auth.getRealName());
         // 身份证号脱敏
         vo.setIdCard(maskIdCard(auth.getIdCard()));

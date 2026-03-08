@@ -62,4 +62,18 @@ public interface BlacklistService extends IService<Blacklist> {
      * @return 是否被对方拉黑
      */
     boolean isBlockedBy(Long userId, Long targetUserId);
+
+    /**
+     * 获取黑名单列表（管理员）
+     *
+     * @param page         分页参数
+     * @param userId       用户ID筛选
+     * @param blockedUserId 被拉黑用户ID筛选
+     * @param keyword      关键词搜索
+     * @param startTime    开始时间
+     * @param endTime      结束时间
+     * @return 黑名单列表
+     */
+    IPage<Blacklist> getBlacklistList(Page<Blacklist> page, Long userId, Long blockedUserId,
+                                       String keyword, String startTime, String endTime);
 }
