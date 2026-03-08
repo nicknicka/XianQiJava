@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xx.xianqijava.dto.admin.UserQueryDTO;
 import com.xx.xianqijava.dto.admin.UserUpdateStatusDTO;
 import com.xx.xianqijava.vo.admin.UserManageVO;
+import com.xx.xianqijava.vo.admin.UserStatisticsInfo;
 
 /**
  * 用户管理服务接口 - 管理端

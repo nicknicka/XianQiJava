@@ -18,6 +18,7 @@ import com.xx.xianqijava.mapper.ShareItemBookingMapper;
 import com.xx.xianqijava.mapper.ShareItemMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.DepositRecordService;
+import com.xx.xianqijava.service.PaymentService;
 import com.xx.xianqijava.vo.DepositRecordVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -38,6 +39,7 @@ public class DepositRecordServiceImpl extends ServiceImpl<DepositRecordMapper, D
     private final ShareItemBookingMapper shareItemBookingMapper;
     private final ShareItemMapper shareItemMapper;
     private final UserMapper userMapper;
+    private final PaymentService paymentService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -85,26 +87,55 @@ public class DepositRecordServiceImpl extends ServiceImpl<DepositRecordMapper, D
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "押金记录创建失败");
         }
 
-        // TODO: 调用第三方支付接口
-        // 这里模拟支付成功
+        // 调用支付服务创建支付订单
+        var paymentResult = paymentService.createDepositPayment(
+                record.getRecordId(),
+                record.getAmount(),
+                record.getShareId()
+        );
 
-        // 6. 更新押金状态为已支付
-        record.setStatus(1); // 已支付
-        record.setPayTime(java.time.LocalDateTime.now());
-        updateById(record);
-
-        // 7. 更新预约状态为借用中
-        // 再次检查预约状态，确保期间未被取消
-        ShareItemBooking latestBooking = shareItemBookingMapper.selectById(payDTO.getBookingId());
-        if (latestBooking == null || latestBooking.getStatus() != 1) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST, "预约状态已变化，无法完成支付");
+        if (!(Boolean) paymentResult.getOrDefault("success", false)) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR,
+                    "创建支付订单失败：" + paymentResult.get("message"));
         }
 
-        latestBooking.setStatus(4); // 借用中
-        latestBooking.setStartTime(java.time.LocalDateTime.now());
-        shareItemBookingMapper.updateById(latestBooking);
+        // 保存商户订单号
+        String outTradeNo = (String) paymentResult.get("outTradeNo");
+        record.setOutTradeNo(outTradeNo);
 
-        log.info("押金支付成功, recordId={}, booking status updated to borrowing", record.getRecordId());
+        // 在实际生产环境中，这里应该等待支付回调后再更新状态
+        // 但为了简化流程，这里直接模拟支付成功（mock模式）
+        // 真实环境中需要移除下面这段代码，改为在回调中处理
+        try {
+            String paymentStatus = paymentService.queryPaymentStatus(outTradeNo);
+            if ("SUCCESS".equals(paymentStatus)) {
+                // 6. 更新押金状态为已支付
+                record.setStatus(1); // 已支付
+                record.setPayTime(java.time.LocalDateTime.now());
+                updateById(record);
+
+                // 7. 更新预约状态为借用中
+                // 再次检查预约状态，确保期间未被取消
+                ShareItemBooking latestBooking = shareItemBookingMapper.selectById(payDTO.getBookingId());
+                if (latestBooking == null || latestBooking.getStatus() != 1) {
+                    throw new BusinessException(ErrorCode.BAD_REQUEST, "预约状态已变化，无法完成支付");
+                }
+
+                latestBooking.setStatus(4); // 借用中
+                latestBooking.setStartTime(java.time.LocalDateTime.now());
+                shareItemBookingMapper.updateById(latestBooking);
+
+                log.info("押金支付成功, recordId={}, outTradeNo={}", record.getRecordId(), outTradeNo);
+            } else {
+                // 支付未完成，返回支付信息让用户继续支付
+                log.info("押金支付订单创建成功，等待支付 - recordId={}, outTradeNo={}, status={}",
+                        record.getRecordId(), outTradeNo, paymentStatus);
+            }
+        } catch (Exception e) {
+            log.error("查询支付状态失败", e);
+            // 即使查询失败，也返回支付信息让用户继续支付
+        }
+
         return convertToVO(record);
     }
 
@@ -145,7 +176,23 @@ public class DepositRecordServiceImpl extends ServiceImpl<DepositRecordMapper, D
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "退还押金失败");
         }
 
-        // TODO: 调用第三方支付接口进行退款
+        // 调用支付服务进行退款
+        String outTradeNo = record.getOutTradeNo();
+        if (outTradeNo != null && !outTradeNo.isEmpty()) {
+            var refundResult = paymentService.refund(
+                    outTradeNo,
+                    record.getAmount(),
+                    refundDTO.getDeductReason()
+            );
+
+            if ((Boolean) refundResult.getOrDefault("success", false)) {
+                log.info("押金退款成功 - recordId={}, refundNo={}",
+                        record.getRecordId(), refundResult.get("refundNo"));
+            } else {
+                log.warn("押金退款失败 - recordId={}, error={}",
+                        record.getRecordId(), refundResult.get("message"));
+            }
+        }
 
         log.info("押金退还成功, recordId={}", record.getRecordId());
         return convertToVO(record);

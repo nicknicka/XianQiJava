@@ -10,6 +10,7 @@ import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
@@ -201,5 +202,12 @@ public class WebSocketHandler extends TextWebSocketHandler {
         return (int) USER_SESSIONS.values().stream()
                 .filter(WebSocketSession::isOpen)
                 .count();
+    }
+
+    /**
+     * 获取所有在线用户ID
+     */
+    public Set<Long> getOnlineUserIds() {
+        return USER_SESSIONS.keySet();
     }
 }

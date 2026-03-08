@@ -324,9 +324,9 @@ public class CreditScoreService {
     private BigDecimal evaluateQuality(Evaluation evaluation) {
         double score = 0.0;
 
-        // 有标签 +0.2（由于Evaluation没有image字段，移除图片检查）
-        if (evaluation.getTags() != null && !evaluation.getTags().isEmpty()) {
-            score += 0.2;
+        // 有图片 +0.3
+        if (evaluation.getImage() != null && !evaluation.getImage().isEmpty()) {
+            score += 0.3;
         }
 
         // 有标签 +0.2

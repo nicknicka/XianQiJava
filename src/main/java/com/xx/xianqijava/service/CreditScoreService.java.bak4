@@ -89,7 +89,7 @@ public class CreditScoreService {
         }
 
         // 3. 根据交易金额计算基础分
-        BigDecimal baseScore = calculateByAmount(order.getAmount());
+        BigDecimal baseScore = calculateByAmount(order.getTotalAmount());
 
         // 4. 应用每日上限
         BigDecimal remaining = BigDecimal.valueOf(config.getDailyMaxGain()).subtract(todayGain);
@@ -204,7 +204,7 @@ public class CreditScoreService {
      */
     public CreditChangeDTO calculateEvaluationCredit(Evaluation evaluation) {
         int rating = evaluation.getScore();
-        String userId = evaluation.getToUserId().toString();
+        String userId = evaluation.getToUserId();
 
         // 评分说明：1星=差评(-5分), 2星=较差(-3分), 3星=中评(-1分), 4-5星=好评(+1~2分)
 
@@ -280,8 +280,8 @@ public class CreditScoreService {
      * 检查是否互刷好评
      */
     private boolean isMutualEvaluationSpam(Evaluation evaluation) {
-        String evaluatorId = evaluation.getFromUserId().toString();
-        String evaluatedId = evaluation.getToUserId().toString();
+        String evaluatorId = evaluation.getFromUserId();
+        String evaluatedId = evaluation.getToUserId();
 
         LocalDateTime checkTime = LocalDateTime.now().minusDays(
             config.getAntiSpam().getMutualEvaluationDays()
@@ -292,7 +292,7 @@ public class CreditScoreService {
             new LambdaQueryWrapper<Evaluation>()
                 .eq(Evaluation::getFromUserId, evaluatedId)
                 .eq(Evaluation::getToUserId, evaluatorId)
-                .ge(Evaluation::getCreateTime, checkTime)
+                .ge(Evaluation::getCreatedAt, checkTime)
         );
 
         if (count == 0) {
@@ -324,9 +324,9 @@ public class CreditScoreService {
     private BigDecimal evaluateQuality(Evaluation evaluation) {
         double score = 0.0;
 
-        // 有标签 +0.2（由于Evaluation没有image字段，移除图片检查）
-        if (evaluation.getTags() != null && !evaluation.getTags().isEmpty()) {
-            score += 0.2;
+        // 有图片 +0.3
+        if (evaluation.getImages() != null && !evaluation.getImages().isEmpty()) {
+            score += 0.3;
         }
 
         // 有标签 +0.2
@@ -482,19 +482,19 @@ public class CreditScoreService {
         long positiveCount = evaluationMapper.selectCount(
             new LambdaQueryWrapper<Evaluation>()
                 .eq(Evaluation::getToUserId, userId)
-                .ge(Evaluation::getScore, 4)
+                .ge(Evaluation::getRating, 4)
         );
 
         long neutralCount = evaluationMapper.selectCount(
             new LambdaQueryWrapper<Evaluation>()
                 .eq(Evaluation::getToUserId, userId)
-                .eq(Evaluation::getScore, 3)
+                .eq(Evaluation::getRating, 3)
         );
 
         long negativeCount = evaluationMapper.selectCount(
             new LambdaQueryWrapper<Evaluation>()
                 .eq(Evaluation::getToUserId, userId)
-                .le(Evaluation::getScore, 2)
+                .le(Evaluation::getRating, 2)
         );
 
         // 更新扩展表的评价统计

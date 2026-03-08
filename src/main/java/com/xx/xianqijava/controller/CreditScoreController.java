@@ -3,18 +3,20 @@ package com.xx.xianqijava.controller;
 import com.xx.xianqijava.dto.CreditDetailVO;
 import com.xx.xianqijava.service.CreditScoreService;
 import com.xx.xianqijava.common.Result;
-import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
-import io.swagger.annotations.ApiParam;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 信用分相关接口
  */
 @Slf4j
-@Api(tags = "信用分管理")
+@Tag(name = "信用分管理")
 @RestController
 @RequestMapping("/api/credit")
 public class CreditScoreController {
@@ -25,10 +27,10 @@ public class CreditScoreController {
     /**
      * 获取信用分详情
      */
-    @ApiOperation("获取信用分详情")
+    @Operation(summary = "获取信用分详情")
     @GetMapping("/detail/{userId}")
     public Result<CreditDetailVO> getCreditDetail(
-        @ApiParam("用户ID") @PathVariable String userId) {
+        @Parameter(description = "用户ID") @PathVariable String userId) {
         try {
             CreditDetailVO detail = creditScoreService.getCreditDetail(userId);
             return Result.success(detail);
@@ -41,7 +43,7 @@ public class CreditScoreController {
     /**
      * 获取当前用户的信用分详情
      */
-    @ApiOperation("获取当前用户的信用分详情")
+    @Operation(summary = "获取当前用户的信用分详情")
     @GetMapping("/my")
     public Result<CreditDetailVO> getMyCreditDetail(
         @RequestHeader(value = "X-User-Id", required = false) String userId) {
@@ -60,7 +62,7 @@ public class CreditScoreController {
     /**
      * 获取信用分规则说明
      */
-    @ApiOperation("获取信用分规则说明")
+    @Operation(summary = "获取信用分规则说明")
     @GetMapping("/rules")
     public Result<CreditRulesVO> getCreditRules() {
         try {

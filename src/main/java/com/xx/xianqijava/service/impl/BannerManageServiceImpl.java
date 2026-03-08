@@ -17,6 +17,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -198,10 +199,12 @@ public class BannerManageServiceImpl implements BannerManageService {
                 .distinct()
                 .collect(Collectors.toList());
 
-        Map<Long, Product> productMap = new HashMap<>();
+        final Map<Long, Product> productMap;
         if (!productIds.isEmpty()) {
             productMap = productMapper.selectBatchIds(productIds).stream()
                     .collect(Collectors.toMap(Product::getProductId, p -> p));
+        } else {
+            productMap = new HashMap<>();
         }
 
         // 转换为VO

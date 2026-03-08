@@ -165,6 +165,31 @@ app:
   base-url: http://localhost:8080  # 应用基础URL（开发环境）
   image-url-prefix: /api/image  # 图片访问URL前缀（包含/api前缀）
 
+# 短信服务配置
+sms:
+  enabled: true              # 是否启用短信服务
+  mock-mode: true            # 模拟模式（开发环境使用true，生产环境使用false）
+  # 阿里云短信配置（生产环境）
+  aliyun:
+    access-key-id: ${ALIYUN_ACCESS_KEY_ID:your-access-key-id}
+    access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET:your-access-key-secret}
+    sign-name: 校园二手交易
+    template-register: SMS_TEMPLATE_REGISTER  # 注册验证码模板
+    template-login: SMS_TEMPLATE_LOGIN      # 登录验证码模板
+    template-reset: SMS_TEMPLATE_RESET      # 重置密码模板
+
+# 支付服务配置
+payment:
+  enabled: true              # 是否启用支付服务
+  mock-mode: true            # 模拟模式（开发环境使用true，生产环境使用false）
+  # 支付宝配置（生产环境）
+  alipay:
+    app-id: ${ALIPAY_APP_ID:}
+    private-key: ${ALIPAY_PRIVATE_KEY:}
+    public-key: ${ALIPAY_PUBLIC_KEY:}
+    gateway-url: https://openapi.alipay.com/gateway.do  # 正式环境
+    # gateway-url: https://openapi.alipaydev.com/gateway.do  # 沙箱环境
+
 # 推荐系统配置
 recommendation:
   # 缓存配置

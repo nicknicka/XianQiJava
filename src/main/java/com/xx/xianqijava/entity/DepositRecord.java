@@ -44,6 +44,9 @@ public class DepositRecord extends BaseEntity {
     @Schema(description = "交易流水号")
     private String transactionNo;
 
+    @Schema(description = "商户订单号（第三方支付平台订单号）")
+    private String outTradeNo;
+
     @Schema(description = "押金状态：0-待支付，1-已支付，2-已退还，3-已扣除")
     private Integer status;
 

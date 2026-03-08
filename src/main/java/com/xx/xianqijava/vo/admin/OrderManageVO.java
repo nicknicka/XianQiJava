@@ -91,10 +91,10 @@ public class OrderManageVO {
     // @Schema(description = "退款处理时间")
     // @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     // private LocalDateTime refundProcessTime;
-    //
-    // @Schema(description = "退款状态：0-无退款，1-退款中，2-退款成功，3-退款拒绝")
-    // private Integer refundStatus;
-    //
+
+    @Schema(description = "退款状态：0-无退款，1-退款中，2-退款成功，3-退款拒绝")
+    private Integer refundStatus;
+
     // @Schema(description = "退款备注")
     // private String refundRemark;
 

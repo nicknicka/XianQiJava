@@ -220,7 +220,7 @@ public class UserManageServiceImpl implements UserManageService {
         // 统计评价数量
         Long evaluationCount = evaluationMapper.selectCount(
                 new LambdaQueryWrapper<com.xx.xianqijava.entity.Evaluation>()
-                        .eq(com.xx.xianqijava.entity.Evaluation::getToUserId, user.getUserId())
+                        .eq(com.xx.xianqijava.entity.Evaluation::getReviewedUserId, user.getUserId())
         );
         vo.setEvaluationCount(evaluationCount.intValue());
 

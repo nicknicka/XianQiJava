@@ -324,9 +324,9 @@ public class CreditScoreService {
     private BigDecimal evaluateQuality(Evaluation evaluation) {
         double score = 0.0;
 
-        // 有标签 +0.2（由于Evaluation没有image字段，移除图片检查）
-        if (evaluation.getTags() != null && !evaluation.getTags().isEmpty()) {
-            score += 0.2;
+        // 有图片 +0.3
+        if (evaluation.getImage() != null && !evaluation.getImage().isEmpty()) {
+            score += 0.3;
         }
 
         // 有标签 +0.2
@@ -482,19 +482,19 @@ public class CreditScoreService {
         long positiveCount = evaluationMapper.selectCount(
             new LambdaQueryWrapper<Evaluation>()
                 .eq(Evaluation::getToUserId, userId)
-                .ge(Evaluation::getScore, 4)
+                .ge(Evaluation::getRating, 4)
         );
 
         long neutralCount = evaluationMapper.selectCount(
             new LambdaQueryWrapper<Evaluation>()
                 .eq(Evaluation::getToUserId, userId)
-                .eq(Evaluation::getScore, 3)
+                .eq(Evaluation::getRating, 3)
         );
 
         long negativeCount = evaluationMapper.selectCount(
             new LambdaQueryWrapper<Evaluation>()
                 .eq(Evaluation::getToUserId, userId)
-                .le(Evaluation::getScore, 2)
+                .le(Evaluation::getRating, 2)
         );
 
         // 更新扩展表的评价统计

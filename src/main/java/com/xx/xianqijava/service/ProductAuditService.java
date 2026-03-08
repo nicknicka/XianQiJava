@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xx.xianqijava.dto.admin.ProductAuditDTO;
 import com.xx.xianqijava.dto.admin.ProductAuditQueryDTO;
 import com.xx.xianqijava.vo.admin.ProductAuditVO;
+import com.xx.xianqijava.vo.admin.ProductAuditStatistics;
 
 /**
  * 商品审核服务接口 - 管理端
