@@ -1,6 +1,7 @@
 package com.xx.xianqijava.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.dto.admin.ProductAuditDTO;
 import com.xx.xianqijava.dto.admin.ProductAuditQueryDTO;
 import com.xx.xianqijava.service.ProductAuditService;
@@ -66,6 +67,11 @@ public class ProductAuditController {
      */
     @PostMapping("/audit")
     @Operation(summary = "审核商品", description = "审核通过或拒绝商品，拒绝时需填写原因")
+    @OperationLog(
+            module = "product_audit",
+            action = "audit",
+            description = "审核商品（通过/拒绝）"
+    )
     public Boolean auditProduct(@Valid @RequestBody ProductAuditDTO auditDTO) {
         Long adminId = SecurityUtil.getCurrentUserId();
         log.info("管理员{}审核商品，商品ID：{}，审核状态：{}",

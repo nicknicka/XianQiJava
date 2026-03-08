@@ -1,6 +1,7 @@
 package com.xx.xianqijava.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.dto.admin.ShareItemManageQueryDTO;
 import com.xx.xianqijava.dto.admin.ShareItemStatusUpdateDTO;
 import com.xx.xianqijava.service.ShareItemManageService;
@@ -55,6 +56,7 @@ public class ShareItemManageController {
      */
     @PutMapping("/status")
     @Operation(summary = "更新共享物品状态", description = "下架/上架/设置为借用中")
+    @OperationLog(module = "share_item", action = "update_status", description = "更新共享物品状态")
     public Boolean updateShareItemStatus(@Valid @RequestBody ShareItemStatusUpdateDTO updateDTO) {
         Long adminId = SecurityUtil.getCurrentUserId();
         log.info("管理员{}更新共享物品状态，共享物品ID：{}，状态：{}",

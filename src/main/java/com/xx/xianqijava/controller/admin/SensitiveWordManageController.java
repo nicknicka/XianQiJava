@@ -3,6 +3,7 @@ package com.xx.xianqijava.controller.admin;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.entity.SensitiveWord;
 import com.xx.xianqijava.mapper.SensitiveWordMapper;
@@ -130,6 +131,11 @@ public class SensitiveWordManageController {
      */
     @PostMapping
     @Operation(summary = "创建敏感词")
+    @OperationLog(
+            module = "sensitive_word",
+            action = "create",
+            description = "创建敏感词"
+    )
     public Result<Long> createSensitiveWord(@RequestBody SensitiveWord sensitiveWord) {
         log.info("创建敏感词: word={}, type={}", sensitiveWord.getWord(), sensitiveWord.getType());
 
@@ -173,6 +179,11 @@ public class SensitiveWordManageController {
      */
     @PutMapping
     @Operation(summary = "更新敏感词")
+    @OperationLog(
+            module = "sensitive_word",
+            action = "update",
+            description = "更新敏感词"
+    )
     public Result<Boolean> updateSensitiveWord(@RequestBody SensitiveWord sensitiveWord) {
         log.info("更新敏感词: wordId={}", sensitiveWord.getWordId());
 
@@ -209,6 +220,11 @@ public class SensitiveWordManageController {
      */
     @DeleteMapping("/{wordId}")
     @Operation(summary = "删除敏感词")
+    @OperationLog(
+            module = "sensitive_word",
+            action = "delete",
+            description = "删除敏感词"
+    )
     public Result<Boolean> deleteSensitiveWord(
             @Parameter(description = "敏感词ID") @PathVariable Long wordId) {
         log.info("删除敏感词, wordId={}", wordId);
@@ -229,6 +245,11 @@ public class SensitiveWordManageController {
      */
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除敏感词")
+    @OperationLog(
+            module = "sensitive_word",
+            action = "batch_delete",
+            description = "批量删除敏感词"
+    )
     public Result<Boolean> batchDeleteSensitiveWord(@RequestBody List<Long> wordIds) {
         log.info("批量删除敏感词, 数量={}", wordIds.size());
 
@@ -247,6 +268,11 @@ public class SensitiveWordManageController {
      */
     @PutMapping("/{wordId}/status")
     @Operation(summary = "更新敏感词状态")
+    @OperationLog(
+            module = "sensitive_word",
+            action = "update_status",
+            description = "更新敏感词状态"
+    )
     public Result<Boolean> updateStatus(
             @Parameter(description = "敏感词ID") @PathVariable Long wordId,
             @Parameter(description = "状态（0-禁用，1-启用）") @RequestParam Integer status) {

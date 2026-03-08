@@ -2,6 +2,7 @@ package com.xx.xianqijava.controller.admin;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.dto.UserFeedbackDTO;
 import com.xx.xianqijava.entity.UserFeedback;
@@ -64,6 +65,7 @@ public class FeedbackManageController {
      */
     @PutMapping("/handle")
     @Operation(summary = "处理反馈")
+    @OperationLog(module = "feedback", action = "handle", description = "处理用户反馈")
     public Result<Void> handleFeedback(
             @Parameter(description = "反馈ID") @RequestParam Long id,
             @Parameter(description = "处理结果") @RequestParam String result) {
@@ -77,6 +79,7 @@ public class FeedbackManageController {
      */
     @DeleteMapping("/{id}")
     @Operation(summary = "删除反馈")
+    @OperationLog(module = "feedback", action = "delete", description = "删除反馈")
     public Result<Void> deleteFeedback(
             @Parameter(description = "反馈ID") @PathVariable("id") Long id) {
         log.info("删除反馈, id={}", id);

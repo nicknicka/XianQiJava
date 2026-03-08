@@ -3,6 +3,7 @@ package com.xx.xianqijava.controller.admin;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.entity.Report;
 import com.xx.xianqijava.mapper.ReportMapper;
@@ -131,6 +132,11 @@ public class ReportManageController {
      */
     @PutMapping("/{reportId}/handle")
     @Operation(summary = "处理举报")
+    @OperationLog(
+            module = "report",
+            action = "handle",
+            description = "处理举报"
+    )
     public Result<Boolean> handleReport(
             @Parameter(description = "举报ID") @PathVariable Long reportId,
             @Parameter(description = "管理员备注") @RequestParam(required = false) String adminNote) {
@@ -159,6 +165,11 @@ public class ReportManageController {
      */
     @PutMapping("/{reportId}/reject")
     @Operation(summary = "驳回举报")
+    @OperationLog(
+            module = "report",
+            action = "reject",
+            description = "驳回举报"
+    )
     public Result<Boolean> rejectReport(
             @Parameter(description = "举报ID") @PathVariable Long reportId,
             @Parameter(description = "驳回原因") @RequestParam(required = false) String adminNote) {
@@ -187,6 +198,11 @@ public class ReportManageController {
      */
     @PutMapping("/batch/handle")
     @Operation(summary = "批量处理举报")
+    @OperationLog(
+            module = "report",
+            action = "batch_handle",
+            description = "批量处理举报"
+    )
     public Result<Boolean> batchHandleReport(
             @RequestBody List<Long> reportIds,
             @Parameter(description = "管理员备注") @RequestParam(required = false) String adminNote) {
@@ -215,6 +231,11 @@ public class ReportManageController {
      */
     @DeleteMapping("/{reportId}")
     @Operation(summary = "删除举报记录")
+    @OperationLog(
+            module = "report",
+            action = "delete",
+            description = "删除举报记录"
+    )
     public Result<Boolean> deleteReport(
             @Parameter(description = "举报ID") @PathVariable Long reportId) {
         log.info("删除举报记录, reportId={}", reportId);
@@ -235,6 +256,11 @@ public class ReportManageController {
      */
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除举报记录")
+    @OperationLog(
+            module = "report",
+            action = "batch_delete",
+            description = "批量删除举报记录"
+    )
     public Result<Boolean> batchDeleteReport(@RequestBody List<Long> reportIds) {
         log.info("批量删除举报记录, 数量={}", reportIds.size());
 

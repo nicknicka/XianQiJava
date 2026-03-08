@@ -2,6 +2,7 @@ package com.xx.xianqijava.controller.admin;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.entity.UserRealNameAuth;
 import com.xx.xianqijava.entity.UserStudentAuth;
@@ -88,6 +89,11 @@ public class AuthManageController {
      */
     @PutMapping("/real-name/audit")
     @Operation(summary = "审核实名认证")
+    @OperationLog(
+            module = "auth",
+            action = "audit_real_name",
+            description = "审核实名认证"
+    )
     public Result<Void> auditRealNameAuth(@Valid @RequestBody AuthAuditDTO auditDTO) {
         Long auditorId = SecurityUtil.getCurrentUserIdRequired();
 
@@ -153,6 +159,11 @@ public class AuthManageController {
      */
     @PutMapping("/student/audit")
     @Operation(summary = "审核学生认证")
+    @OperationLog(
+            module = "auth",
+            action = "audit_student",
+            description = "审核学号认证"
+    )
     public Result<Void> auditStudentAuth(@Valid @RequestBody AuthAuditDTO auditDTO) {
         Long auditorId = SecurityUtil.getCurrentUserIdRequired();
 

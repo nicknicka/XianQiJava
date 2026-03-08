@@ -3,6 +3,7 @@ package com.xx.xianqijava.controller.admin;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.entity.Evaluation;
 import com.xx.xianqijava.service.EvaluationService;
@@ -73,6 +74,7 @@ public class EvaluationManageController {
      */
     @DeleteMapping("/{evalId}")
     @Operation(summary = "删除评价")
+    @OperationLog(module = "evaluation", action = "delete", description = "删除评价")
     public Result<Void> deleteEvaluation(
             @Parameter(description = "评价ID") @PathVariable("evalId") Long evalId) {
         log.info("删除评价, evalId={}", evalId);
@@ -85,6 +87,7 @@ public class EvaluationManageController {
      */
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除评价")
+    @OperationLog(module = "evaluation", action = "batch_delete", description = "批量删除评价")
     public Result<Integer> batchDeleteEvaluations(
             @RequestBody List<Long> evalIds) {
         log.info("批量删除评价, count={}", evalIds.size());

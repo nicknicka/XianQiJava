@@ -2,6 +2,7 @@ package com.xx.xianqijava.controller.admin;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.entity.SystemNotification;
 import com.xx.xianqijava.service.SystemNotificationService;
@@ -36,6 +37,7 @@ public class SystemNotificationManageController {
      */
     @PostMapping
     @Operation(summary = "创建系统通知", description = "管理员创建新的系统通知")
+    @OperationLog(module = "notification", action = "create", description = "创建系统通知")
     public Result<SystemNotification> createNotification(@RequestBody SystemNotification notification) {
         log.info("创建系统通知, title={}", notification.getTitle());
 
@@ -61,6 +63,7 @@ public class SystemNotificationManageController {
      */
     @PutMapping("/{notificationId}")
     @Operation(summary = "更新系统通知", description = "管理员更新系统通知内容")
+    @OperationLog(module = "notification", action = "update", description = "更新系统通知")
     public Result<SystemNotification> updateNotification(
             @PathVariable Long notificationId,
             @RequestBody SystemNotification notification) {
@@ -95,6 +98,7 @@ public class SystemNotificationManageController {
      */
     @PutMapping("/{notificationId}/publish")
     @Operation(summary = "发布系统通知", description = "管理员发布系统通知")
+    @OperationLog(module = "notification", action = "publish", description = "发布系统通知")
     public Result<Void> publishNotification(@PathVariable Long notificationId) {
         log.info("发布系统通知, notificationId={}", notificationId);
 
@@ -120,6 +124,7 @@ public class SystemNotificationManageController {
      */
     @DeleteMapping("/{notificationId}")
     @Operation(summary = "删除系统通知", description = "管理员删除系统通知（逻辑删除）")
+    @OperationLog(module = "notification", action = "delete", description = "删除系统通知")
     public Result<Void> deleteNotification(@PathVariable Long notificationId) {
         log.info("删除系统通知, notificationId={}", notificationId);
 

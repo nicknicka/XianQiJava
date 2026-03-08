@@ -2,6 +2,7 @@ package com.xx.xianqijava.controller.admin;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.dto.SystemConfigCreateDTO;
 import com.xx.xianqijava.entity.SystemConfig;
@@ -46,6 +47,11 @@ public class SystemConfigController {
      */
     @PutMapping("/{configId}")
     @Operation(summary = "更新系统配置")
+    @OperationLog(
+            module = "config",
+            action = "update",
+            description = "更新系统配置"
+    )
     public Result<SystemConfigVO> updateConfig(
             @Parameter(description = "配置ID") @PathVariable("configId") Long configId,
             @Valid @RequestBody SystemConfigCreateDTO createDTO) {
@@ -133,6 +139,11 @@ public class SystemConfigController {
      */
     @PutMapping("/batch")
     @Operation(summary = "批量更新配置")
+    @OperationLog(
+            module = "config",
+            action = "batch_update",
+            description = "批量更新系统配置"
+    )
     public Result<Void> batchUpdateConfigs(
             @RequestBody List<SystemConfigCreateDTO> configs) {
         log.info("批量更新配置, count={}", configs.size());
@@ -145,6 +156,11 @@ public class SystemConfigController {
      */
     @PutMapping("/value")
     @Operation(summary = "按配置键更新配置值")
+    @OperationLog(
+            module = "config",
+            action = "update_value",
+            description = "更新配置值"
+    )
     public Result<Void> updateConfigValue(
             @Parameter(description = "配置键") @RequestParam String configKey,
             @Parameter(description = "配置值") @RequestParam String configValue) {

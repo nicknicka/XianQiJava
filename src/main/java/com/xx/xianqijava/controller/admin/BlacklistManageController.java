@@ -2,6 +2,7 @@ package com.xx.xianqijava.controller.admin;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.entity.Blacklist;
 import com.xx.xianqijava.service.BlacklistService;
@@ -71,6 +72,7 @@ public class BlacklistManageController {
      */
     @DeleteMapping("/{blacklistId}")
     @Operation(summary = "删除黑名单")
+    @OperationLog(module = "blacklist", action = "delete", description = "删除黑名单记录")
     public Result<Boolean> deleteBlacklist(
             @Parameter(description = "黑名单ID") @PathVariable("blacklistId") Long blacklistId) {
         log.info("删除黑名单, blacklistId={}", blacklistId);
@@ -83,6 +85,7 @@ public class BlacklistManageController {
      */
     @DeleteMapping("/batch")
     @Operation(summary = "批量删除黑名单")
+    @OperationLog(module = "blacklist", action = "batch_delete", description = "批量删除黑名单记录")
     public Result<Integer> batchDeleteBlacklists(@RequestBody java.util.List<Long> blacklistIds) {
         log.info("批量删除黑名单, count={}", blacklistIds.size());
         int count = 0;

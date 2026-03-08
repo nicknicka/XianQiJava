@@ -1,6 +1,7 @@
 package com.xx.xianqijava.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.dto.admin.BannerCreateDTO;
 import com.xx.xianqijava.dto.admin.BannerManageQueryDTO;
 import com.xx.xianqijava.dto.admin.BannerUpdateDTO;
@@ -55,6 +56,7 @@ public class BannerManageController {
      */
     @PostMapping
     @Operation(summary = "创建轮播图", description = "创建新的轮播图")
+    @OperationLog(module = "banner", action = "create", description = "创建轮播图")
     public Boolean createBanner(@Valid @RequestBody BannerCreateDTO createDTO) {
         Long adminId = SecurityUtil.getCurrentUserId();
         log.info("管理员{}创建轮播图，标题：{}", adminId, createDTO.getTitle());
@@ -66,6 +68,7 @@ public class BannerManageController {
      */
     @PutMapping
     @Operation(summary = "更新轮播图", description = "更新轮播图信息")
+    @OperationLog(module = "banner", action = "update", description = "更新轮播图")
     public Boolean updateBanner(@Valid @RequestBody BannerUpdateDTO updateDTO) {
         Long adminId = SecurityUtil.getCurrentUserId();
         log.info("管理员{}更新轮播图，轮播图ID：{}", adminId, updateDTO.getBannerId());
@@ -77,6 +80,7 @@ public class BannerManageController {
      */
     @DeleteMapping("/{bannerId}")
     @Operation(summary = "删除轮播图", description = "根据ID删除轮播图")
+    @OperationLog(module = "banner", action = "delete", description = "删除轮播图")
     public Boolean deleteBanner(@PathVariable Long bannerId) {
         Long adminId = SecurityUtil.getCurrentUserId();
         log.info("管理员{}删除轮播图，轮播图ID：{}", adminId, bannerId);
@@ -88,6 +92,7 @@ public class BannerManageController {
      */
     @PutMapping("/{bannerId}/status")
     @Operation(summary = "启用/禁用轮播图", description = "更新轮播图状态")
+    @OperationLog(module = "banner", action = "update_status", description = "更新轮播图状态")
     public Boolean updateBannerStatus(
             @PathVariable Long bannerId,
             @RequestParam Integer status) {

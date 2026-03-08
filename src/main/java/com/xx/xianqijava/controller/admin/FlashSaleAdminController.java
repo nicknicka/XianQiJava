@@ -2,6 +2,7 @@ package com.xx.xianqijava.controller.admin;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.entity.FlashSaleSession;
 import com.xx.xianqijava.entity.FlashSaleSessionTemplate;
@@ -53,6 +54,11 @@ public class FlashSaleAdminController {
      */
     @PostMapping("/template")
     @Operation(summary = "保存场次模板")
+    @OperationLog(
+            module = "flash_sale",
+            action = "save_template",
+            description = "保存场次模板"
+    )
     public Result<String> saveTemplate(@RequestBody FlashSaleSessionTemplate template) {
         if (template.getTemplateId() == null) {
             templateMapper.insert(template);
@@ -69,6 +75,11 @@ public class FlashSaleAdminController {
      */
     @PutMapping("/template/{templateId}/toggle")
     @Operation(summary = "启用/禁用模板")
+    @OperationLog(
+            module = "flash_sale",
+            action = "toggle_template",
+            description = "启用/禁用模板"
+    )
     public Result<String> toggleTemplate(
             @Parameter(description = "模板ID") @PathVariable Long templateId) {
         FlashSaleSessionTemplate template = templateMapper.selectById(templateId);
@@ -90,6 +101,11 @@ public class FlashSaleAdminController {
      */
     @PostMapping("/sessions/generate")
     @Operation(summary = "手动更新今天的场次")
+    @OperationLog(
+            module = "flash_sale",
+            action = "generate_sessions",
+            description = "生成今日场次"
+    )
     public Result<String> generateTodaySessions() {
         scheduler.updateDailySessions();
         return Result.success("更新任务已触发");
@@ -100,6 +116,11 @@ public class FlashSaleAdminController {
      */
     @PostMapping("/sessions/generate/{date}")
     @Operation(summary = "为指定日期更新场次")
+    @OperationLog(
+            module = "flash_sale",
+            action = "generate_sessions_date",
+            description = "为指定日期生成场次"
+    )
     public Result<String> generateSessionsForDate(
             @Parameter(description = "日期（yyyy-MM-dd）") @PathVariable @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate date) {
         scheduler.updateSessionsForDate(date);
@@ -126,6 +147,11 @@ public class FlashSaleAdminController {
      */
     @PostMapping("/sessions/temporary")
     @Operation(summary = "创建临时场次")
+    @OperationLog(
+            module = "flash_sale",
+            action = "create_temp_session",
+            description = "创建临时场次"
+    )
     public Result<String> createTemporarySession(@RequestBody FlashSaleSession session) {
         // 验证必填字段
         if (session.getName() == null || session.getName().trim().isEmpty()) {
@@ -165,6 +191,11 @@ public class FlashSaleAdminController {
      */
     @PutMapping("/sessions/temporary/{sessionId}")
     @Operation(summary = "更新临时场次")
+    @OperationLog(
+            module = "flash_sale",
+            action = "update_temp_session",
+            description = "更新临时场次"
+    )
     public Result<String> updateTemporarySession(
             @Parameter(description = "场次ID") @PathVariable Long sessionId,
             @RequestBody FlashSaleSession session) {
@@ -191,6 +222,11 @@ public class FlashSaleAdminController {
      */
     @DeleteMapping("/sessions/temporary/{sessionId}")
     @Operation(summary = "删除临时场次")
+    @OperationLog(
+            module = "flash_sale",
+            action = "delete_temp_session",
+            description = "删除临时场次"
+    )
     public Result<String> deleteTemporarySession(
             @Parameter(description = "场次ID") @PathVariable Long sessionId) {
         FlashSaleSession existing = sessionMapper.selectById(sessionId);
@@ -229,6 +265,11 @@ public class FlashSaleAdminController {
      */
     @PutMapping("/sessions/{sessionId}/toggle")
     @Operation(summary = "启用/禁用场次")
+    @OperationLog(
+            module = "flash_sale",
+            action = "toggle_session",
+            description = "启用/禁用场次"
+    )
     public Result<String> toggleSession(
             @Parameter(description = "场次ID") @PathVariable Long sessionId) {
         FlashSaleSession session = sessionMapper.selectById(sessionId);
@@ -251,6 +292,11 @@ public class FlashSaleAdminController {
      */
     @PutMapping("/sessions/batch-toggle")
     @Operation(summary = "批量启用/禁用所有固定场次")
+    @OperationLog(
+            module = "flash_sale",
+            action = "batch_toggle_sessions",
+            description = "批量启用/禁用场次"
+    )
     public Result<String> batchToggleSessions(@RequestBody java.util.Map<String, Integer> params) {
         Integer enabled = params.get("enabled");
         if (enabled == null || (enabled != 0 && enabled != 1)) {

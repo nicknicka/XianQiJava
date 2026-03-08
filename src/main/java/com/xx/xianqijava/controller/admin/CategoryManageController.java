@@ -2,6 +2,7 @@ package com.xx.xianqijava.controller.admin;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.entity.Category;
 import com.xx.xianqijava.mapper.CategoryMapper;
@@ -118,6 +119,11 @@ public class CategoryManageController {
      */
     @PostMapping
     @Operation(summary = "创建分类")
+    @OperationLog(
+            module = "category",
+            action = "create",
+            description = "创建分类"
+    )
     public Result<Long> createCategory(@RequestBody Category category) {
         log.info("创建分类: {}", category.getName());
 
@@ -160,6 +166,11 @@ public class CategoryManageController {
      */
     @PutMapping
     @Operation(summary = "更新分类")
+    @OperationLog(
+            module = "category",
+            action = "update",
+            description = "更新分类"
+    )
     public Result<Boolean> updateCategory(@RequestBody Category category) {
         log.info("更新分类: categoryId={}", category.getCategoryId());
 
@@ -197,6 +208,11 @@ public class CategoryManageController {
      */
     @DeleteMapping("/{categoryId}")
     @Operation(summary = "删除分类")
+    @OperationLog(
+            module = "category",
+            action = "delete",
+            description = "删除分类"
+    )
     public Result<Boolean> deleteCategory(
             @Parameter(description = "分类ID") @PathVariable Long categoryId) {
         log.info("删除分类, categoryId={}", categoryId);
@@ -230,6 +246,11 @@ public class CategoryManageController {
      */
     @PutMapping("/{categoryId}/status")
     @Operation(summary = "更新分类状态")
+    @OperationLog(
+            module = "category",
+            action = "update_status",
+            description = "更新分类状态"
+    )
     public Result<Boolean> updateCategoryStatus(
             @Parameter(description = "分类ID") @PathVariable Long categoryId,
             @Parameter(description = "状态（0-禁用，1-启用）") @RequestParam Integer status) {
@@ -253,6 +274,11 @@ public class CategoryManageController {
      */
     @PutMapping("/sort")
     @Operation(summary = "批量更新排序")
+    @OperationLog(
+            module = "category",
+            action = "batch_update_sort",
+            description = "批量更新排序"
+    )
     public Result<Boolean> batchUpdateSortOrder(@RequestBody List<Map<String, Integer>> sortData) {
         log.info("批量更新排序, 数量={}", sortData.size());
 
