@@ -1,6 +1,7 @@
 package com.xx.xianqijava.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -20,17 +21,19 @@ public class HotTag extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "标签ID")
-    private Long tagId;
+    private Long id;
 
     @Schema(description = "关键词")
     private String keyword;
 
+    @TableField("click_count")
     @Schema(description = "搜索次数")
     private Integer searchCount;
 
     @Schema(description = "排序（数值越小越靠前）")
     private Integer sortOrder;
 
+    @TableField("is_active")
     @Schema(description = "状态：0-禁用，1-启用")
     private Integer status;
 }

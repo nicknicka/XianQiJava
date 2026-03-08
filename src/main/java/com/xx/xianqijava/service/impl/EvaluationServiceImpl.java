@@ -297,4 +297,106 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
         IPage<Evaluation> evaluationPage = page(page, wrapper);
         return evaluationPage.convert(evaluation -> convertToVO(evaluation, false));
     }
+
+    @Override
+    public IPage<EvaluationVO> getEvaluationList(Page<Evaluation> page, Long fromUserId, Long toUserId,
+                                                   Long orderId, Integer score, String keyword,
+                                                   String startTime, String endTime) {
+        log.info("查询评价列表（管理员）, fromUserId={}, toUserId={}, score={}", fromUserId, toUserId, score);
+
+        LambdaQueryWrapper<Evaluation> queryWrapper = new LambdaQueryWrapper<>();
+
+        // 按评价人筛选
+        if (fromUserId != null) {
+            queryWrapper.eq(Evaluation::getFromUserId, fromUserId);
+        }
+
+        // 按被评价人筛选
+        if (toUserId != null) {
+            queryWrapper.eq(Evaluation::getToUserId, toUserId);
+        }
+
+        // 按订单筛选
+        if (orderId != null) {
+            queryWrapper.eq(Evaluation::getOrderId, orderId);
+        }
+
+        // 按评分筛选
+        if (score != null) {
+            queryWrapper.eq(Evaluation::getScore, score);
+        }
+
+        // 按关键词筛选（评价内容）
+        if (keyword != null && !keyword.isEmpty()) {
+            queryWrapper.like(Evaluation::getContent, keyword);
+        }
+
+        // 按时间范围筛选
+        if (startTime != null && !startTime.isEmpty() && endTime != null && !endTime.isEmpty()) {
+            queryWrapper.between(Evaluation::getCreateTime, startTime, endTime);
+        }
+
+        queryWrapper.orderByDesc(Evaluation::getCreateTime);
+
+        IPage<Evaluation> evaluationPage = page(page, queryWrapper);
+        return evaluationPage.convert(evaluation -> convertToVO(evaluation, false));
+    }
+
+    @Override
+    public EvaluationVO getEvaluationDetail(Long evalId) {
+        log.info("查询评价详情, evalId={}", evalId);
+
+        Evaluation evaluation = getById(evalId);
+        if (evaluation == null) {
+            throw new RuntimeException("评价不存在");
+        }
+
+        return convertToVO(evaluation, false);
+    }
+
+    @Override
+    public void deleteEvaluation(Long evalId) {
+        log.info("删除评价, evalId={}", evalId);
+
+        Evaluation evaluation = getById(evalId);
+        if (evaluation == null) {
+            throw new RuntimeException("评价不存在");
+        }
+
+        // 删除评价
+        removeById(evalId);
+
+        log.info("评价删除成功, evalId={}", evalId);
+    }
+
+    @Override
+    public int batchDeleteEvaluations(java.util.List<Long> evalIds) {
+        log.info("批量删除评价, count={}", evalIds.size());
+
+        int count = 0;
+        for (Long evalId : evalIds) {
+            try {
+                deleteEvaluation(evalId);
+                count++;
+            } catch (Exception e) {
+                log.error("删除评价失败, evalId={}, error={}", evalId, e.getMessage());
+            }
+        }
+
+        return count;
+    }
+
+    @Override
+    public double getAverageScore() {
+        List<Evaluation> evaluations = lambdaQuery().list();
+
+        if (evaluations.isEmpty()) {
+            return 0.0;
+        }
+
+        return evaluations.stream()
+                .mapToInt(Evaluation::getScore)
+                .average()
+                .orElse(0.0);
+    }
 }

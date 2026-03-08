@@ -7,6 +7,8 @@ import com.xx.xianqijava.dto.EvaluationCreateDTO;
 import com.xx.xianqijava.entity.Evaluation;
 import com.xx.xianqijava.vo.EvaluationVO;
 
+import java.util.List;
+
 /**
  * 评价服务接口
  */
@@ -48,4 +50,31 @@ public interface EvaluationService extends IService<Evaluation> {
      * @return 商品评价列表
      */
     IPage<EvaluationVO> getProductEvaluations(Long productId, Page<Evaluation> page);
+
+    /**
+     * 获取评价列表（管理员）
+     */
+    IPage<EvaluationVO> getEvaluationList(Page<Evaluation> page, Long fromUserId, Long toUserId,
+                                          Long orderId, Integer score, String keyword,
+                                          String startTime, String endTime);
+
+    /**
+     * 获取评价详情
+     */
+    EvaluationVO getEvaluationDetail(Long evalId);
+
+    /**
+     * 删除评价
+     */
+    void deleteEvaluation(Long evalId);
+
+    /**
+     * 批量删除评价
+     */
+    int batchDeleteEvaluations(List<Long> evalIds);
+
+    /**
+     * 获取平均评分
+     */
+    double getAverageScore();
 }

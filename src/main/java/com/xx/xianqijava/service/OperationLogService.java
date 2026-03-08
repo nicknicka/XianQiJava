@@ -72,4 +72,24 @@ public interface OperationLogService extends IService<OperationLog> {
      * @return 清理的记录数
      */
     int cleanExpiredLogs(int days);
+
+    /**
+     * 删除操作日志
+     *
+     * @param logId 日志ID
+     */
+    void deleteLog(Long logId);
+
+    /**
+     * 批量删除操作日志
+     *
+     * @param logIds 日志ID列表
+     * @return 删除的记录数
+     */
+    int batchDeleteLogs(java.util.List<Long> logIds);
+
+    /**
+     * 清空所有操作日志
+     */
+    void clearLogs();
 }

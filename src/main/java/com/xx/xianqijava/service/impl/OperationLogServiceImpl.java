@@ -195,4 +195,30 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, Ope
             default -> action;
         };
     }
+
+    @Override
+    public void deleteLog(Long logId) {
+        log.info("删除操作日志, logId={}", logId);
+        removeById(logId);
+    }
+
+    @Override
+    public int batchDeleteLogs(java.util.List<Long> logIds) {
+        log.info("批量删除操作日志, count={}", logIds.size());
+        int count = 0;
+        for (Long logId : logIds) {
+            if (removeById(logId)) {
+                count++;
+            }
+        }
+        return count;
+    }
+
+    @Override
+    public void clearLogs() {
+        log.info("清空所有操作日志");
+        // 删除所有记录
+        LambdaQueryWrapper<OperationLog> queryWrapper = new LambdaQueryWrapper<>();
+        remove(queryWrapper);
+    }
 }

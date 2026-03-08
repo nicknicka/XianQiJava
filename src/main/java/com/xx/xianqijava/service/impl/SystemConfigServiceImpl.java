@@ -183,6 +183,77 @@ public class SystemConfigServiceImpl extends ServiceImpl<SystemConfigMapper, Sys
                 ));
     }
 
+    @Override
+    public List<SystemConfigVO> getAllConfigs() {
+        log.info("获取所有配置列表");
+
+        LambdaQueryWrapper<SystemConfig> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.orderByAsc(SystemConfig::getGroupName)
+                .orderByAsc(SystemConfig::getSortOrder)
+                .orderByDesc(SystemConfig::getCreateTime);
+
+        List<SystemConfig> configs = list(queryWrapper);
+        return configs.stream()
+                .map(this::convertToVO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "systemConfig", allEntries = true)
+    public void batchUpdateConfigs(List<SystemConfigCreateDTO> configs) {
+        log.info("批量更新配置, count={}", configs.size());
+
+        for (SystemConfigCreateDTO dto : configs) {
+            // 查找现有配置
+            LambdaQueryWrapper<SystemConfig> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(SystemConfig::getConfigKey, dto.getConfigKey());
+            SystemConfig config = getOne(queryWrapper);
+
+            if (config != null) {
+                // 更新现有配置
+                config.setConfigValue(dto.getConfigValue());
+                if (StrUtil.isNotBlank(dto.getDescription())) {
+                    config.setDescription(dto.getDescription());
+                }
+                updateById(config);
+            } else {
+                // 创建新配置
+                config = new SystemConfig();
+                BeanUtil.copyProperties(dto, config);
+                if (config.getSortOrder() == null) {
+                    config.setSortOrder(0);
+                }
+                if (config.getIsSystem() == null) {
+                    config.setIsSystem(0);
+                }
+                save(config);
+            }
+        }
+
+        log.info("批量更新配置成功");
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    @CacheEvict(value = "systemConfig", allEntries = true)
+    public void updateConfigValue(String configKey, String configValue) {
+        log.info("按配置键更新配置值, configKey={}", configKey);
+
+        LambdaQueryWrapper<SystemConfig> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.eq(SystemConfig::getConfigKey, configKey);
+        SystemConfig config = getOne(queryWrapper);
+
+        if (config == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "配置不存在: " + configKey);
+        }
+
+        config.setConfigValue(configValue);
+        updateById(config);
+
+        log.info("配置值更新成功, configKey={}", configKey);
+    }
+
     /**
      * 转换为VO
      */

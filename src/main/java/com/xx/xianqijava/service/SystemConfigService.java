@@ -7,6 +7,7 @@ import com.xx.xianqijava.dto.SystemConfigCreateDTO;
 import com.xx.xianqijava.entity.SystemConfig;
 import com.xx.xianqijava.vo.SystemConfigVO;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -78,4 +79,26 @@ public interface SystemConfigService extends IService<SystemConfig> {
      * @return 配置Map
      */
     Map<String, String> getConfigsByGroup(String groupName);
+
+    /**
+     * 获取所有配置列表
+     *
+     * @return 配置列表
+     */
+    List<SystemConfigVO> getAllConfigs();
+
+    /**
+     * 批量更新配置
+     *
+     * @param configs 配置列表
+     */
+    void batchUpdateConfigs(List<SystemConfigCreateDTO> configs);
+
+    /**
+     * 按配置键更新配置值
+     *
+     * @param configKey   配置键
+     * @param configValue 配置值
+     */
+    void updateConfigValue(String configKey, String configValue);
 }

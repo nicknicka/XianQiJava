@@ -76,7 +76,7 @@ public class PublicController {
 
         List<HotTagVO> voList = hotTags.stream().map(tag -> {
             HotTagVO vo = new HotTagVO();
-            vo.setTagId(tag.getTagId());
+            vo.setTagId(tag.getId());
             vo.setKeyword(tag.getKeyword());
             vo.setSearchCount(tag.getSearchCount());
             vo.setSortOrder(tag.getSortOrder());

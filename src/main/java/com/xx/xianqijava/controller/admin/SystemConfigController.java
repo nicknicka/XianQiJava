@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -114,5 +115,41 @@ public class SystemConfigController {
         log.info("获取分组配置, groupName={}", groupName);
         Map<String, String> configs = systemConfigService.getConfigsByGroup(groupName);
         return Result.success(configs);
+    }
+
+    /**
+     * 获取所有配置列表（不分页）
+     */
+    @GetMapping("/all")
+    @Operation(summary = "获取所有配置列表")
+    public Result<List<SystemConfigVO>> getAllConfigs() {
+        log.info("获取所有配置列表");
+        List<SystemConfigVO> configs = systemConfigService.getAllConfigs();
+        return Result.success(configs);
+    }
+
+    /**
+     * 批量更新配置
+     */
+    @PutMapping("/batch")
+    @Operation(summary = "批量更新配置")
+    public Result<Void> batchUpdateConfigs(
+            @RequestBody List<SystemConfigCreateDTO> configs) {
+        log.info("批量更新配置, count={}", configs.size());
+        systemConfigService.batchUpdateConfigs(configs);
+        return Result.success("批量更新成功");
+    }
+
+    /**
+     * 按配置键更新配置值
+     */
+    @PutMapping("/value")
+    @Operation(summary = "按配置键更新配置值")
+    public Result<Void> updateConfigValue(
+            @Parameter(description = "配置键") @RequestParam String configKey,
+            @Parameter(description = "配置值") @RequestParam String configValue) {
+        log.info("按配置键更新配置值, configKey={}", configKey);
+        systemConfigService.updateConfigValue(configKey, configValue);
+        return Result.success("配置更新成功");
     }
 }

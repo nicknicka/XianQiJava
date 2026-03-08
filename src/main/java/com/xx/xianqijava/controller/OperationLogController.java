@@ -29,7 +29,7 @@ public class OperationLogController {
     /**
      * 获取操作日志列表（管理员）
      */
-    @GetMapping
+    @GetMapping("/list")
     @Operation(summary = "获取操作日志列表（管理员）")
     public Result<IPage<OperationLogVO>> getLogList(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer current,
@@ -63,6 +63,41 @@ public class OperationLogController {
         Page<OperationLog> page = new Page<>(current, size);
         IPage<OperationLogVO> result = operationLogService.getMyLogs(page, userId);
         return Result.success(result);
+    }
+
+    /**
+     * 删除操作日志
+     */
+    @DeleteMapping("/{logId}")
+    @Operation(summary = "删除操作日志")
+    public Result<Void> deleteLog(
+            @Parameter(description = "日志ID") @PathVariable("logId") Long logId) {
+        log.info("删除操作日志, logId={}", logId);
+        operationLogService.deleteLog(logId);
+        return Result.success("删除成功");
+    }
+
+    /**
+     * 批量删除操作日志
+     */
+    @DeleteMapping("/batch")
+    @Operation(summary = "批量删除操作日志")
+    public Result<Integer> batchDeleteLogs(
+            @RequestBody java.util.List<Long> logIds) {
+        log.info("批量删除操作日志, count={}", logIds.size());
+        int count = operationLogService.batchDeleteLogs(logIds);
+        return Result.success("成功删除 " + count + " 条日志", count);
+    }
+
+    /**
+     * 清空所有日志
+     */
+    @DeleteMapping("/clear")
+    @Operation(summary = "清空所有日志")
+    public Result<Void> clearLogs() {
+        log.info("清空所有操作日志");
+        operationLogService.clearLogs();
+        return Result.success("清空成功");
     }
 
     /**
