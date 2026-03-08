@@ -1,4 +1,4 @@
-package com.xx.xianqijava.controller;
+package com.xx.xianqijava.controller.admin;
 
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -18,12 +18,12 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Map;
 
 /**
- * 系统配置控制器
+ * 系统配置管理控制器 - 管理端
  */
 @Slf4j
 @Tag(name = "系统配置管理")
 @RestController
-@RequestMapping("/config")
+@RequestMapping("/admin/config")
 @RequiredArgsConstructor
 public class SystemConfigController {
 
@@ -68,7 +68,7 @@ public class SystemConfigController {
     /**
      * 获取配置列表（分页）
      */
-    @GetMapping
+    @GetMapping("/list")
     @Operation(summary = "获取配置列表")
     public Result<IPage<SystemConfigVO>> getConfigList(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,

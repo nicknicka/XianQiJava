@@ -1,7 +1,6 @@
 package com.xx.xianqijava.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
-import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -18,6 +17,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * 用户反馈服务实现类
@@ -82,6 +84,102 @@ public class UserFeedbackServiceImpl extends ServiceImpl<UserFeedbackMapper, Use
 
         IPage<UserFeedback> feedbackPage = page(page, queryWrapper);
         return feedbackPage.convert(this::convertToVO);
+    }
+
+    @Override
+    public IPage<UserFeedbackVO> getFeedbackList(Page<UserFeedback> page, String type, Integer status) {
+        log.info("查询反馈列表, type={}, status={}", type, status);
+
+        LambdaQueryWrapper<UserFeedback> queryWrapper = new LambdaQueryWrapper<>();
+
+        // 按类型筛选
+        if (type != null && !type.isEmpty()) {
+            Integer typeInt = convertTypeToInt(type);
+            queryWrapper.eq(UserFeedback::getType, typeInt);
+        }
+
+        // 按状态筛选
+        if (status != null) {
+            queryWrapper.eq(UserFeedback::getStatus, status);
+        }
+
+        queryWrapper.orderByDesc(UserFeedback::getCreateTime);
+
+        IPage<UserFeedback> feedbackPage = page(page, queryWrapper);
+        return feedbackPage.convert(this::convertToVO);
+    }
+
+    @Override
+    public UserFeedbackVO getFeedbackDetail(Long id) {
+        log.info("查询反馈详情, id={}", id);
+
+        UserFeedback feedback = getById(id);
+        if (feedback == null) {
+            throw new RuntimeException("反馈不存在");
+        }
+
+        return convertToVO(feedback);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void handleFeedback(Long id, String result) {
+        log.info("处理反馈, id={}, result={}", id, result);
+
+        UserFeedback feedback = getById(id);
+        if (feedback == null) {
+            throw new RuntimeException("反馈不存在");
+        }
+
+        feedback.setStatus(2); // 已处理
+        feedback.setHandleNote(result);
+        feedback.setHandleTime(java.time.LocalDateTime.now());
+        updateById(feedback);
+
+        log.info("反馈处理成功, id={}", id);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void deleteFeedback(Long id) {
+        log.info("删除反馈, id={}", id);
+
+        UserFeedback feedback = getById(id);
+        if (feedback == null) {
+            throw new RuntimeException("反馈不存在");
+        }
+
+        removeById(id);
+        log.info("反馈删除成功, id={}", id);
+    }
+
+    @Override
+    public Map<String, Object> getStatistics() {
+        log.info("查询反馈统计数据");
+
+        Map<String, Object> statistics = new HashMap<>();
+
+        // 总数
+        long totalCount = count();
+        statistics.put("totalCount", totalCount);
+
+        // 按状态统计
+        Map<String, Long> statusStats = new HashMap<>();
+        statusStats.put("pending", count(new LambdaQueryWrapper<UserFeedback>().eq(UserFeedback::getStatus, 0)));
+        statusStats.put("processing", count(new LambdaQueryWrapper<UserFeedback>().eq(UserFeedback::getStatus, 1)));
+        statusStats.put("resolved", count(new LambdaQueryWrapper<UserFeedback>().eq(UserFeedback::getStatus, 2)));
+        statusStats.put("rejected", count(new LambdaQueryWrapper<UserFeedback>().eq(UserFeedback::getStatus, 3)));
+        statistics.put("statusStats", statusStats);
+
+        // 按类型统计
+        Map<String, Long> typeStats = new HashMap<>();
+        typeStats.put("suggestion", count(new LambdaQueryWrapper<UserFeedback>().eq(UserFeedback::getType, 1)));
+        typeStats.put("bug", count(new LambdaQueryWrapper<UserFeedback>().eq(UserFeedback::getType, 2)));
+        typeStats.put("complaint", count(new LambdaQueryWrapper<UserFeedback>().eq(UserFeedback::getType, 3)));
+        typeStats.put("other", count(new LambdaQueryWrapper<UserFeedback>().eq(UserFeedback::getType, 4)));
+        statistics.put("typeStats", typeStats);
+
+        return statistics;
     }
 
     /**
