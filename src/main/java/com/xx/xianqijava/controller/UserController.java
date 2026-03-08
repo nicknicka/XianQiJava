@@ -73,16 +73,16 @@ public class UserController {
             String ip = getClientIP(request);
 
             loginDeviceService.recordOrUpdateLoginDevice(
-                result.getUserId(),
+                result.getId(),
                 deviceIdentifier,
                 deviceName,
                 deviceType,
                 platform,
                 ip
             );
-            log.info("登录设备记录成功, userId={}, deviceType={}", result.getUserId(), deviceType);
+            log.info("登录设备记录成功, userId={}, deviceType={}", result.getId(), deviceType);
         } catch (Exception e) {
-            log.error("记录登录设备失败, userId={}", result.getUserId(), e);
+            log.error("记录登录设备失败, userId={}", result.getId(), e);
             // 不影响登录流程，只记录错误日志
         }
 
@@ -316,16 +316,16 @@ public class UserController {
             String ip = getClientIP(request);
 
             loginDeviceService.recordOrUpdateLoginDevice(
-                result.getUserId(),
+                result.getId(),
                 deviceIdentifier,
                 deviceName,
                 deviceType,
                 platform,
                 ip
             );
-            log.info("登录设备记录成功, userId={}, deviceType={}", result.getUserId(), deviceType);
+            log.info("登录设备记录成功, userId={}, deviceType={}", result.getId(), deviceType);
         } catch (Exception e) {
-            log.error("记录登录设备失败, userId={}", result.getUserId(), e);
+            log.error("记录登录设备失败, userId={}", result.getId(), e);
             // 不影响登录流程，只记录错误日志
         }
 

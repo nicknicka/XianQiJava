@@ -50,27 +50,4 @@ public class ProductScheduledTask {
         }
     }
 
-    /**
-     * 自动下售完商品（库存为0且一定时间未补充）
-     * 每天凌晨3点执行
-     */
-    @Scheduled(cron = "0 0 3 * * ?")
-    public void autoSoldOutProducts() {
-        log.info("开始执行自动下架售完商品任务");
-
-        try {
-            // 将状态为在售但库存为0的商品标记为已售
-            LambdaUpdateWrapper<Product> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.eq(Product::getStatus, ProductStatus.ON_SALE.getCode())
-                    .eq(Product::getStock, 0)
-                    .set(Product::getStatus, ProductStatus.SOLD_OUT.getCode())
-                    .set(Product::getUpdateTime, LocalDateTime.now());
-
-            int updatedCount = productMapper.update(null, updateWrapper);
-
-            log.info("自动下架售完商品任务完成，下架商品数：{}", updatedCount);
-        } catch (Exception e) {
-            log.error("自动下架售完商品任务执行失败", e);
-        }
-    }
 }

@@ -40,6 +40,9 @@ public class UserInfoVO {
     @Schema(description = "信用分数")
     private Integer creditScore;
 
+    @Schema(description = "信用等级：excellent-优秀, good-良好, normal-一般, poor-较差")
+    private String creditLevel;
+
     @Schema(description = "状态：0-正常，1-封禁")
     private Integer status;
 
@@ -52,9 +55,18 @@ public class UserInfoVO {
     @Schema(description = "学生认证状态：0-未认证 1-审核中 2-已认证 3-认证失败")
     private Integer studentStatus;
 
+    @Schema(description = "粉丝数")
+    private Integer followerCount;
+
+    @Schema(description = "关注数")
+    private Integer followingCount;
+
+    @Schema(description = "发布商品数")
+    private Integer productCount;
+
     @Schema(description = "创建时间")
-    private String createTime;
+    private String createdAt;
 
     @Schema(description = "更新时间")
-    private String updateTime;
+    private String updatedAt;
 }

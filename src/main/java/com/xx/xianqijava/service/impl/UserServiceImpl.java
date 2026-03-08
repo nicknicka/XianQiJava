@@ -147,17 +147,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         userInfo.setIsVerified(user.getIsVerified());
         userInfo.setRealNameStatus(0); // 新用户默认未认证
         userInfo.setStudentStatus(0); // 新用户默认未认证
-        userInfo.setCreateTime(user.getCreateTime().toString());
-        userInfo.setUpdateTime(user.getUpdateTime().toString());
+        userInfo.setCreditLevel(calculateCreditLevel(user.getCreditScore()));
+        userInfo.setFollowerCount(0);
+        userInfo.setFollowingCount(0);
+        userInfo.setProductCount(0);
+        userInfo.setCreatedAt(user.getCreateTime().toString());
+        userInfo.setUpdatedAt(user.getUpdateTime().toString());
 
         // 10. 返回注册结果
         UserRegisterVO registerVO = new UserRegisterVO();
         registerVO.setToken(token);
         registerVO.setUserInfo(userInfo);
-        registerVO.setUserId(user.getUserId());
+        registerVO.setId(user.getUserId());
         registerVO.setUsername(user.getUsername());
         registerVO.setNickname(user.getNickname());
-        registerVO.setCreateTime(user.getCreateTime().toString());
+        registerVO.setCreatedAt(user.getCreateTime().toString());
 
         return registerVO;
     }
@@ -195,7 +199,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserLoginVO loginVO = new UserLoginVO();
         loginVO.setToken(token);
         loginVO.setRefreshToken(refreshToken);
-        loginVO.setUserId(user.getUserId());
+        loginVO.setId(user.getUserId());
         loginVO.setUsername(user.getUsername());
         loginVO.setNickname(user.getNickname());
         loginVO.setAvatar(user.getAvatar());
@@ -232,8 +236,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             userInfoVO.setAvatar(user.getAvatar());
         }
 
-        userInfoVO.setCreateTime(user.getCreateTime().toString());
-        userInfoVO.setUpdateTime(user.getUpdateTime().toString());
+        userInfoVO.setCreatedAt(user.getCreateTime().toString());
+        userInfoVO.setUpdatedAt(user.getUpdateTime().toString());
+
+        // 计算信用等级
+        userInfoVO.setCreditLevel(calculateCreditLevel(user.getCreditScore()));
+
+        try {
+            // 统计粉丝数量
+            int followerCount = userFollowService.countFollowers(userId);
+            userInfoVO.setFollowerCount(followerCount);
+
+            // 统计关注数量
+            int followingCount = userFollowService.countFollowing(userId);
+            userInfoVO.setFollowingCount(followingCount);
+
+            // 统计发布商品数量
+            int productCount = productService.countByUserId(userId);
+            userInfoVO.setProductCount(productCount);
+
+        } catch (Exception e) {
+            log.error("获取用户统计数据失败, userId={}", userId, e);
+            // 如果统计失败，设置默认值
+            userInfoVO.setFollowerCount(0);
+            userInfoVO.setFollowingCount(0);
+            userInfoVO.setProductCount(0);
+        }
 
         // 查询实名认证状态（从扩展表获取）
         com.xx.xianqijava.entity.UserRealNameAuth realNameAuth =
@@ -387,7 +415,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         UserCenterVO userCenterVO = new UserCenterVO();
-        userCenterVO.setUserId(user.getUserId());
+        userCenterVO.setId(user.getUserId());
         userCenterVO.setUsername(user.getUsername());
         userCenterVO.setNickname(user.getNickname());
         userCenterVO.setAvatar(user.getAvatar());
@@ -651,7 +679,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         UserLoginVO loginVO = new UserLoginVO();
         loginVO.setToken(token);
         loginVO.setRefreshToken(refreshToken);
-        loginVO.setUserId(user.getUserId());
+        loginVO.setId(user.getUserId());
         loginVO.setUsername(user.getUsername());
         loginVO.setNickname(user.getNickname());
         loginVO.setAvatar(user.getAvatar());
@@ -1101,5 +1129,26 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
      */
     private boolean isValidTheme(String theme) {
         return "light".equals(theme) || "dark".equals(theme) || "auto".equals(theme);
+    }
+
+    /**
+     * 根据信用分数计算信用等级
+     * @param creditScore 信用分数
+     * @return 信用等级（excellent-优秀, good-良好, normal-一般, poor-较差）
+     */
+    private String calculateCreditLevel(Integer creditScore) {
+        if (creditScore == null) {
+            return "normal";
+        }
+
+        if (creditScore >= 150) {
+            return "excellent"; // 优秀：150分及以上
+        } else if (creditScore >= 120) {
+            return "good"; // 良好：120-149分
+        } else if (creditScore >= 90) {
+            return "normal"; // 一般：90-119分
+        } else {
+            return "poor"; // 较差：90分以下
+        }
     }
 }

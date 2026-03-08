@@ -30,4 +30,16 @@ public class CategoryVO {
 
     @Schema(description = "状态：0-禁用，1-启用")
     private Integer status;
+
+    @Schema(description = "父分类ID")
+    private Long parentId;
+
+    @Schema(description = "创建时间")
+    private String createTime;
+
+    @Schema(description = "更新时间")
+    private String updateTime;
+
+    @Schema(description = "子分类列表")
+    private java.util.List<CategoryVO> children;
 }

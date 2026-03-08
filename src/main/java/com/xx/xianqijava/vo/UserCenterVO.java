@@ -13,7 +13,7 @@ import java.util.List;
 public class UserCenterVO {
 
     @Schema(description = "用户ID")
-    private Long userId;
+    private Long id;
 
     @Schema(description = "用户名")
     private String username;

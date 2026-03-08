@@ -1,4 +1,4 @@
-package com.xx.xianqijava.controller;
+package com.xx.xianqijava.controller.admin;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
@@ -26,7 +26,7 @@ import java.util.List;
 @Slf4j
 @Tag(name = "秒杀管理后台")
 @RestController
-@RequestMapping("/flash-sale/admin")
+@RequestMapping("/admin/flash-sale")
 @RequiredArgsConstructor
 public class FlashSaleAdminController {
 

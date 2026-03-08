@@ -219,4 +219,44 @@ public class UserRealNameAuthServiceImpl extends ServiceImpl<UserRealNameAuthMap
             return "";
         }
     }
+
+    @Override
+    public java.util.Map<String, Long> getStatistics() {
+        log.info("获取实名认证统计信息");
+
+        java.time.LocalDateTime todayStart = java.time.LocalDateTime.now().toLocalDate().atStartOfDay();
+        java.time.LocalDateTime todayEnd = todayStart.plusDays(1);
+
+        // 总数
+        Long total = count();
+        // 待审核数（status=1）
+        Long pending = count(new LambdaQueryWrapper<UserRealNameAuth>()
+                .eq(UserRealNameAuth::getStatus, 1));
+        // 已通过数（status=2）
+        Long approved = count(new LambdaQueryWrapper<UserRealNameAuth>()
+                .eq(UserRealNameAuth::getStatus, 2));
+        // 已拒绝数（status=3）
+        Long rejected = count(new LambdaQueryWrapper<UserRealNameAuth>()
+                .eq(UserRealNameAuth::getStatus, 3));
+        // 今日通过数
+        Long todayApproved = count(new LambdaQueryWrapper<UserRealNameAuth>()
+                .eq(UserRealNameAuth::getStatus, 2)
+                .ge(UserRealNameAuth::getAuditedAt, todayStart)
+                .lt(UserRealNameAuth::getAuditedAt, todayEnd));
+        // 今日拒绝数
+        Long todayRejected = count(new LambdaQueryWrapper<UserRealNameAuth>()
+                .eq(UserRealNameAuth::getStatus, 3)
+                .ge(UserRealNameAuth::getAuditedAt, todayStart)
+                .lt(UserRealNameAuth::getAuditedAt, todayEnd));
+
+        java.util.Map<String, Long> stats = new java.util.HashMap<>();
+        stats.put("total", total);
+        stats.put("pending", pending);
+        stats.put("approved", approved);
+        stats.put("rejected", rejected);
+        stats.put("todayApproved", todayApproved);
+        stats.put("todayRejected", todayRejected);
+
+        return stats;
+    }
 }

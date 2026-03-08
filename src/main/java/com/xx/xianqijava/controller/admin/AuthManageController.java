@@ -10,6 +10,7 @@ import com.xx.xianqijava.service.UserStudentAuthService;
 import com.xx.xianqijava.util.SecurityUtil;
 import com.xx.xianqijava.vo.RealNameAuthVO;
 import com.xx.xianqijava.vo.StudentAuthVO;
+import com.xx.xianqijava.vo.admin.AuthManageStatistics;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -19,6 +20,8 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 /**
  * 认证管理控制器 - 管理端
@@ -154,6 +157,41 @@ public class AuthManageController {
         studentAuthService.auditAuth(auditDTO.getAuthId(), auditorId,
                 auditDTO.getStatus(), auditDTO.getRejectReason());
         return Result.success("审核完成");
+    }
+
+    // ==================== 统计管理 ====================
+
+    /**
+     * 获取认证管理统计信息
+     */
+    @GetMapping("/statistics")
+    @Operation(summary = "获取认证管理统计信息")
+    public Result<AuthManageStatistics> getAuthStatistics() {
+        log.info("管理员获取认证统计信息");
+
+        // 获取实名认证统计
+        Map<String, Long> realNameStats = realNameAuthService.getStatistics();
+
+        // 获取学号认证统计
+        Map<String, Long> studentStats = studentAuthService.getStatistics();
+
+        // 组装统计数据
+        AuthManageStatistics statistics = new AuthManageStatistics();
+        statistics.setRealNameTotal(realNameStats.get("total"));
+        statistics.setRealNamePending(realNameStats.get("pending"));
+        statistics.setRealNameApproved(realNameStats.get("approved"));
+        statistics.setRealNameRejected(realNameStats.get("rejected"));
+        statistics.setRealNameTodayApproved(realNameStats.get("todayApproved"));
+        statistics.setRealNameTodayRejected(realNameStats.get("todayRejected"));
+
+        statistics.setStudentTotal(studentStats.get("total"));
+        statistics.setStudentPending(studentStats.get("pending"));
+        statistics.setStudentApproved(studentStats.get("approved"));
+        statistics.setStudentRejected(studentStats.get("rejected"));
+        statistics.setStudentTodayApproved(studentStats.get("todayApproved"));
+        statistics.setStudentTodayRejected(studentStats.get("todayRejected"));
+
+        return Result.success(statistics);
     }
 
     // ==================== DTO ====================

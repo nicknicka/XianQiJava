@@ -63,4 +63,11 @@ public interface UserRealNameAuthService extends IService<UserRealNameAuth> {
      * @param rejectReason 拒绝原因
      */
     void auditAuth(Long authId, Long auditorId, Integer status, String rejectReason);
+
+    /**
+     * 获取实名认证统计信息
+     *
+     * @return 统计信息Map，包含total/pending/approved/rejected/todayApproved/todayRejected
+     */
+    java.util.Map<String, Long> getStatistics();
 }

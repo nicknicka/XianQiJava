@@ -122,7 +122,7 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
 
             // 5. 构建 VO
             UserLoginVO vo = new UserLoginVO();
-            vo.setUserId(user.getUserId());
+            vo.setId(user.getUserId());
             vo.setToken(token);
             vo.setNickname(user.getNickname());
             vo.setAvatar(user.getAvatar());
@@ -222,7 +222,7 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
 
             // 6. 构建 VO
             UserLoginVO vo = new UserLoginVO();
-            vo.setUserId(user.getUserId());
+            vo.setId(user.getUserId());
             vo.setToken(token);
             vo.setNickname(user.getNickname());
             vo.setAvatar(user.getAvatar());

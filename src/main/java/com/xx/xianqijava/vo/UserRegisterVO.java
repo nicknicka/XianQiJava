@@ -17,7 +17,7 @@ public class UserRegisterVO {
     private UserInfoVO userInfo;
 
     @Schema(description = "用户ID")
-    private Long userId;
+    private Long id;
 
     @Schema(description = "用户名")
     private String username;
@@ -26,5 +26,5 @@ public class UserRegisterVO {
     private String nickname;
 
     @Schema(description = "创建时间")
-    private String createTime;
+    private String createdAt;
 }

@@ -213,4 +213,44 @@ public class UserStudentAuthServiceImpl extends ServiceImpl<UserStudentAuthMappe
 
         return vo;
     }
+
+    @Override
+    public java.util.Map<String, Long> getStatistics() {
+        log.info("获取学号认证统计信息");
+
+        java.time.LocalDateTime todayStart = java.time.LocalDateTime.now().toLocalDate().atStartOfDay();
+        java.time.LocalDateTime todayEnd = todayStart.plusDays(1);
+
+        // 总数
+        Long total = count();
+        // 待审核数（status=1）
+        Long pending = count(new LambdaQueryWrapper<UserStudentAuth>()
+                .eq(UserStudentAuth::getStatus, 1));
+        // 已通过数（status=2）
+        Long approved = count(new LambdaQueryWrapper<UserStudentAuth>()
+                .eq(UserStudentAuth::getStatus, 2));
+        // 已拒绝数（status=3）
+        Long rejected = count(new LambdaQueryWrapper<UserStudentAuth>()
+                .eq(UserStudentAuth::getStatus, 3));
+        // 今日通过数
+        Long todayApproved = count(new LambdaQueryWrapper<UserStudentAuth>()
+                .eq(UserStudentAuth::getStatus, 2)
+                .ge(UserStudentAuth::getAuditedAt, todayStart)
+                .lt(UserStudentAuth::getAuditedAt, todayEnd));
+        // 今日拒绝数
+        Long todayRejected = count(new LambdaQueryWrapper<UserStudentAuth>()
+                .eq(UserStudentAuth::getStatus, 3)
+                .ge(UserStudentAuth::getAuditedAt, todayStart)
+                .lt(UserStudentAuth::getAuditedAt, todayEnd));
+
+        java.util.Map<String, Long> stats = new java.util.HashMap<>();
+        stats.put("total", total);
+        stats.put("pending", pending);
+        stats.put("approved", approved);
+        stats.put("rejected", rejected);
+        stats.put("todayApproved", todayApproved);
+        stats.put("todayRejected", todayRejected);
+
+        return stats;
+    }
 }
