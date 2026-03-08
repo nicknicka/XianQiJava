@@ -66,4 +66,16 @@ public class User extends BaseEntity {
 
     @Schema(description = "显示位置信息：0-否，1-是")
     private Integer locationEnabled;
+
+    @Schema(description = "微信OpenID")
+    private String wechatOpenid;
+
+    @Schema(description = "微信UnionID")
+    private String wechatUnionid;
+
+    @Schema(description = "QQ OpenID")
+    private String qqOpenid;
+
+    @Schema(description = "最后登录时间")
+    private java.time.LocalDateTime lastLoginTime;
 }

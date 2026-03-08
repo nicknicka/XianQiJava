@@ -1,6 +1,7 @@
 package com.xx.xianqijava.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.dto.admin.UserQueryDTO;
 import com.xx.xianqijava.dto.admin.UserUpdateStatusDTO;
@@ -68,6 +69,11 @@ public class UserManageController {
      */
     @PutMapping("/status")
     @Operation(summary = "更新用户状态", description = "封禁或解封用户，封禁时需填写原因")
+    @OperationLog(
+            module = "user",
+            action = "update_status",
+            description = "更新用户状态（封禁/解封）"
+    )
     public Result<Boolean> updateUserStatus(@Valid @RequestBody UserUpdateStatusDTO updateDTO) {
         Long adminId = SecurityUtil.getCurrentUserId();
         log.info("管理员{}更新用户状态，用户ID：{}，状态：{}",

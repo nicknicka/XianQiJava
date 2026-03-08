@@ -6,11 +6,14 @@ import com.xx.xianqijava.dto.admin.OrderManageQueryDTO;
 import com.xx.xianqijava.dto.admin.OrderRefundProcessDTO;
 import com.xx.xianqijava.entity.Order;
 import com.xx.xianqijava.entity.Product;
+import com.xx.xianqijava.entity.RefundRecord;
 import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.mapper.OrderMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
+import com.xx.xianqijava.mapper.RefundRecordMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.OrderManageService;
+import com.xx.xianqijava.service.ProductImageService;
 import com.xx.xianqijava.vo.admin.OrderManageStatistics;
 import com.xx.xianqijava.vo.admin.OrderManageVO;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +39,8 @@ public class OrderManageServiceImpl implements OrderManageService {
     private final OrderMapper orderMapper;
     private final ProductMapper productMapper;
     private final UserMapper userMapper;
+    private final RefundRecordMapper refundRecordMapper;
+    private final ProductImageService productImageService;
 
     @Override
     public Page<OrderManageVO> getOrderList(OrderManageQueryDTO queryDTO) {
@@ -351,16 +356,29 @@ public class OrderManageServiceImpl implements OrderManageService {
         // 其他时间字段需要从RefundRecord等表中获取
         vo.setUpdateTime(order.getUpdateTime());
         vo.setFinishTime(order.getFinishTime());
-        // vo.setRefundStatus(0); // TODO: 从RefundRecord表获取退款状态
+        // 从RefundRecord表获取退款状态
+        vo.setRefundStatus(getRefundStatus(order.getOrderId()));
 
         return vo;
+    }
+
+    /**
+     * 获取订单的退款状态
+     */
+    private Integer getRefundStatus(Long orderId) {
+        RefundRecord refundRecord = refundRecordMapper.selectOne(
+                new LambdaQueryWrapper<RefundRecord>()
+                        .eq(RefundRecord::getOrderId, orderId)
+                        .orderByDesc(RefundRecord::getCreateTime)
+                        .last("LIMIT 1")
+        );
+        return refundRecord != null ? refundRecord.getStatus() : null;
     }
 
     /**
      * 获取商品封面图
      */
     private String getCoverImage(Product product) {
-        // TODO: 从ProductImage表获取封面图
-        return "/images/default-product.png";
+        return productImageService.getCoverImage(product.getProductId());
     }
 }

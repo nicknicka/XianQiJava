@@ -1,6 +1,10 @@
 package com.xx.xianqijava.service.impl;
 
 import cn.hutool.core.bean.BeanUtil;
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.json.JSONArray;
+import cn.hutool.json.JSONObject;
+import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -9,10 +13,12 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xx.xianqijava.common.ErrorCode;
 import com.xx.xianqijava.entity.Coupon;
 import com.xx.xianqijava.entity.Order;
+import com.xx.xianqijava.entity.Product;
 import com.xx.xianqijava.entity.UserCoupon;
 import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.mapper.CouponMapper;
 import com.xx.xianqijava.mapper.OrderMapper;
+import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.mapper.UserCouponMapper;
 import com.xx.xianqijava.service.CouponService;
 import com.xx.xianqijava.util.SecurityUtil;
@@ -27,6 +33,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -40,6 +47,7 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
 
     private final UserCouponMapper userCouponMapper;
     private final OrderMapper orderMapper;
+    private final ProductMapper productMapper;
 
     @Override
     public IPage<CouponVO> getAvailableCoupons(Long userId, Page<Coupon> page) {
@@ -150,11 +158,20 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
             throw new BusinessException(ErrorCode.BAD_REQUEST, "优惠券不存在");
         }
 
-        // TODO: 验证订单金额是否满足门槛
-        // TODO: 验证订单商品是否符合使用范围
+        // 获取订单信息
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "订单不存在");
+        }
+
+        // 验证订单金额是否满足门槛
+        validateOrderAmount(order, coupon);
+
+        // 验证订单商品是否符合使用范围
+        validateProductScope(order, coupon);
 
         // 计算优惠金额
-        BigDecimal discountAmount = calculateDiscount(coupon);
+        BigDecimal discountAmount = calculateDiscount(coupon, order);
 
         // 更新用户优惠券状态
         userCoupon.setStatus(2); // 已使用
@@ -185,20 +202,103 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
     /**
      * 计算优惠金额
      */
-    private BigDecimal calculateDiscount(Coupon coupon) {
+    private BigDecimal calculateDiscount(Coupon coupon, Order order) {
+        BigDecimal orderAmount = order.getAmount();
+
         switch (coupon.getType()) {
             case 1: // 满减券
                 return coupon.getDiscountValue();
             case 2: // 折扣券
                 // discountValue 是折扣值，如 8.5 表示 8.5 折
                 BigDecimal discount = coupon.getDiscountValue().divide(BigDecimal.valueOf(10), 2, RoundingMode.HALF_UP);
-                // 注意：这里需要根据订单金额计算，暂时返回折扣百分比
-                return coupon.getDiscountValue();
+                BigDecimal discountAmount = orderAmount.multiply(BigDecimal.ONE.subtract(discount))
+                        .setScale(2, RoundingMode.HALF_UP);
+
+                // 如果设置了最大优惠金额，不能超过最大优惠
+                if (coupon.getMaxDiscount() != null && coupon.getMaxDiscount().compareTo(BigDecimal.ZERO) > 0) {
+                    return discountAmount.min(coupon.getMaxDiscount());
+                }
+                return discountAmount;
             case 3: // 免邮券
                 // 返回固定邮费减免金额或根据实际邮费计算
                 return BigDecimal.valueOf(10); // 假设免邮10元
             default:
                 return BigDecimal.ZERO;
+        }
+    }
+
+    /**
+     * 验证订单金额是否满足门槛
+     */
+    private void validateOrderAmount(Order order, Coupon coupon) {
+        if (coupon.getMinAmount() != null && coupon.getMinAmount().compareTo(BigDecimal.ZERO) > 0) {
+            if (order.getAmount() == null || order.getAmount().compareTo(coupon.getMinAmount()) < 0) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST,
+                        String.format("订单金额需满%s元才能使用此优惠券", coupon.getMinAmount()));
+            }
+        }
+    }
+
+    /**
+     * 验证订单商品是否符合使用范围
+     */
+    private void validateProductScope(Order order, Coupon coupon) {
+        // 如果使用范围是全场，则不需要验证
+        if (coupon.getScope() == null || coupon.getScope() == 1) {
+            return;
+        }
+
+        // 获取订单商品信息
+        Long productId = order.getProductId();
+        if (productId == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "订单商品信息不完整");
+        }
+
+        Product product = productMapper.selectById(productId);
+        if (product == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "商品不存在");
+        }
+
+        // 验证指定分类
+        if (coupon.getScope() == 2) {
+            if (StrUtil.isBlank(coupon.getCategoryIds())) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "优惠券适用分类未设置");
+            }
+
+            JSONArray categoryArray = JSONUtil.parseArray(coupon.getCategoryIds());
+            List<Long> categoryIds = new ArrayList<>();
+            for (Object item : categoryArray) {
+                if (item instanceof JSONObject) {
+                    categoryIds.add(((JSONObject) item).getLong("id"));
+                } else {
+                    categoryIds.add(Long.valueOf(item.toString()));
+                }
+            }
+
+            if (!categoryIds.contains(product.getCategoryId())) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "此优惠券仅适用于指定分类的商品");
+            }
+        }
+
+        // 验证指定商品
+        if (coupon.getScope() == 3) {
+            if (StrUtil.isBlank(coupon.getProductIds())) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "优惠券适用商品未设置");
+            }
+
+            JSONArray productArray = JSONUtil.parseArray(coupon.getProductIds());
+            List<Long> productIds = new ArrayList<>();
+            for (Object item : productArray) {
+                if (item instanceof JSONObject) {
+                    productIds.add(((JSONObject) item).getLong("id"));
+                } else {
+                    productIds.add(Long.valueOf(item.toString()));
+                }
+            }
+
+            if (!productIds.contains(productId)) {
+                throw new BusinessException(ErrorCode.BAD_REQUEST, "此优惠券仅适用于指定商品");
+            }
         }
     }
 

@@ -131,6 +131,26 @@ public interface ConversationService extends IService<Conversation> {
     MessageVO sendImageMessage(ImageMessageSendDTO sendDTO, Long userId);
 
     /**
+     * 发送商品卡片消息
+     *
+     * @param conversationId 会话ID
+     * @param productId      商品ID
+     * @param userId         当前用户ID
+     * @return 消息VO
+     */
+    MessageVO sendProductCardMessage(Long conversationId, Long productId, Long userId);
+
+    /**
+     * 发送订单卡片消息
+     *
+     * @param conversationId 会话ID
+     * @param orderId        订单ID
+     * @param userId         当前用户ID
+     * @return 消息VO
+     */
+    MessageVO sendOrderCardMessage(Long conversationId, Long orderId, Long userId);
+
+    /**
      * 清空聊天记录
      *
      * @param conversationId 会话ID

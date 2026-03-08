@@ -1,6 +1,7 @@
 package com.xx.xianqijava.controller.admin;
 
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.dto.admin.OrderManageQueryDTO;
 import com.xx.xianqijava.dto.admin.OrderRefundProcessDTO;
 import com.xx.xianqijava.service.OrderManageService;
@@ -55,6 +56,11 @@ public class OrderManageController {
      */
     @PostMapping("/refund/process")
     @Operation(summary = "处理退款申请", description = "管理员介入处理退款申请")
+    @OperationLog(
+            module = "order",
+            action = "refund_process",
+            description = "管理员处理退款申请"
+    )
     public Boolean processRefund(@Valid @RequestBody OrderRefundProcessDTO processDTO) {
         Long adminId = SecurityUtil.getCurrentUserId();
         log.info("管理员{}处理退款申请，订单ID：{}，处理结果：{}",

@@ -2,6 +2,7 @@ package com.xx.xianqijava.security;
 
 import com.xx.xianqijava.entity.Admin;
 import com.xx.xianqijava.mapper.AdminMapper;
+import com.xx.xianqijava.service.TokenBlacklistService;
 import com.xx.xianqijava.util.AdminJwtUtil;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -33,6 +34,7 @@ public class AdminJwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final AdminJwtUtil adminJwtUtil;
     private final AdminMapper adminMapper;
+    private final TokenBlacklistService tokenBlacklistService;
 
     private static final String HEADER_NAME = "Authorization";
     private static final String TOKEN_PREFIX = "Bearer ";
@@ -54,6 +56,13 @@ public class AdminJwtAuthenticationFilter extends OncePerRequestFilter {
 
             // 验证 Token 并设置认证信息
             if (StringUtils.hasText(token) && adminJwtUtil.validateToken(token)) {
+                // 检查 Token 是否在黑名单中
+                if (tokenBlacklistService.isBlacklisted(token)) {
+                    log.warn("Token 已在黑名单中，拒绝访问");
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.getWriter().write("{\"code\":401,\"message\":\"Token已失效，请重新登录\"}");
+                    return;
+                }
                 Long adminId = adminJwtUtil.getAdminIdFromToken(token);
                 String username = adminJwtUtil.getUsernameFromToken(token);
 

@@ -1,9 +1,11 @@
 package com.xx.xianqijava.controller.admin;
 
+import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.dto.admin.AdminLoginDTO;
 import com.xx.xianqijava.security.SecurityContextHolder;
 import com.xx.xianqijava.service.AdminService;
+import com.xx.xianqijava.service.TokenBlacklistService;
 import com.xx.xianqijava.vo.admin.AdminInfoVO;
 import com.xx.xianqijava.vo.admin.AdminLoginVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -28,12 +30,18 @@ import org.springframework.web.bind.annotation.*;
 public class AdminAuthController {
 
     private final AdminService adminService;
+    private final TokenBlacklistService tokenBlacklistService;
 
     /**
      * 管理员登录
      */
     @Operation(summary = "管理员登录")
     @PostMapping("/login")
+    @com.xx.xianqijava.annotation.OperationLog(
+            module = "admin",
+            action = "login",
+            description = "管理员登录"
+    )
     public Result<AdminLoginVO> login(@Valid @RequestBody AdminLoginDTO dto,
                                      HttpServletRequest request) {
         log.info("管理员登录请求, username={}", dto.getUsername());
@@ -65,13 +73,30 @@ public class AdminAuthController {
      */
     @Operation(summary = "管理员退出登录")
     @PostMapping("/logout")
-    public Result<Void> logout() {
-        log.info("管理员退出登录, adminId={}", SecurityContextHolder.getAdminId());
+    public Result<Void> logout(HttpServletRequest request) {
+        Long adminId = SecurityContextHolder.getAdminId();
+        log.info("管理员退出登录, adminId={}", adminId);
 
-        // TODO: 可以将Token加入黑名单，实现真正的退出
-        // 目前只是清除前端Token即可
+        // 从请求头中获取 Token
+        String token = extractTokenFromRequest(request);
+        if (token != null && !token.isEmpty()) {
+            // 将 Token 加入黑名单，设置过期时间为 24 小时
+            tokenBlacklistService.addToBlacklist(token, 86400);
+            log.info("Token 已加入黑名单, adminId={}", adminId);
+        }
 
         return Result.success("退出成功");
+    }
+
+    /**
+     * 从请求中提取 Token
+     */
+    private String extractTokenFromRequest(HttpServletRequest request) {
+        String bearerToken = request.getHeader("Authorization");
+        if (bearerToken != null && bearerToken.startsWith("Bearer ")) {
+            return bearerToken.substring(7);
+        }
+        return null;
     }
 
     /**

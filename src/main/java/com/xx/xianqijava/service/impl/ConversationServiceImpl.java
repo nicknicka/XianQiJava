@@ -12,12 +12,17 @@ import com.xx.xianqijava.dto.ImageMessageSendDTO;
 import com.xx.xianqijava.dto.MessageSendDTO;
 import com.xx.xianqijava.entity.Conversation;
 import com.xx.xianqijava.entity.Message;
+import com.xx.xianqijava.entity.Order;
+import com.xx.xianqijava.entity.Product;
 import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.mapper.ConversationMapper;
 import com.xx.xianqijava.mapper.MessageMapper;
+import com.xx.xianqijava.mapper.OrderMapper;
+import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.ConversationService;
+import com.xx.xianqijava.service.ProductImageService;
 import com.xx.xianqijava.util.SecurityUtil;
 import com.xx.xianqijava.vo.ConversationVO;
 import com.xx.xianqijava.vo.MessageVO;
@@ -44,6 +49,9 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
 
     private final MessageMapper messageMapper;
     private final UserMapper userMapper;
+    private final ProductMapper productMapper;
+    private final OrderMapper orderMapper;
+    private final ProductImageService productImageService;
 
     @Autowired
     private com.xx.xianqijava.websocket.WebSocketHandler webSocketHandler;
@@ -576,6 +584,164 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
 
         log.info("发送图片消息成功, messageId={}, conversationId={}, from={}, to={}",
                 message.getMessageId(), sendDTO.getConversationId(), userId, toUserId);
+
+        return convertMessageToVO(message, userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public MessageVO sendProductCardMessage(Long conversationId, Long productId, Long userId) {
+        log.info("发送商品卡片消息, conversationId={}, productId={}, userId={}",
+                conversationId, productId, userId);
+
+        Conversation conversation = baseMapper.selectById(conversationId);
+        if (conversation == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "会话不存在");
+        }
+
+        // 验证用户是否参与该会话
+        if (!conversation.getUserId1().equals(userId) && !conversation.getUserId2().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "无权限在此会话中发送消息");
+        }
+
+        // 查询商品信息
+        Product product = productMapper.selectById(productId);
+        if (product == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "商品不存在");
+        }
+
+        // 确定接收者
+        Long toUserId = conversation.getUserId1().equals(userId) ? conversation.getUserId2() : conversation.getUserId1();
+
+        // 构建商品卡片数据
+        Map<String, Object> productCardData = Map.of(
+                "productId", product.getProductId(),
+                "title", product.getTitle(),
+                "price", product.getPrice(),
+                "conditionLevel", product.getConditionLevel(),
+                "location", product.getLocation(),
+                "coverImage", productImageService.getCoverImage(productId)
+        );
+
+        // 创建消息
+        Message message = new Message();
+        message.setConversationId(conversationId);
+        message.setFromUserId(userId);
+        message.setToUserId(toUserId);
+        message.setContent(product.getTitle()); // content 存储商品标题
+        message.setType(3); // 3-商品卡片
+        message.setParentMessageId(null);
+        message.setIsRead(0);
+        message.setSendStatus(1);
+        message.setStatus(0);
+        message.setExtraData(JSONUtil.toJsonStr(productCardData));
+
+        messageMapper.insert(message);
+
+        // 更新会话的最后消息信息
+        conversation.setLastMessageId(message.getMessageId());
+        String displayContent = "[商品] " + product.getTitle();
+        conversation.setLastMessageContent(displayContent);
+        conversation.setLastMessageType(message.getType());
+        conversation.setLastMessageTime(message.getCreateTime());
+
+        // 增加接收者的未读数
+        if (conversation.getUserId1().equals(toUserId)) {
+            conversation.setUnreadCountUser1(conversation.getUnreadCountUser1() + 1);
+        } else {
+            conversation.setUnreadCountUser2(conversation.getUnreadCountUser2() + 1);
+        }
+
+        baseMapper.updateById(conversation);
+
+        // 通过WebSocket发送消息给接收者
+        webSocketHandler.sendMessageToUser(toUserId, "new_message",
+                Map.of(
+                        "conversationId", conversation.getConversationId(),
+                        "message", convertMessageToVO(message, toUserId)
+                ));
+
+        log.info("发送商品卡片消息成功, messageId={}, conversationId={}, productId={}, from={}, to={}",
+                message.getMessageId(), conversationId, productId, userId, toUserId);
+
+        return convertMessageToVO(message, userId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public MessageVO sendOrderCardMessage(Long conversationId, Long orderId, Long userId) {
+        log.info("发送订单卡片消息, conversationId={}, orderId={}, userId={}",
+                conversationId, orderId, userId);
+
+        Conversation conversation = baseMapper.selectById(conversationId);
+        if (conversation == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "会话不存在");
+        }
+
+        // 验证用户是否参与该会话
+        if (!conversation.getUserId1().equals(userId) && !conversation.getUserId2().equals(userId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "无权限在此会话中发送消息");
+        }
+
+        // 查询订单信息
+        Order order = orderMapper.selectById(orderId);
+        if (order == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "订单不存在");
+        }
+
+        // 确定接收者
+        Long toUserId = conversation.getUserId1().equals(userId) ? conversation.getUserId2() : conversation.getUserId1();
+
+        // 构建订单卡片数据
+        Map<String, Object> orderCardData = Map.of(
+                "orderId", order.getOrderId(),
+                "orderNo", order.getOrderNo(),
+                "amount", order.getAmount(),
+                "status", order.getStatus(),
+                "productId", order.getProductId(),
+                "coverImage", productImageService.getCoverImage(order.getProductId())
+        );
+
+        // 创建消息
+        Message message = new Message();
+        message.setConversationId(conversationId);
+        message.setFromUserId(userId);
+        message.setToUserId(toUserId);
+        message.setContent("订单号: " + order.getOrderNo()); // content 存储订单号
+        message.setType(4); // 4-订单卡片
+        message.setParentMessageId(null);
+        message.setIsRead(0);
+        message.setSendStatus(1);
+        message.setStatus(0);
+        message.setExtraData(JSONUtil.toJsonStr(orderCardData));
+
+        messageMapper.insert(message);
+
+        // 更新会话的最后消息信息
+        conversation.setLastMessageId(message.getMessageId());
+        String displayContent = "[订单] " + order.getOrderNo();
+        conversation.setLastMessageContent(displayContent);
+        conversation.setLastMessageType(message.getType());
+        conversation.setLastMessageTime(message.getCreateTime());
+
+        // 增加接收者的未读数
+        if (conversation.getUserId1().equals(toUserId)) {
+            conversation.setUnreadCountUser1(conversation.getUnreadCountUser1() + 1);
+        } else {
+            conversation.setUnreadCountUser2(conversation.getUnreadCountUser2() + 1);
+        }
+
+        baseMapper.updateById(conversation);
+
+        // 通过WebSocket发送消息给接收者
+        webSocketHandler.sendMessageToUser(toUserId, "new_message",
+                Map.of(
+                        "conversationId", conversation.getConversationId(),
+                        "message", convertMessageToVO(message, toUserId)
+                ));
+
+        log.info("发送订单卡片消息成功, messageId={}, conversationId={}, orderId={}, from={}, to={}",
+                message.getMessageId(), conversationId, orderId, userId, toUserId);
 
         return convertMessageToVO(message, userId);
     }

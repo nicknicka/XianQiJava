@@ -6,6 +6,7 @@ import com.xx.xianqijava.dto.*;
 import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.service.FileUploadService;
+import com.xx.xianqijava.service.ThirdPartyLoginService;
 import com.xx.xianqijava.service.UserService;
 import com.xx.xianqijava.util.SecurityUtil;
 import com.xx.xianqijava.vo.PayPasswordCheckVO;
@@ -40,6 +41,7 @@ public class UserController {
     private final UserService userService;
     private final FileUploadService fileUploadService;
     private final LoginDeviceService loginDeviceService;
+    private final ThirdPartyLoginService thirdPartyLoginService;
 
     /**
      * 用户注册
@@ -339,9 +341,8 @@ public class UserController {
                                               @RequestParam(value = "nickname", required = false) String nickname,
                                               @RequestParam(value = "avatar", required = false) String avatar) {
         log.info("微信授权登录请求, code={}", code);
-        // TODO: 对接微信开放平台验证code并获取用户信息
-        // 当前实现：使用模拟数据返回，实际使用时需要对接微信API
-        throw new BusinessException(ErrorCode.NOT_IMPLEMENTED, "微信登录功能暂未开放，请使用其他登录方式");
+        UserLoginVO result = thirdPartyLoginService.loginByWechat(code);
+        return Result.success("登录成功", result);
     }
 
     /**
@@ -353,9 +354,8 @@ public class UserController {
                                          @RequestParam(value = "nickname", required = false) String nickname,
                                          @RequestParam(value = "avatar", required = false) String avatar) {
         log.info("QQ授权登录请求, code={}", code);
-        // TODO: 对接QQ互联平台验证code并获取用户信息
-        // 当前实现：使用模拟数据返回，实际使用时需要对接QQ API
-        throw new BusinessException(ErrorCode.NOT_IMPLEMENTED, "QQ登录功能暂未开放，请使用其他登录方式");
+        UserLoginVO result = thirdPartyLoginService.loginByQQ(code);
+        return Result.success("登录成功", result);
     }
 
     // ==================== 账号安全相关接口 ====================

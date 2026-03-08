@@ -221,32 +221,13 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
 
     private BigDecimal calculateTotalAmount() {
-        // 查询所有已完成订单的金额，然后在Java中求和
-        // TODO: 性能优化 - 建议在OrderMapper中添加自定义SQL方法：
-        // @Select("SELECT COALESCE(SUM(amount), 0) FROM `order` WHERE status = 2")
-        // BigDecimal sumAmountByStatus(@Param("status") Integer status);
-        LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(Order::getStatus, 2); // 只统计已完成的订单
-        wrapper.select(Order::getAmount);
-
-        List<Order> orderList = orderMapper.selectList(wrapper);
-        return orderList.stream()
-                .map(Order::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // 使用SQL SUM函数进行统计，提升性能
+        return orderMapper.sumAmountByStatus(2); // 只统计已完成的订单
     }
 
     private BigDecimal calculateAmountAfter(LocalDateTime dateTime) {
-        // TODO: 性能优化 - 同上，建议使用SQL SUM函数
-
-        LambdaQueryWrapper<Order> wrapper = new LambdaQueryWrapper<>();
-        wrapper.ge(Order::getCreateTime, dateTime);
-        wrapper.eq(Order::getStatus, 2); // 只统计已完成的订单
-        wrapper.select(Order::getAmount);
-
-        List<Order> orders = orderMapper.selectList(wrapper);
-        return orders.stream()
-                .map(Order::getAmount)
-                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        // 使用SQL SUM函数进行统计，提升性能
+        return orderMapper.sumAmountAfter(dateTime, 2); // 只统计已完成的订单
     }
 
     private Long countVerificationsByStatus(Integer status) {

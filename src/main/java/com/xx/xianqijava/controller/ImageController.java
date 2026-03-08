@@ -4,6 +4,7 @@ import com.xx.xianqijava.common.ErrorCode;
 import com.xx.xianqijava.entity.ProductImage;
 import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.mapper.ProductImageMapper;
+import com.xx.xianqijava.service.OssService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -37,6 +38,7 @@ import java.util.Map;
 public class ImageController {
 
     private final ProductImageMapper productImageMapper;
+    private final OssService ossService;
 
     @Value("${file.upload.path:/tmp/uploads}")
     private String uploadPath;
@@ -189,23 +191,45 @@ public class ImageController {
 
     /**
      * 获取缩略图
+     * 如果启用 OSS，返回带图片处理参数的 URL
+     * 如果未启用 OSS，返回本地生成的缩略图
      */
     @GetMapping("/thumbnail/{filename}**")
-    @Operation(summary = "获取缩略图", description = "获取图片的缩略图版本")
+    @Operation(summary = "获取缩略图", description = "获取图片的缩略图版本 (200x200)")
     public ResponseEntity<Resource> getThumbnail(@PathVariable String filename) {
-        // TODO: 实现缩略图逻辑
-        // 目前暂时返回原图，后续可以集成图片处理库生成缩略图
+        // 如果启用了 OSS，返回重定向到 OSS URL
+        if (ossService.isEnabled()) {
+            String ossUrl = ossService.getThumbnailUrl(filename);
+            if (ossUrl != null) {
+                log.debug("使用 OSS 缩略图 URL: {}", ossUrl);
+                return ResponseEntity.status(302).header("Location", ossUrl).build();
+            }
+        }
+
+        // 否则返回原图（前端可以请求时指定尺寸）
+        log.debug("OSS 未启用，返回原图作为缩略图");
         return getImage(filename);
     }
 
     /**
      * 获取中等尺寸图片
+     * 如果启用 OSS，返回带图片处理参数的 URL
+     * 如果未启用 OSS，返回本地生成的中等尺寸图
      */
     @GetMapping("/medium/{filename}**")
-    @Operation(summary = "获取中等尺寸图片", description = "获取图片的中等尺寸版本")
+    @Operation(summary = "获取中等尺寸图片", description = "获取图片的中等尺寸版本 (800x800)")
     public ResponseEntity<Resource> getMedium(@PathVariable String filename) {
-        // TODO: 实现中等尺寸图逻辑
-        // 目前暂时返回原图，后续可以集成图片处理库生成中等尺寸图
+        // 如果启用了 OSS，返回重定向到 OSS URL
+        if (ossService.isEnabled()) {
+            String ossUrl = ossService.getMediumUrl(filename);
+            if (ossUrl != null) {
+                log.debug("使用 OSS 中等尺寸图 URL: {}", ossUrl);
+                return ResponseEntity.status(302).header("Location", ossUrl).build();
+            }
+        }
+
+        // 否则返回原图（前端可以请求时指定尺寸）
+        log.debug("OSS 未启用，返回原图作为中等尺寸图");
         return getImage(filename);
     }
 
