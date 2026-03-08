@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/share-item")
+@RequestMapping("/admin/share-item")
 @Tag(name = "共享物品管理", description = "共享物品管理相关接口")
 @SecurityRequirement(name = "bearer-auth")
 public class ShareItemManageController {

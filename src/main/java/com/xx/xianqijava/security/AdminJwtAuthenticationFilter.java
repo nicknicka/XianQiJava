@@ -44,7 +44,7 @@ public class AdminJwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             // 只处理管理员路径
             String uri = request.getRequestURI();
-            if (!uri.startsWith("/admin/")) {
+            if (!uri.startsWith("/api/admin/")) {
                 filterChain.doFilter(request, response);
                 return;
             }
@@ -89,7 +89,7 @@ public class AdminJwtAuthenticationFilter extends OncePerRequestFilter {
             log.error("无法设置管理员认证: {}", e.getMessage());
         } finally {
             // 清理自定义上下文
-            if (!request.getRequestURI().startsWith("/admin/")) {
+            if (!request.getRequestURI().startsWith("/api/admin/")) {
                 SecurityContextHolder.clear();
             }
         }

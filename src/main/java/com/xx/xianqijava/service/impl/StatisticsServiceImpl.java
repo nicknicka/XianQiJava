@@ -30,7 +30,8 @@ public class StatisticsServiceImpl implements StatisticsService {
     private final OrderMapper orderMapper;
     private final EvaluationMapper evaluationMapper;
     private final CategoryMapper categoryMapper;
-    private final UserVerificationMapper userVerificationMapper;
+    private final UserRealNameAuthMapper userRealNameAuthMapper;
+    private final UserStudentAuthMapper userStudentAuthMapper;
     private final SystemNotificationMapper systemNotificationMapper;
     private final UserFeedbackMapper userFeedbackMapper;
     private final ReportMapper reportMapper;
@@ -64,7 +65,7 @@ public class StatisticsServiceImpl implements StatisticsService {
 
         // 待处理事项
         vo.setPendingProducts(countProductsByAuditStatus(0));
-        vo.setPendingVerifications(countVerificationsByStatus(0));
+        vo.setPendingVerifications(countVerificationsByStatus(1)); // 1-审核中（待审核）
         vo.setSystemNotifications(countNotificationsAfter(LocalDateTime.now().minusDays(7)));
         vo.setUserFeedbacks(countFeedbacksByStatus(0));
         vo.setPendingReports(countReportsByStatus(0));
@@ -249,9 +250,16 @@ public class StatisticsServiceImpl implements StatisticsService {
     }
 
     private Long countVerificationsByStatus(Integer status) {
-        LambdaQueryWrapper<UserVerification> wrapper = new LambdaQueryWrapper<>();
-        wrapper.eq(UserVerification::getStatus, status);
-        return userVerificationMapper.selectCount(wrapper);
+        // 统计实名认证和学生认证的待审核数量
+        LambdaQueryWrapper<UserRealNameAuth> realNameWrapper = new LambdaQueryWrapper<>();
+        realNameWrapper.eq(UserRealNameAuth::getStatus, status);
+        long realNameCount = userRealNameAuthMapper.selectCount(realNameWrapper);
+
+        LambdaQueryWrapper<UserStudentAuth> studentWrapper = new LambdaQueryWrapper<>();
+        studentWrapper.eq(UserStudentAuth::getStatus, status);
+        long studentCount = userStudentAuthMapper.selectCount(studentWrapper);
+
+        return realNameCount + studentCount;
     }
 
     private Long countNotificationsAfter(LocalDateTime dateTime) {

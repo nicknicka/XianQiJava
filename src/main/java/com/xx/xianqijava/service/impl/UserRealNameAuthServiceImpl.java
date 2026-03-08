@@ -4,6 +4,8 @@ import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xx.xianqijava.common.ErrorCode;
 import com.xx.xianqijava.dto.RealNameAuthSubmitDTO;
@@ -135,6 +137,64 @@ public class UserRealNameAuthServiceImpl extends ServiceImpl<UserRealNameAuthMap
         updateById(auth);
 
         log.info("审核实名认证成功, authId={}, status={}", authId, status);
+    }
+
+    @Override
+    public RealNameAuthVO getAuthDetail(Long authId) {
+        log.info("获取实名认证详情, authId={}", authId);
+
+        UserRealNameAuth auth = getById(authId);
+        if (auth == null) {
+            throw new BusinessException(ErrorCode.AUTH_NOT_EXISTS);
+        }
+
+        return convertToVO(auth);
+    }
+
+    @Override
+    public IPage<RealNameAuthVO> getPendingList(Page<UserRealNameAuth> page) {
+        log.info("获取待审核的实名认证列表, page={}", page.getCurrent());
+
+        LambdaQueryWrapper<UserRealNameAuth> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserRealNameAuth::getStatus, 1) // 审核中
+                .orderByAsc(UserRealNameAuth::getCreateTime);
+
+        IPage<UserRealNameAuth> authPage = page(page, wrapper);
+        return authPage.convert(this::convertToVO);
+    }
+
+    @Override
+    public IPage<RealNameAuthVO> getAllList(Page<UserRealNameAuth> page, Integer status) {
+        log.info("获取所有实名认证列表, page={}, status={}", page.getCurrent(), status);
+
+        LambdaQueryWrapper<UserRealNameAuth> wrapper = new LambdaQueryWrapper<>();
+        if (status != null) {
+            wrapper.eq(UserRealNameAuth::getStatus, status);
+        }
+        wrapper.orderByDesc(UserRealNameAuth::getCreateTime);
+
+        IPage<UserRealNameAuth> authPage = page(page, wrapper);
+        return authPage.convert(this::convertToVO);
+    }
+
+    /**
+     * 转换为VO
+     */
+    private RealNameAuthVO convertToVO(UserRealNameAuth auth) {
+        RealNameAuthVO vo = new RealNameAuthVO();
+        vo.setId(auth.getId());
+        vo.setUserId(auth.getUserId());
+        vo.setRealName(auth.getRealName());
+        // 身份证号脱敏
+        vo.setIdCard(maskIdCard(auth.getIdCard()));
+        vo.setStatus(auth.getStatus());
+        vo.setRejectReason(auth.getRejectReason());
+        vo.setAuditedAt(auth.getAuditedAt() != null ?
+            auth.getAuditedAt().format(FORMATTER) : null);
+        vo.setCreatedAt(auth.getCreateTime() != null ?
+            auth.getCreateTime().format(FORMATTER) : null);
+
+        return vo;
     }
 
     /**

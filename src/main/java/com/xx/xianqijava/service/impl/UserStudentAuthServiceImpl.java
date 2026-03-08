@@ -3,6 +3,8 @@ package com.xx.xianqijava.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.json.JSONUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xx.xianqijava.common.ErrorCode;
 import com.xx.xianqijava.dto.StudentAuthSubmitDTO;
@@ -144,5 +146,71 @@ public class UserStudentAuthServiceImpl extends ServiceImpl<UserStudentAuthMappe
         updateById(auth);
 
         log.info("审核学生认证成功, authId={}, status={}", authId, status);
+    }
+
+    @Override
+    public StudentAuthVO getAuthDetail(Long authId) {
+        log.info("获取学生认证详情, authId={}", authId);
+
+        UserStudentAuth auth = getById(authId);
+        if (auth == null) {
+            throw new BusinessException(ErrorCode.AUTH_NOT_EXISTS);
+        }
+
+        return convertToVO(auth);
+    }
+
+    @Override
+    public IPage<StudentAuthVO> getPendingList(Page<UserStudentAuth> page) {
+        log.info("获取待审核的学生认证列表, page={}", page.getCurrent());
+
+        LambdaQueryWrapper<UserStudentAuth> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(UserStudentAuth::getStatus, 1) // 审核中
+                .orderByAsc(UserStudentAuth::getCreateTime);
+
+        IPage<UserStudentAuth> authPage = page(page, wrapper);
+        return authPage.convert(this::convertToVO);
+    }
+
+    @Override
+    public IPage<StudentAuthVO> getAllList(Page<UserStudentAuth> page, Integer status) {
+        log.info("获取所有学生认证列表, page={}, status={}", page.getCurrent(), status);
+
+        LambdaQueryWrapper<UserStudentAuth> wrapper = new LambdaQueryWrapper<>();
+        if (status != null) {
+            wrapper.eq(UserStudentAuth::getStatus, status);
+        }
+        wrapper.orderByDesc(UserStudentAuth::getCreateTime);
+
+        IPage<UserStudentAuth> authPage = page(page, wrapper);
+        return authPage.convert(this::convertToVO);
+    }
+
+    /**
+     * 转换为VO
+     */
+    private StudentAuthVO convertToVO(UserStudentAuth auth) {
+        StudentAuthVO vo = new StudentAuthVO();
+        vo.setId(auth.getId());
+        vo.setUserId(auth.getUserId());
+        vo.setStudentId(auth.getStudentId());
+        vo.setCollege(auth.getCollege());
+        vo.setMajor(auth.getMajor());
+        // 解析JSON图片列表
+        if (auth.getStudentCardImages() != null) {
+            List<String> images = JSONUtil.toList(auth.getStudentCardImages(), String.class);
+            vo.setStudentCardImages(images);
+        }
+        vo.setStatus(auth.getStatus());
+        vo.setRejectReason(auth.getRejectReason());
+        vo.setEnrollmentYear(auth.getEnrollmentYear());
+        vo.setGraduationYear(auth.getGraduationYear());
+        vo.setEducationLevel(auth.getEducationLevel());
+        vo.setAuditedAt(auth.getAuditedAt() != null ?
+            auth.getAuditedAt().format(FORMATTER) : null);
+        vo.setCreatedAt(auth.getCreateTime() != null ?
+            auth.getCreateTime().format(FORMATTER) : null);
+
+        return vo;
     }
 }

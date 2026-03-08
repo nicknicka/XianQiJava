@@ -10,6 +10,9 @@ import lombok.Data;
 @Schema(description = "用户查询条件DTO")
 public class UserQueryDTO {
 
+    @Schema(description = "关键词（用户名/昵称/手机号/学号，模糊搜索）")
+    private String keyword;
+
     @Schema(description = "用户名（模糊搜索）")
     private String username;
 

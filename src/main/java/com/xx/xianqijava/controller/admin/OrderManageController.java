@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/order")
+@RequestMapping("/admin/order")
 @Tag(name = "订单管理", description = "订单管理相关接口")
 @SecurityRequirement(name = "bearer-auth")
 public class OrderManageController {

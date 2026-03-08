@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/product-audit")
+@RequestMapping("/admin/product-audit")
 @Tag(name = "商品审核", description = "商品审核相关接口")
 @SecurityRequirement(name = "bearer-auth")
 public class ProductAuditController {

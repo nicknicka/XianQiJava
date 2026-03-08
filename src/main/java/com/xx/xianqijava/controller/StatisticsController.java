@@ -1,5 +1,6 @@
 package com.xx.xianqijava.controller;
 
+import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.service.StatisticsService;
 import com.xx.xianqijava.util.SecurityUtil;
 import com.xx.xianqijava.vo.OrderStatisticsVO;
@@ -21,7 +22,7 @@ import org.springframework.web.bind.annotation.RestController;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/statistics")
+@RequestMapping("/admin/statistics")
 @Tag(name = "数据统计管理", description = "数据统计相关接口")
 @SecurityRequirement(name = "bearer-auth")
 public class StatisticsController {
@@ -33,10 +34,11 @@ public class StatisticsController {
      */
     @GetMapping("/overview")
     @Operation(summary = "获取总览统计数据", description = "获取平台总览统计数据，用于管理后台首页展示")
-    public StatisticsVO getOverviewStatistics() {
+    public Result<StatisticsVO> getOverviewStatistics() {
         Long userId = SecurityUtil.getCurrentUserId();
         log.info("用户{}获取总览统计数据", userId);
-        return statisticsService.getOverviewStatistics();
+        StatisticsVO data = statisticsService.getOverviewStatistics();
+        return Result.success(data);
     }
 
     /**
@@ -44,10 +46,11 @@ public class StatisticsController {
      */
     @GetMapping("/users")
     @Operation(summary = "获取用户统计数据", description = "获取用户相关的详细统计数据")
-    public UserStatisticsVO getUserStatistics() {
+    public Result<UserStatisticsVO> getUserStatistics() {
         Long userId = SecurityUtil.getCurrentUserId();
         log.info("用户{}获取用户统计数据", userId);
-        return statisticsService.getUserStatistics();
+        UserStatisticsVO data = statisticsService.getUserStatistics();
+        return Result.success(data);
     }
 
     /**
@@ -55,10 +58,11 @@ public class StatisticsController {
      */
     @GetMapping("/products")
     @Operation(summary = "获取商品统计数据", description = "获取商品相关的详细统计数据")
-    public ProductStatisticsVO getProductStatistics() {
+    public Result<ProductStatisticsVO> getProductStatistics() {
         Long userId = SecurityUtil.getCurrentUserId();
         log.info("用户{}获取商品统计数据", userId);
-        return statisticsService.getProductStatistics();
+        ProductStatisticsVO data = statisticsService.getProductStatistics();
+        return Result.success(data);
     }
 
     /**
@@ -66,9 +70,10 @@ public class StatisticsController {
      */
     @GetMapping("/orders")
     @Operation(summary = "获取订单统计数据", description = "获取订单相关的详细统计数据")
-    public OrderStatisticsVO getOrderStatistics() {
+    public Result<OrderStatisticsVO> getOrderStatistics() {
         Long userId = SecurityUtil.getCurrentUserId();
         log.info("用户{}获取订单统计数据", userId);
-        return statisticsService.getOrderStatistics();
+        OrderStatisticsVO data = statisticsService.getOrderStatistics();
+        return Result.success(data);
     }
 }

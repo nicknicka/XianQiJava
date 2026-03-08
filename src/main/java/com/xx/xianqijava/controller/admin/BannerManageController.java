@@ -21,7 +21,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/admin/banner")
+@RequestMapping("/admin/banner")
 @Tag(name = "轮播图管理", description = "轮播图管理相关接口")
 @SecurityRequirement(name = "bearer-auth")
 public class BannerManageController {

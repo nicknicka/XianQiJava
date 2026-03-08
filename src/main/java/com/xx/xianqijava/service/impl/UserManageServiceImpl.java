@@ -42,8 +42,21 @@ public class UserManageServiceImpl implements UserManageService {
         // 构建查询条件
         LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
 
+        // 关键词搜索（用户名/昵称/手机号/学号）
+        if (StringUtils.hasText(queryDTO.getKeyword())) {
+            String keyword = queryDTO.getKeyword();
+            queryWrapper.and(wrapper -> wrapper
+                    .like(User::getUsername, keyword)
+                    .or()
+                    .like(User::getNickname, keyword)
+                    .or()
+                    .like(User::getPhone, keyword)
+                    .or()
+                    .like(User::getStudentId, keyword)
+            );
+        }
         // 用户名模糊搜索
-        if (StringUtils.hasText(queryDTO.getUsername())) {
+        else if (StringUtils.hasText(queryDTO.getUsername())) {
             queryWrapper.like(User::getUsername, queryDTO.getUsername());
         }
 

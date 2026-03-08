@@ -1,5 +1,6 @@
 package com.xx.xianqijava.security;
 
+import com.xx.xianqijava.security.AdminJwtAuthenticationFilter;
 import com.xx.xianqijava.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -29,9 +30,12 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AdminJwtAuthenticationFilter adminJwtAuthenticationFilter;
 
-    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter) {
+    public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
+                          AdminJwtAuthenticationFilter adminJwtAuthenticationFilter) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
+        this.adminJwtAuthenticationFilter = adminJwtAuthenticationFilter;
     }
 
     /**
@@ -101,6 +105,7 @@ public class SecurityConfig {
                                 "/public/**",
                                 "/user/register",
                                 "/user/login",
+                                "/admin/auth/login",  // 管理员登录接口
                                 "/doc.html",
                                 "/swagger-ui/**",
                                 "/v3/api-docs/**",
@@ -126,7 +131,8 @@ public class SecurityConfig {
                 )
 
                 // 添加 JWT 过滤器
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(adminJwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
