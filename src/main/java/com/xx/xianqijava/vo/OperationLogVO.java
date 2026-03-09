@@ -52,6 +52,9 @@ public class OperationLogVO {
     @Schema(description = "IP地址")
     private String ipAddress;
 
+    @Schema(description = "用户代理")
+    private String userAgent;
+
     @Schema(description = "执行时长（毫秒）")
     private Long executeTime;
 

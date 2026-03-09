@@ -124,28 +124,70 @@ public class OperationLogAspect {
         try {
             Object[] args = joinPoint.getArgs();
             if (args == null || args.length == 0) {
-                return "";
+                return "{}";
             }
 
             // 过滤掉不能序列化的参数（如HttpServletRequest、HttpServletResponse等）
-            StringBuilder params = new StringBuilder();
+            java.util.Map<String, Object> paramMap = new java.util.LinkedHashMap<>();
+            int paramIndex = 0;
+
             for (Object arg : args) {
                 if (arg == null) {
+                    paramIndex++;
                     continue;
                 }
+
+                // 跳过Web相关的对象
+                if (arg instanceof HttpServletRequest ||
+                    arg instanceof jakarta.servlet.http.HttpServletResponse ||
+                    arg instanceof jakarta.servlet.http.HttpSession) {
+                    paramIndex++;
+                    continue;
+                }
+
                 try {
-                    String json = objectMapper.writeValueAsString(arg);
-                    if (json.length() > 500) {
-                        json = json.substring(0, 500) + "...";
+                    // 尝试将参数转换为可序列化的对象
+                    Object paramValue;
+                    try {
+                        // 先序列化为JSON，再反序列化为通用对象（Map/List等）
+                        // 这样可以避免循环引用等问题
+                        String json = objectMapper.writeValueAsString(arg);
+
+                        // 如果JSON太长，截断为字符串
+                        if (json.length() > 1000) {
+                            paramValue = json.substring(0, 1000) + "...";
+                        } else {
+                            // 正常长度，反序列化为通用对象
+                            paramValue = objectMapper.readValue(json, Object.class);
+                        }
+                    } catch (Exception ex) {
+                        // 如果无法序列化/反序列化，使用toString
+                        String strValue = arg.toString();
+                        paramValue = strValue.length() > 1000 ? strValue.substring(0, 1000) + "..." : strValue;
                     }
-                    params.append(json).append("; ");
+
+                    // 使用参数索引作为key
+                    String key = "param" + paramIndex;
+                    paramMap.put(key, paramValue);
+                    paramIndex++;
                 } catch (Exception e) {
-                    params.append("[").append(arg.getClass().getSimpleName()).append("]; ");
+                    // 序列化失败，记录类型信息
+                    String key = "param" + paramIndex;
+                    paramMap.put(key, "[" + arg.getClass().getSimpleName() + "]");
+                    paramIndex++;
                 }
             }
-            return params.toString();
+
+            // 如果所有参数都被过滤，返回空对象
+            if (paramMap.isEmpty()) {
+                return "{}";
+            }
+
+            // 转换为JSON字符串
+            return objectMapper.writeValueAsString(paramMap);
         } catch (Exception e) {
-            return "";
+            log.warn("序列化请求参数失败", e);
+            return "{}";
         }
     }
 

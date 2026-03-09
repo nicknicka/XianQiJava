@@ -220,16 +220,20 @@ public class ProductAuditServiceImpl implements ProductAuditService {
                 .map(Product::getSellerId)
                 .distinct()
                 .collect(Collectors.toList());
-        Map<Long, User> userMap = userMapper.selectBatchIds(sellerIds).stream()
-                .collect(Collectors.toMap(User::getUserId, u -> u));
+        Map<Long, User> userMap = sellerIds.isEmpty()
+                ? Map.of()
+                : userMapper.selectBatchIds(sellerIds).stream()
+                        .collect(Collectors.toMap(User::getUserId, u -> u));
 
         // 批量获取分类信息
         List<Long> categoryIds = productPage.getRecords().stream()
                 .map(Product::getCategoryId)
                 .distinct()
                 .collect(Collectors.toList());
-        Map<Long, Category> categoryMap = categoryMapper.selectBatchIds(categoryIds).stream()
-                .collect(Collectors.toMap(Category::getCategoryId, c -> c));
+        Map<Long, Category> categoryMap = categoryIds.isEmpty()
+                ? Map.of()
+                : categoryMapper.selectBatchIds(categoryIds).stream()
+                        .collect(Collectors.toMap(Category::getCategoryId, c -> c));
 
         // 转换为VO
         Page<ProductAuditVO> voPage = new Page<>(productPage.getCurrent(), productPage.getSize(), productPage.getTotal());
