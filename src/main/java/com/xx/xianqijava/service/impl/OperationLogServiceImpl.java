@@ -34,7 +34,8 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, Ope
     public void recordLog(Long userId, String username, String module, String action,
                           String description, String requestMethod, String requestUrl,
                           String requestParams, String ipAddress, String userAgent,
-                          Long executeTime, Integer status, String errorMessage) {
+                          Long executeTime, Integer status, String errorMessage,
+                          Long bizId, String bizType) {
         try {
             OperationLog log = new OperationLog();
             log.setUserId(userId);
@@ -50,6 +51,8 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, Ope
             log.setExecuteTime(executeTime);
             log.setStatus(status);
             log.setErrorMessage(errorMessage);
+            log.setBizId(bizId);
+            log.setBizType(bizType);
             log.setCreateTime(LocalDateTime.now());
 
             save(log);

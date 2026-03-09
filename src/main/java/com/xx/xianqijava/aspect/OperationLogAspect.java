@@ -116,7 +116,9 @@ public class OperationLogAspect {
                 userAgent,
                 executeTime,
                 status,
-                errorMessage
+                errorMessage,
+                null,  // bizId - 切面无法获取业务对象ID
+                null   // bizType - 切面无法获取业务对象类型
         );
     }
 

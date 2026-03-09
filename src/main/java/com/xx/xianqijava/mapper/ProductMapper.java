@@ -27,4 +27,19 @@ public interface ProductMapper extends BaseMapper<Product> {
      * 查询商品的秒杀信息
      */
     Map<String, Object> selectFlashSaleInfo(@Param("productId") Long productId, @Param("now") LocalDateTime now);
+
+    /**
+     * 增加商品浏览量
+     */
+    void incrementViewCount(@Param("productId") Long productId);
+
+    /**
+     * 增加商品收藏量
+     */
+    void incrementFavoriteCount(@Param("productId") Long productId);
+
+    /**
+     * 减少商品收藏量
+     */
+    void decrementFavoriteCount(@Param("productId") Long productId);
 }

@@ -169,13 +169,19 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Override
     public ProductVO getProductDetail(Long productId, Long userId) {
+        log.info("获取商品详情, productId={}, userId={}", productId, userId);
         Product product = getById(productId);
         if (product == null) {
             throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
-        // 异步记录浏览历史（触发器会自动更新 product_statistics 表的 view_count）
+        // 记录浏览历史（仅登录用户）
         productViewHistoryService.recordViewHistory(userId, productId);
+
+        // 更新商品浏览量（无论是否登录）
+        log.info("准备更新商品浏览量, productId={}", productId);
+        baseMapper.incrementViewCount(productId);
+        log.info("商品浏览量更新完成, productId={}", productId);
 
         return convertToVO(product, userId);
     }
@@ -199,8 +205,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
-        // 异步记录浏览历史（触发器会自动更新 product_statistics 表的 view_count）
+        // 记录浏览历史（仅登录用户）
         productViewHistoryService.recordViewHistory(userId, productId);
+
+        // 更新商品浏览量（无论是否登录）
+        baseMapper.incrementViewCount(productId);
 
         // 转换为基础 VO
         ProductVO productVO = convertToVO(product, userId);

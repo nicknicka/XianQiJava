@@ -55,6 +55,9 @@ public class ProductFavoriteServiceImpl extends ServiceImpl<ProductFavoriteMappe
         favorite.setUserId(userId);
         favorite.setProductId(productId);
         baseMapper.insert(favorite);
+
+        // 更新商品收藏量
+        productMapper.incrementFavoriteCount(productId);
     }
 
     @Override
@@ -63,7 +66,16 @@ public class ProductFavoriteServiceImpl extends ServiceImpl<ProductFavoriteMappe
         LambdaQueryWrapper<ProductFavorite> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ProductFavorite::getUserId, userId)
                 .eq(ProductFavorite::getProductId, productId);
-        baseMapper.delete(queryWrapper);
+
+        // 检查是否确实有收藏记录
+        Long count = baseMapper.selectCount(queryWrapper);
+        if (count > 0) {
+            // 删除收藏记录
+            baseMapper.delete(queryWrapper);
+
+            // 减少商品收藏量
+            productMapper.decrementFavoriteCount(productId);
+        }
     }
 
     @Override

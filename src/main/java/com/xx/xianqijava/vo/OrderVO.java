@@ -57,7 +57,7 @@ public class OrderVO {
     @Schema(description = "卖家头像")
     private String sellerAvatar;
 
-    @Schema(description = "订单状态：0-待确认 1-进行中 2-已完成 3-已取消 4-已退款")
+    @Schema(description = "订单状态：0-待确认 1-进行中 2-已完成 3-已取消 4-退款中")
     private Integer status;
 
     @Schema(description = "状态描述")

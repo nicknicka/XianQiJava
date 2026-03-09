@@ -62,7 +62,7 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
     cache-enabled: false
-    # log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 注释掉，隐藏 SQL 日志
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl  # 启用 SQL 日志用于调试
   global-config:
     db-config:
       id-type: auto

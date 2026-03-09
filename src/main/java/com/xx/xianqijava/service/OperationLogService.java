@@ -27,11 +27,14 @@ public interface OperationLogService extends IService<OperationLog> {
      * @param executeTime     执行时长
      * @param status          执行状态
      * @param errorMessage    错误信息
+     * @param bizId           业务对象ID（可选）
+     * @param bizType         业务对象类型（可选）
      */
     void recordLog(Long userId, String username, String module, String action,
                    String description, String requestMethod, String requestUrl,
                    String requestParams, String ipAddress, String userAgent,
-                   Long executeTime, Integer status, String errorMessage);
+                   Long executeTime, Integer status, String errorMessage,
+                   Long bizId, String bizType);
 
     /**
      * 获取操作日志列表

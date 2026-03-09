@@ -35,10 +35,9 @@ public class ProductViewHistoryServiceImpl extends ServiceImpl<ProductViewHistor
     }
 
     @Override
-    @Async
     @Transactional(rollbackFor = Exception.class)
     public void recordViewHistory(Long userId, Long productId) {
-        if (userId == null || productId == null) {
+        if (productId == null) {
             return;
         }
 
@@ -48,24 +47,27 @@ public class ProductViewHistoryServiceImpl extends ServiceImpl<ProductViewHistor
             return;
         }
 
-        // 检查是否已有浏览记录
-        LambdaQueryWrapper<ProductViewHistory> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.eq(ProductViewHistory::getUserId, userId)
-                .eq(ProductViewHistory::getProductId, productId);
-        ProductViewHistory existHistory = baseMapper.selectOne(queryWrapper);
+        // 只有登录用户才记录浏览历史
+        if (userId != null) {
+            // 检查是否已有浏览记录
+            LambdaQueryWrapper<ProductViewHistory> queryWrapper = new LambdaQueryWrapper<>();
+            queryWrapper.eq(ProductViewHistory::getUserId, userId)
+                    .eq(ProductViewHistory::getProductId, productId);
+            ProductViewHistory existHistory = baseMapper.selectOne(queryWrapper);
 
-        if (existHistory != null) {
-            // 更新浏览时间
-            existHistory.setViewTime(LocalDateTime.now());
-            baseMapper.updateById(existHistory);
-        } else {
-            // 新增浏览记录
-            ProductViewHistory history = new ProductViewHistory();
-            history.setUserId(userId);
-            history.setProductId(productId);
-            history.setViewTime(LocalDateTime.now());
-            history.setViewDuration(0);
-            baseMapper.insert(history);
+            if (existHistory != null) {
+                // 更新浏览时间
+                existHistory.setViewTime(LocalDateTime.now());
+                baseMapper.updateById(existHistory);
+            } else {
+                // 新增浏览记录
+                ProductViewHistory history = new ProductViewHistory();
+                history.setUserId(userId);
+                history.setProductId(productId);
+                history.setViewTime(LocalDateTime.now());
+                history.setViewDuration(0);
+                baseMapper.insert(history);
+            }
         }
     }
 

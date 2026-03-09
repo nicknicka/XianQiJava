@@ -14,6 +14,7 @@ import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.mapper.OrderMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.mapper.UserMapper;
+import com.xx.xianqijava.service.OperationLogService;
 import com.xx.xianqijava.service.OrderService;
 import com.xx.xianqijava.vo.OrderVO;
 import lombok.RequiredArgsConstructor;
@@ -36,6 +37,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     private final ProductMapper productMapper;
     private final UserMapper userMapper;
+    private final OperationLogService operationLogService;
 
     private static final AtomicInteger ORDER_COUNTER = new AtomicInteger(0);
 
@@ -89,6 +91,28 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setRemark(createDTO.getRemark());
 
         save(order);
+
+        // 记录操作日志
+        User buyer = userMapper.selectById(buyerId);
+        if (buyer != null) {
+            operationLogService.recordLog(
+                    buyerId,
+                    buyer.getNickname(),
+                    "订单",
+                    "创建订单",
+                    "创建订单 " + order.getOrderNo(),
+                    "POST",
+                    "/order",
+                    null,
+                    null,
+                    null,
+                    null,
+                    1,
+                    null,
+                    order.getOrderId(),
+                    "order"
+            );
+        }
 
         log.info("订单创建成功, orderId={}, orderNo={}", order.getOrderId(), order.getOrderNo());
 
@@ -155,6 +179,28 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setStatus(1); // 进行中
         updateById(order);
 
+        // 记录操作日志
+        User seller = userMapper.selectById(sellerId);
+        if (seller != null) {
+            operationLogService.recordLog(
+                    sellerId,
+                    seller.getNickname(),
+                    "订单",
+                    "确认订单",
+                    "确认订单 " + order.getOrderNo(),
+                    "PUT",
+                    "/order/" + orderId + "/confirm",
+                    null,
+                    null,
+                    null,
+                    null,
+                    1,
+                    null,
+                    orderId,
+                    "order"
+            );
+        }
+
         log.info("订单确认成功, orderId={}", orderId);
     }
 
@@ -184,6 +230,29 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 更新订单状态
         order.setStatus(3); // 已取消
         updateById(order);
+
+        // 记录操作日志
+        User user = userMapper.selectById(userId);
+        if (user != null) {
+            String role = order.getBuyerId().equals(userId) ? "买家" : "卖家";
+            operationLogService.recordLog(
+                    userId,
+                    user.getNickname(),
+                    "订单",
+                    "取消订单",
+                    role + "取消订单 " + order.getOrderNo(),
+                    "PUT",
+                    "/order/" + orderId + "/cancel",
+                    null,
+                    null,
+                    null,
+                    null,
+                    1,
+                    null,
+                    orderId,
+                    "order"
+            );
+        }
 
         // 如果是待确认状态取消，恢复商品状态为在售
         if (originalStatus == 0) {
@@ -223,6 +292,28 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setFinishTime(LocalDateTime.now());
         updateById(order);
 
+        // 记录操作日志
+        User buyer = userMapper.selectById(userId);
+        if (buyer != null) {
+            operationLogService.recordLog(
+                    userId,
+                    buyer.getNickname(),
+                    "订单",
+                    "完成订单",
+                    "完成订单 " + order.getOrderNo(),
+                    "PUT",
+                    "/order/" + orderId + "/complete",
+                    null,
+                    null,
+                    null,
+                    null,
+                    1,
+                    null,
+                    orderId,
+                    "order"
+            );
+        }
+
         // 更新商品状态为已售
         Product product = productMapper.selectById(order.getProductId());
         if (product != null) {
@@ -257,6 +348,28 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         order.setStatus(4);
         updateById(order);
 
+        // 记录操作日志
+        User buyer = userMapper.selectById(buyerId);
+        if (buyer != null) {
+            operationLogService.recordLog(
+                    buyerId,
+                    buyer.getNickname(),
+                    "订单",
+                    "申请退款",
+                    "申请退款 " + order.getOrderNo(),
+                    "PUT",
+                    "/order/" + orderId + "/refund-request",
+                    null,
+                    null,
+                    null,
+                    null,
+                    1,
+                    null,
+                    orderId,
+                    "order"
+            );
+        }
+
         log.info("退款申请成功, orderId={}", orderId);
     }
 
@@ -283,6 +396,28 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 更新订单状态为已取消
         order.setStatus(3);
         updateById(order);
+
+        // 记录操作日志
+        User seller = userMapper.selectById(sellerId);
+        if (seller != null) {
+            operationLogService.recordLog(
+                    sellerId,
+                    seller.getNickname(),
+                    "订单",
+                    "同意退款",
+                    "同意退款 " + order.getOrderNo(),
+                    "PUT",
+                    "/order/" + orderId + "/refund-approve",
+                    null,
+                    null,
+                    null,
+                    null,
+                    1,
+                    null,
+                    orderId,
+                    "order"
+            );
+        }
 
         // 恢复商品状态为在售
         Product product = productMapper.selectById(order.getProductId());
@@ -317,6 +452,28 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 恢复订单状态为进行中
         order.setStatus(1);
         updateById(order);
+
+        // 记录操作日志
+        User seller = userMapper.selectById(sellerId);
+        if (seller != null) {
+            operationLogService.recordLog(
+                    sellerId,
+                    seller.getNickname(),
+                    "订单",
+                    "拒绝退款",
+                    "拒绝退款 " + order.getOrderNo(),
+                    "PUT",
+                    "/order/" + orderId + "/refund-reject",
+                    null,
+                    null,
+                    null,
+                    null,
+                    1,
+                    null,
+                    orderId,
+                    "order"
+            );
+        }
 
         log.info("拒绝退款成功, orderId={}", orderId);
     }

@@ -5,8 +5,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.dto.OrderCreateDTO;
 import com.xx.xianqijava.entity.Order;
+import com.xx.xianqijava.service.OperationLogService;
 import com.xx.xianqijava.service.OrderService;
 import com.xx.xianqijava.util.SecurityUtil;
+import com.xx.xianqijava.vo.OperationLogVO;
 import com.xx.xianqijava.vo.OrderVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -15,6 +17,8 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * 订单控制器
@@ -27,6 +31,7 @@ import org.springframework.web.bind.annotation.*;
 public class OrderController {
 
     private final OrderService orderService;
+    private final OperationLogService operationLogService;
 
     /**
      * 创建订单
@@ -144,5 +149,18 @@ public class OrderController {
         log.info("拒绝退款, orderId={}, userId={}", id, userId);
         orderService.rejectRefund(id, userId);
         return Result.success("已拒绝退款申请");
+    }
+
+    /**
+     * 获取订单操作日志
+     */
+    @GetMapping("/{id}/logs")
+    @Operation(summary = "获取订单操作日志")
+    public Result<List<OperationLogVO>> getOrderLogs(
+            @Parameter(description = "订单ID") @PathVariable("id") Long id) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取订单操作日志, orderId={}, userId={}", id, userId);
+        List<OperationLogVO> logs = operationLogService.getOrderLogs(id);
+        return Result.success(logs);
     }
 }

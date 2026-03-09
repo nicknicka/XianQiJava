@@ -1,6 +1,5 @@
 package com.xx.xianqijava.task;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.xx.xianqijava.entity.Order;
 import com.xx.xianqijava.enums.OrderStatus;
@@ -15,9 +14,16 @@ import java.time.LocalDateTime;
 
 /**
  * 订单定时任务
+ * <p>
+ * 校园二手交易平台采用线下交易模式，订单状态简化为：
+ * - 0: 待确认（订单创建后等待卖家确认）
+ * - 1: 进行中（订单已确认，双方线下交易）
+ * - 2: 已完成（交易完成）
+ * - 3: 已取消（订单已取消）
+ * - 4: 退款中（退款处理中）
  *
  * @author Claude Code
- * @since 2026-03-08
+ * @since 2026-03-09
  */
 @Slf4j
 @Component
@@ -26,116 +32,87 @@ public class OrderScheduledTask {
 
     private final OrderMapper orderMapper;
 
-    @Value("${business.order.auto-close-time:1800}")
+    /**
+     * 待确认订单自动关闭时间（默认7天）
+     * 订单创建后7天内卖家未确认，自动取消
+     */
+    @Value("${business.order.auto-close-time:604800}")
     private int autoCloseTimeSeconds;
 
-    @Value("${business.order.auto-finish-time:604800}")
+    /**
+     * 进行中订单自动完成时间（默认30天）
+     * 订单确认后30天内买家未确认完成，自动完成
+     */
+    @Value("${business.order.auto-finish-time:2592000}")
     private int autoFinishTimeSeconds;
 
     /**
-     * 自动关闭超时未支付的订单
-     * 每5分钟执行一次
+     * 自动关闭超时待确认的订单
+     * 每10分钟执行一次
+     * <p>
+     * 逻辑：订单创建后超过指定时间卖家仍未确认，自动取消订单
      */
-    @Scheduled(fixedRate = 300000)
-    public void autoClosePendingOrders() {
-        log.info("开始执行自动关闭待支付订单任务");
+    @Scheduled(fixedRate = 600000)
+    public void autoCloseUnconfirmedOrders() {
+        log.info("开始执行自动关闭待确认订单任务");
 
         try {
             LocalDateTime expireTime = LocalDateTime.now().minusSeconds(autoCloseTimeSeconds);
 
             LambdaUpdateWrapper<Order> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.eq(Order::getStatus, OrderStatus.PENDING.getCode())
+            updateWrapper.eq(Order::getStatus, OrderStatus.PENDING_CONFIRM.getCode())
                     .le(Order::getCreateTime, expireTime)
-                    .set(Order::getStatus, OrderStatus.CANCELLED.getCode())
-                    .set(Order::getCancelReason, "超时未支付自动关闭");
-
-            int updatedCount = orderMapper.update(null, updateWrapper);
-
-            log.info("自动关闭待支付订单任务完成，关闭订单数：{}", updatedCount);
-        } catch (Exception e) {
-            log.error("自动关闭待支付订单任务执行失败", e);
-        }
-    }
-
-    /**
-     * 自动关闭超时未确认的订单
-     * 每5分钟执行一次
-     */
-    @Scheduled(fixedRate = 300000)
-    public void autoCloseUnconfirmedOrders() {
-        log.info("开始执行自动关闭待确认订单任务");
-
-        try {
-            // 待确认订单超时时间：支付后3天未确认
-            LocalDateTime expireTime = LocalDateTime.now().minusDays(3);
-
-            LambdaUpdateWrapper<Order> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.eq(Order::getStatus, OrderStatus.PAID.getCode())
-                    .le(Order::getPayTime, expireTime)
                     .set(Order::getStatus, OrderStatus.CANCELLED.getCode())
                     .set(Order::getCancelReason, "超时未确认自动关闭");
 
             int updatedCount = orderMapper.update(null, updateWrapper);
 
-            log.info("自动关闭待确认订单任务完成，关闭订单数：{}", updatedCount);
+            if (updatedCount > 0) {
+                log.info("自动关闭待确认订单任务完成，关闭订单数：{}", updatedCount);
+            } else {
+                log.debug("自动关闭待确认订单任务完成，无需要关闭的订单");
+            }
         } catch (Exception e) {
             log.error("自动关闭待确认订单任务执行失败", e);
         }
     }
 
     /**
-     * 自动完成已发货超时的订单
-     * 每10分钟执行一次
+     * 自动完成超时进行中的订单
+     * 每1小时执行一次
+     * <p>
+     * 逻辑：订单确认后超过指定时间买家未确认完成，自动完成订单
+     * 适用于线下交易场景：双方已线下完成交易但忘记在平台上确认
      */
-    @Scheduled(fixedRate = 600000)
-    public void autoFinishShippedOrders() {
-        log.info("开始执行自动完成已发货订单任务");
+    @Scheduled(fixedRate = 3600000)
+    public void autoFinishInProgressOrders() {
+        log.info("开始执行自动完成进行中订单任务");
 
         try {
+            // 查询订单确认时间（使用更新时间代替，因为实体中无confirmTime字段）
+            // TODO: 优化时应在Order实体中添加confirmTime字段
             LocalDateTime expireTime = LocalDateTime.now().minusSeconds(autoFinishTimeSeconds);
 
             LambdaUpdateWrapper<Order> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.eq(Order::getStatus, OrderStatus.SHIPPED.getCode())
-                    .le(Order::getShipTime, expireTime)
+            updateWrapper.eq(Order::getStatus, OrderStatus.IN_PROGRESS.getCode())
+                    .le(Order::getUpdateTime, expireTime)
                     .set(Order::getStatus, OrderStatus.COMPLETED.getCode())
                     .set(Order::getFinishTime, LocalDateTime.now());
 
             int updatedCount = orderMapper.update(null, updateWrapper);
 
-            log.info("自动完成已发货订单任务完成，完成订单数：{}", updatedCount);
+            if (updatedCount > 0) {
+                log.info("自动完成进行中订单任务完成，完成订单数：{}", updatedCount);
+            } else {
+                log.debug("自动完成进行中订单任务完成，无需要完成的订单");
+            }
         } catch (Exception e) {
-            log.error("自动完成已发货订单任务执行失败", e);
+            log.error("自动完成进行中订单任务执行失败", e);
         }
     }
 
     /**
-     * 自动完成待收货超时的订单
-     * 每10分钟执行一次
-     */
-    @Scheduled(fixedRate = 600000)
-    public void autoFinishDeliveredOrders() {
-        log.info("开始执行自动完成待收货订单任务");
-
-        try {
-            // 待收货订单超时时间：发货后15天自动完成
-            LocalDateTime expireTime = LocalDateTime.now().minusDays(15);
-
-            LambdaUpdateWrapper<Order> updateWrapper = new LambdaUpdateWrapper<>();
-            updateWrapper.eq(Order::getStatus, OrderStatus.DELIVERED.getCode())
-                    .le(Order::getDeliverTime, expireTime)
-                    .set(Order::getStatus, OrderStatus.COMPLETED.getCode())
-                    .set(Order::getFinishTime, LocalDateTime.now());
-
-            int updatedCount = orderMapper.update(null, updateWrapper);
-
-            log.info("自动完成待收货订单任务完成，完成订单数：{}", updatedCount);
-        } catch (Exception e) {
-            log.error("自动完成待收货订单任务执行失败", e);
-        }
-    }
-
-    /**
-     * 自动取消超时未同意的转赠请求
+     * 自动取消超时转赠请求（共享物品功能）
      * 每30分钟执行一次
      */
     @Scheduled(fixedRate = 1800000)
@@ -143,13 +120,9 @@ public class OrderScheduledTask {
         log.info("开始执行自动取消超时转赠请求任务");
 
         try {
-            // 转赠请求超时时间：7天未同意自动取消
-            LocalDateTime expireTime = LocalDateTime.now().minusDays(7);
-
             // TODO: 实现转赠记录的自动取消逻辑
             // 需要查询 share_item_transfer 表中状态为待处理且创建时间超过7天的记录
-
-            log.info("自动取消超时转赠请求任务完成");
+            log.debug("自动取消超时转赠请求任务完成（暂未实现）");
         } catch (Exception e) {
             log.error("自动取消超时转赠请求任务执行失败", e);
         }
