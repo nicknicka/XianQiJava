@@ -12,7 +12,7 @@ import java.util.TimeZone;
 
 /**
  * Jackson 配置
- * 处理 BigDecimal 等类型的序列化
+ * 处理 BigDecimal、Long 等类型的序列化
  */
 @Configuration
 public class JacksonConfig {
@@ -28,9 +28,12 @@ public class JacksonConfig {
                 // 设置时区
                 jacksonObjectMapperBuilder.timeZone(TimeZone.getDefault());
 
+                // Long 序列化为字符串（解决雪花ID精度丢失问题）
+                jacksonObjectMapperBuilder.serializerByType(Long.class, ToStringSerializer.instance);
+                jacksonObjectMapperBuilder.serializerByType(Long.TYPE, ToStringSerializer.instance);
+
                 // BigDecimal 序列化为字符串（避免精度丢失）
-                // 如果需要序列化为数字，可以注释掉下面这行
-                // jacksonObjectMapperBuilder.serializerByType(BigDecimal.class, ToStringSerializer.instance);
+                jacksonObjectMapperBuilder.serializerByType(BigDecimal.class, ToStringSerializer.instance);
             }
         };
     }

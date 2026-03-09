@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -289,5 +290,130 @@ public class SensitiveWordManageController {
 
         log.info("更新敏感词状态成功, wordId={}, status={}", wordId, status);
         return Result.success(true);
+    }
+
+    // ========== 批量导入导出接口 ==========
+
+    /**
+     * 批量导入敏感词
+     */
+    @PostMapping("/import")
+    @Operation(summary = "批量导入敏感词")
+    @OperationLog(
+            module = "sensitive_word",
+            action = "import",
+            description = "批量导入敏感词"
+    )
+    public Result<Map<String, Object>> importSensitiveWords(@RequestBody Map<String, Object> requestData) {
+        log.info("批量导入敏感词");
+
+        @SuppressWarnings("unchecked")
+        List<String> words = (List<String>) requestData.get("words");
+        Integer type = (Integer) requestData.get("type");
+        Integer level = (Integer) requestData.get("level");
+
+        // 验证参数
+        if (words == null || words.isEmpty()) {
+            return Result.error("敏感词列表不能为空");
+        }
+        if (type == null) {
+            return Result.error("类型不能为空");
+        }
+        if (level == null) {
+            return Result.error("等级不能为空");
+        }
+
+        int successCount = 0;
+        int skipCount = 0;
+        LocalDateTime now = LocalDateTime.now();
+
+        for (String word : words) {
+            String trimmedWord = word.trim();
+            if (trimmedWord.isEmpty()) {
+                continue;
+            }
+
+            // 检查是否已存在
+            Long count = sensitiveWordMapper.selectCount(
+                new LambdaQueryWrapper<SensitiveWord>()
+                    .eq(SensitiveWord::getWord, trimmedWord)
+            );
+
+            if (count > 0) {
+                skipCount++;
+                continue;
+            }
+
+            // 创建敏感词
+            SensitiveWord sensitiveWord = new SensitiveWord();
+            sensitiveWord.setWord(trimmedWord);
+            sensitiveWord.setType(type);
+            sensitiveWord.setLevel(level);
+            sensitiveWord.setStatus(1); // 默认启用
+            sensitiveWord.setCreateTime(now);
+            sensitiveWord.setUpdateTime(now);
+            sensitiveWord.setDeleted(0);
+
+            sensitiveWordMapper.insert(sensitiveWord);
+            successCount++;
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("total", words.size());
+        result.put("success", successCount);
+        result.put("skip", skipCount);
+
+        log.info("批量导入敏感词成功, 总数={}, 成功={}, 跳过={}", words.size(), successCount, skipCount);
+        return Result.success(result);
+    }
+
+    /**
+     * 导出敏感词
+     */
+    @GetMapping("/export")
+    @Operation(summary = "导出敏感词")
+    @OperationLog(
+            module = "sensitive_word",
+            action = "export",
+            description = "导出敏感词"
+    )
+    public Result<List<Map<String, Object>>> exportSensitiveWords() {
+        log.info("导出敏感词");
+
+        List<SensitiveWord> sensitiveWords = sensitiveWordMapper.selectList(
+            new LambdaQueryWrapper<SensitiveWord>()
+                .eq(SensitiveWord::getStatus, 1)
+                .orderByAsc(SensitiveWord::getType)
+                .orderByAsc(SensitiveWord::getWord)
+        );
+
+        List<Map<String, Object>> exportData = new ArrayList<>();
+        for (SensitiveWord word : sensitiveWords) {
+            Map<String, Object> row = new HashMap<>();
+            row.put("word", word.getWord());
+            row.put("type", word.getType());
+            row.put("typeName", getTypeName(word.getType()));
+            row.put("level", word.getLevel());
+            row.put("levelName", word.getLevel() == 1 ? "一般" : "严重");
+            exportData.add(row);
+        }
+
+        log.info("导出敏感词成功, 数量={}", exportData.size());
+        return Result.success(exportData);
+    }
+
+    /**
+     * 获取类型名称
+     */
+    private String getTypeName(Integer type) {
+        if (type == null) {
+            return "未知";
+        }
+        return switch (type) {
+            case 1 -> "禁止词";
+            case 2 -> "敏感词";
+            case 3 -> "替换词";
+            default -> "未知";
+        };
     }
 }

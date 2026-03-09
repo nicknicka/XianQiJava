@@ -1,5 +1,6 @@
 package com.xx.xianqijava.controller.admin;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xx.xianqijava.annotation.OperationLog;
@@ -13,6 +14,7 @@ import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
@@ -153,13 +155,35 @@ public class SystemNotificationManageController {
     public Result<IPage<SystemNotification>> getNotificationList(
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
             @Parameter(description = "页大小") @RequestParam(defaultValue = "20") Integer size,
-            @Parameter(description = "通知状态") @RequestParam(required = false) Integer status,
-            @Parameter(description = "通知类型") @RequestParam(required = false) Integer type) {
+            @Parameter(description = "通知标题") @RequestParam(required = false) String title,
+            @Parameter(description = "通知类型") @RequestParam(required = false) String type,
+            @Parameter(description = "通知状态") @RequestParam(required = false) Integer status) {
 
-        log.info("管理员查询通知列表, page={}, size={}, status={}, type={}", page, size, status, type);
+        log.info("管理员查询通知列表, page={}, size={}, title={}, type={}, status={}", page, size, title, type, status);
+
+        // 构建查询条件
+        LambdaQueryWrapper<SystemNotification> queryWrapper = new LambdaQueryWrapper<>();
+
+        // 按标题模糊查询
+        if (StringUtils.isNotBlank(title)) {
+            queryWrapper.like(SystemNotification::getTitle, title);
+        }
+
+        // 按类型查询
+        if (StringUtils.isNotBlank(type)) {
+            queryWrapper.eq(SystemNotification::getType, type);
+        }
+
+        // 按状态查询
+        if (status != null) {
+            queryWrapper.eq(SystemNotification::getStatus, status);
+        }
+
+        // 按创建时间倒序排列
+        queryWrapper.orderByDesc(SystemNotification::getCreateTime);
 
         Page<SystemNotification> pageParam = new Page<>(page, size);
-        IPage<SystemNotification> notificationPage = systemNotificationService.page(pageParam);
+        IPage<SystemNotification> notificationPage = systemNotificationService.page(pageParam, queryWrapper);
 
         return Result.success(notificationPage);
     }

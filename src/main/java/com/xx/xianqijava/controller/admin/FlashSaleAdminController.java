@@ -19,6 +19,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.List;
 
 /**
@@ -167,13 +168,17 @@ public class FlashSaleAdminController {
             return Result.error("开始时间不能晚于结束时间");
         }
 
+        // 验证开始时间和结束时间必须在同一天
+        if (!session.getStartTime().toLocalDate().equals(session.getEndTime().toLocalDate())) {
+            return Result.error("临时场次的开始时间和结束时间必须在同一天");
+        }
+
         // 设置为临时场次
         session.setSessionType(2);
 
-        // 自动设置 session_time（从 startTime 提取时间部分）
-        if (session.getSessionTime() == null || session.getSessionTime().isEmpty()) {
-            session.setSessionTime(session.getStartTime().toLocalTime().toString());
-        }
+        // 自动设置 session_time（从 startTime 提取时间部分，用于显示）
+        LocalTime startTime = session.getStartTime().toLocalTime();
+        session.setSessionTime(startTime.toString());
 
         // 如果没设置排序，放在最后
         if (session.getSortOrder() == null) {
@@ -197,7 +202,7 @@ public class FlashSaleAdminController {
             description = "更新临时场次"
     )
     public Result<String> updateTemporarySession(
-            @Parameter(description = "场次ID") @PathVariable Long sessionId,
+            @Parameter(description = "场次ID") @PathVariable String sessionId,
             @RequestBody FlashSaleSession session) {
         FlashSaleSession existing = sessionMapper.selectById(sessionId);
         if (existing == null) {
@@ -209,11 +214,34 @@ public class FlashSaleAdminController {
             return Result.error("只能更新临时场次");
         }
 
-        session.setSessionId(sessionId);
+        // 验证必填字段
+        if (session.getName() == null || session.getName().trim().isEmpty()) {
+            return Result.error("场次名称不能为空");
+        }
+        if (session.getStartTime() == null) {
+            return Result.error("开始时间不能为空");
+        }
+        if (session.getEndTime() == null) {
+            return Result.error("结束时间不能为空");
+        }
+        if (session.getStartTime().isAfter(session.getEndTime())) {
+            return Result.error("开始时间不能晚于结束时间");
+        }
+
+        // 验证开始时间和结束时间必须在同一天
+        if (!session.getStartTime().toLocalDate().equals(session.getEndTime().toLocalDate())) {
+            return Result.error("临时场次的开始时间和结束时间必须在同一天");
+        }
+
+        // 自动设置 session_time（从 startTime 提取时间部分）
+        LocalTime startTime = session.getStartTime().toLocalTime();
+        session.setSessionTime(startTime.toString());
+
+        session.setSessionId(Long.valueOf(sessionId));
         session.setSessionType(2);  // 确保类型不变
         sessionMapper.updateById(session);
 
-        log.info("更新临时场次：{}", session.getName());
+        log.info("更新临时场次：{} ({} - {})", session.getName(), session.getStartTime(), session.getEndTime());
         return Result.success("更新成功");
     }
 
@@ -228,7 +256,7 @@ public class FlashSaleAdminController {
             description = "删除临时场次"
     )
     public Result<String> deleteTemporarySession(
-            @Parameter(description = "场次ID") @PathVariable Long sessionId) {
+            @Parameter(description = "场次ID") @PathVariable String sessionId) {
         FlashSaleSession existing = sessionMapper.selectById(sessionId);
         if (existing == null) {
             return Result.error("场次不存在");
