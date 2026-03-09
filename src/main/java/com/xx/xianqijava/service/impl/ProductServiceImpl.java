@@ -402,6 +402,13 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "更新商品失败");
         }
 
+        // 更新商品图片（如果提供）
+        List<String> imageUrls = updateDTO.getImageUrls();
+        if (imageUrls != null && !imageUrls.isEmpty()) {
+            log.info("更新商品图片, productId={}, 图片数量={}", productId, imageUrls.size());
+            saveProductImages(productId, imageUrls.toArray(new String[0]));
+        }
+
         log.info("商品信息更新成功, productId={}", productId);
         return convertToVO(product, userId);
     }
@@ -699,6 +706,9 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         return Math.toIntExact(lambdaQuery()
                 .eq(Product::getSellerId, userId)
                 .eq(Product::getDeleted, 0)
+                // 排除草稿状态（status=4）的商品，只统计正式发布的商品
+                // 状态：0-下架，1-在售，2-已售，3-预订，4-草稿
+                .ne(Product::getStatus, Product.STATUS_DRAFT)
                 .count());
     }
 

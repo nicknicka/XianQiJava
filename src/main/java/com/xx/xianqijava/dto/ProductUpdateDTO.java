@@ -51,6 +51,16 @@ public class ProductUpdateDTO {
     @Schema(description = "经度")
     private BigDecimal longitude;
 
+    @Schema(description = "商品图片URL列表（兼容前端）")
+    private List<String> images;
+
     @Schema(description = "商品图片URL列表")
     private List<String> imageUrls;
+
+    /**
+     * 获取图片URL列表（优先使用 images 字段）
+     */
+    public List<String> getImageUrls() {
+        return images != null ? images : imageUrls;
+    }
 }
