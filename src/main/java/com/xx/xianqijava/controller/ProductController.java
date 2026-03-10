@@ -123,10 +123,10 @@ public class ProductController {
     @PutMapping("/{id}/status")
     public Result<Void> updateProductStatus(
             @Parameter(description = "商品ID") @PathVariable("id") Long id,
-            @Parameter(description = "状态：0-下架 1-在售 2-已售") @RequestParam Integer status) {
+            @org.springframework.web.bind.annotation.RequestBody @Valid com.xx.xianqijava.dto.ProductStatusUpdateDTO statusDTO) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("更新商品状态, productId={}, status={}, userId={}", id, status, userId);
-        productService.updateProductStatus(id, status, userId);
+        log.info("更新商品状态, productId={}, status={}, userId={}", id, statusDTO.getStatus(), userId);
+        productService.updateProductStatus(id, statusDTO.getStatus(), userId);
         return Result.success("商品状态更新成功");
     }
 

@@ -61,6 +61,12 @@ public class Product extends BaseEntity {
     @Schema(description = "经度")
     private BigDecimal longitude;
 
+    @Schema(description = "是否支持邮寄：0-仅自提，1-支持邮寄")
+    private Boolean canDelivery;
+
+    @Schema(description = "配送费（元），NULL或0表示包邮，>0表示具体运费")
+    private BigDecimal deliveryFee;
+
     @Schema(description = "状态：0-下架，1-在售，2-已售，3-预订，4-草稿")
     private Integer status;
 

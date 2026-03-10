@@ -72,8 +72,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 5. 计算金额
         BigDecimal amount = product.getPrice().multiply(BigDecimal.valueOf(quantity));
 
-        // 6. 先将商品状态改为预订（防止超卖）
-        product.setStatus(3); // 预订状态
+        // 6. 先将商品状态改为已售（防止超卖）
+        product.setStatus(2); // 已售状态
         int updated = productMapper.updateById(product);
         if (updated == 0) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "商品已被其他买家下单，请稍后重试");
@@ -257,7 +257,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 如果是待确认状态取消，恢复商品状态为在售
         if (originalStatus == 0) {
             Product product = productMapper.selectById(order.getProductId());
-            if (product != null && product.getStatus() == 3) { // 预订状态
+            if (product != null && product.getStatus() == 2) { // 已售状态
                 product.setStatus(1); // 恢复在售
                 productMapper.updateById(product);
                 log.info("恢复商品状态为在售, productId={}", product.getProductId());

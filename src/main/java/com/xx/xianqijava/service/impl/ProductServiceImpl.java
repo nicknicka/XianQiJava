@@ -125,6 +125,13 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             product.setConditionLevel(createDTO.getConditionLevel());
         }
 
+        // 处理配送设置：将 freeShipping 转换为 deliveryFee
+        // 如果 freeShipping=true，设置 deliveryFee=0（包邮）
+        // 如果 freeShipping=false 且 deliveryFee 未设置，保持原值
+        if (createDTO.getFreeShipping() != null && createDTO.getFreeShipping()) {
+            product.setDeliveryFee(BigDecimal.ZERO);
+        }
+
         boolean saved = save(product);
         if (!saved) {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "商品创建失败");
@@ -424,6 +431,14 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         }
         if (updateDTO.getLongitude() != null) {
             product.setLongitude(updateDTO.getLongitude());
+        }
+
+        // 更新配送设置
+        if (updateDTO.getCanDelivery() != null) {
+            product.setCanDelivery(updateDTO.getCanDelivery());
+        }
+        if (updateDTO.getDeliveryFee() != null) {
+            product.setDeliveryFee(updateDTO.getDeliveryFee());
         }
 
         boolean updated = updateById(product);
@@ -759,7 +774,11 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Override
     public IPage<ProductVO> getMyProducts(Page<Product> page, Long userId, Integer status) {
-        log.info("获取我的商品列表, userId={}, page={}, status={}", userId, page.getCurrent(), status);
+        log.info("========== [我的发布] 开始查询商品 ==========");
+        log.info("   用户ID: {}", userId);
+        log.info("   页码: {}", page.getCurrent());
+        log.info("   页大小: {}", page.getSize());
+        log.info("   请求状态 status: {} (null=全部, 0=下架, 1=在售, 2=已售)", status);
 
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Product::getSellerId, userId);
@@ -767,11 +786,34 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
         if (status != null) {
             wrapper.eq(Product::getStatus, status);
+            log.info("   查询条件: 已添加状态过滤 status={}", status);
+        } else {
+            log.info("   查询条件: 未过滤状态（查询所有非删除、非草稿商品）");
         }
 
         wrapper.orderByDesc(Product::getCreateTime);
 
         IPage<Product> productPage = page(page, wrapper);
+
+        // 输出查询结果详情
+        log.info("========== [我的发布] 查询结果 ==========");
+        log.info("   总记录数: {}", productPage.getTotal());
+        log.info("   当前页记录数: {}", productPage.getRecords().size());
+
+        // 打印每个商品的详细信息
+        java.util.List<Product> records = productPage.getRecords();
+        for (int i = 0; i < records.size(); i++) {
+            Product p = records.get(i);
+            log.info("   商品 {}: id={}, title={}, status={}, deleted={}",
+                i + 1,
+                p.getProductId(),
+                p.getTitle(),
+                p.getStatus(),
+                p.getDeleted()
+            );
+        }
+        log.info("========== [我的发布] 查询完成 ==========");
+
         return productPage.convert(product -> convertToVO(product, userId));
     }
 

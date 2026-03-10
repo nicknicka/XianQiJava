@@ -66,7 +66,7 @@ public class ProductAuditVO {
     @Schema(description = "创建时间")
     private String createTime;
 
-    @Schema(description = "商品状态：0-下架，1-在售，2-已售，3-预订")
+    @Schema(description = "商品状态：0-下架，1-在售，2-已售")
     private Integer status;
 
     @Schema(description = "商品状态描述")

@@ -51,6 +51,12 @@ public class ProductUpdateDTO {
     @Schema(description = "经度")
     private BigDecimal longitude;
 
+    @Schema(description = "是否支持邮寄：0-仅自提，1-支持邮寄")
+    private Boolean canDelivery;
+
+    @Schema(description = "配送费（元），NULL或0表示包邮，>0表示具体运费")
+    private BigDecimal deliveryFee;
+
     @Schema(description = "商品图片URL列表（兼容前端）")
     private List<String> images;
 

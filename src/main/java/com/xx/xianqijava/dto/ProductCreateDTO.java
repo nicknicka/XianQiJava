@@ -62,6 +62,9 @@ public class ProductCreateDTO {
     @Schema(description = "是否包邮")
     private Boolean freeShipping;
 
+    @Schema(description = "配送费（元），NULL或0表示包邮，>0表示具体运费")
+    private BigDecimal deliveryFee;
+
     // ========== 秒杀配置 ==========
 
     @Schema(description = "是否参与秒杀")
