@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
-import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -16,13 +15,13 @@ import java.util.List;
 public class OrderVO {
 
     @Schema(description = "订单ID")
-    private Long orderId;
+    private String orderId;
 
     @Schema(description = "订单号")
     private String orderNo;
 
     @Schema(description = "商品ID")
-    private Long productId;
+    private String productId;
 
     @Schema(description = "商品标题")
     private String productTitle;
@@ -34,13 +33,13 @@ public class OrderVO {
     private Integer quantity;
 
     @Schema(description = "单价")
-    private BigDecimal unitPrice;
+    private String unitPrice;
 
     @Schema(description = "总价")
-    private BigDecimal totalPrice;
+    private String totalPrice;
 
     @Schema(description = "买家ID")
-    private Long buyerId;
+    private String buyerId;
 
     @Schema(description = "买家昵称")
     private String buyerNickname;
@@ -49,7 +48,7 @@ public class OrderVO {
     private String buyerAvatar;
 
     @Schema(description = "卖家ID")
-    private Long sellerId;
+    private String sellerId;
 
     @Schema(description = "卖家昵称")
     private String sellerNickname;

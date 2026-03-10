@@ -25,14 +25,15 @@ public interface ConversationService extends IService<Conversation> {
 
     /**
      * 创建或获取基于商品的会话
-     * 支持同一对用户基于不同商品创建多个独立会话
+     * 支持同一对用户基于不同商品或订单创建多个独立会话
      *
      * @param userId         当前用户ID
      * @param targetUserId   对方用户ID
      * @param relatedProductId 关联的商品ID（可选）
+     * @param relatedOrderId  关联的订单ID（可选）
      * @return 会话VO
      */
-    ConversationVO createOrUpdateConversation(Long userId, Long targetUserId, Long relatedProductId);
+    ConversationVO createOrUpdateConversation(Long userId, Long targetUserId, Long relatedProductId, Long relatedOrderId);
 
     /**
      * 根据用户ID和商品ID查找会话

@@ -69,4 +69,12 @@ public interface OrderService extends IService<Order> {
      * @return 订单数量
      */
     int countByUserId(Long userId);
+
+    /**
+     * 统计用户的买家订单数量（我买到的）
+     *
+     * @param userId 用户ID
+     * @return 买家订单数量
+     */
+    int countBuyerOrders(Long userId);
 }

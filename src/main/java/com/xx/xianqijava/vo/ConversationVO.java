@@ -1,5 +1,8 @@
 package com.xx.xianqijava.vo;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -11,6 +14,7 @@ import lombok.Data;
 public class ConversationVO {
 
     @Schema(description = "会话ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long conversationId;
 
     @Schema(description = "会话类型：1-单聊，2-群聊")
@@ -41,9 +45,11 @@ public class ConversationVO {
     private Integer unreadCount;
 
     @Schema(description = "关联的订单ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long relatedOrderId;
 
     @Schema(description = "关联的商品ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long relatedProductId;
 
     @Schema(description = "是否置顶")

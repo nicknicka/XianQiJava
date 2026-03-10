@@ -98,7 +98,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public ConversationVO createOrUpdateConversation(Long userId, Long targetUserId, Long relatedProductId) {
+    public ConversationVO createOrUpdateConversation(Long userId, Long targetUserId, Long relatedProductId, Long relatedOrderId) {
         if (userId.equals(targetUserId)) {
             throw new BusinessException(ErrorCode.BAD_REQUEST, "不能与自己创建会话");
         }
@@ -107,17 +107,20 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
         Long smallerId = userId < targetUserId ? userId : targetUserId;
         Long largerId = userId < targetUserId ? targetUserId : userId;
 
-        // 查询是否已存在相同（用户对 + 商品）的会话
+        // 查询是否已存在相同（用户对 + 商品/订单）的会话
         LambdaQueryWrapper<Conversation> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(Conversation::getUserId1, smallerId)
                 .eq(Conversation::getUserId2, largerId)
                 .eq(Conversation::getConversationType, 1);
 
-        // 如果指定了商品ID，则查找关联该商品的会话
-        if (relatedProductId != null) {
+        // 如果指定了订单ID，则查找关联该订单的会话
+        if (relatedOrderId != null) {
+            queryWrapper.eq(Conversation::getRelatedOrderId, relatedOrderId);
+        } else if (relatedProductId != null) {
+            // 如果指定了商品ID，则查找关联该商品的会话
             queryWrapper.eq(Conversation::getRelatedProductId, relatedProductId);
         } else {
-            // 如果没有指定商品ID，查找没有关联商品的会话（普通聊天）
+            // 如果没有指定商品ID和订单ID，查找没有关联的会话（普通聊天）
             queryWrapper.isNull(Conversation::getRelatedProductId)
                     .isNull(Conversation::getRelatedOrderId);
         }
@@ -131,6 +134,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
             conversation.setUserId2(largerId);
             conversation.setConversationType(1);
             conversation.setRelatedProductId(relatedProductId);
+            conversation.setRelatedOrderId(relatedOrderId);
             conversation.setUnreadCountUser1(0);
             conversation.setUnreadCountUser2(0);
             conversation.setIsMutedUser1(0);
@@ -140,11 +144,19 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
             conversation.setStatus(0);
 
             baseMapper.insert(conversation);
-            log.info("创建新会话, conversationId={}, userId1={}, userId2={}, relatedProductId={}",
-                    conversation.getConversationId(), smallerId, largerId, relatedProductId);
+            log.info("创建新会话, conversationId={}, userId1={}, userId2={}, relatedProductId={}, relatedOrderId={}",
+                    conversation.getConversationId(), smallerId, largerId, relatedProductId, relatedOrderId);
         } else {
-            log.info("使用已有会话, conversationId={}, relatedProductId={}",
-                    conversation.getConversationId(), relatedProductId);
+            // 如果已有会话但没有订单信息，更新订单信息
+            if (relatedOrderId != null && conversation.getRelatedOrderId() == null) {
+                conversation.setRelatedOrderId(relatedOrderId);
+                baseMapper.updateById(conversation);
+                log.info("更新会话订单信息, conversationId={}, relatedOrderId={}",
+                        conversation.getConversationId(), relatedOrderId);
+            } else {
+                log.info("使用已有会话, conversationId={}, relatedProductId={}, relatedOrderId={}",
+                        conversation.getConversationId(), relatedProductId, relatedOrderId);
+            }
         }
 
         return convertToVO(conversation, userId);
@@ -215,7 +227,11 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
                             // 置顶的按pinOrder排序，未置顶的排在后面
                             return isPinned ? (pinOrder != null ? 0 - pinOrder : 0) : 1000000;
                         })
-                        .thenComparing(Conversation::getLastMessageTime, Comparator.nullsLast(Comparator.reverseOrder()))
+                        .thenComparing((Conversation c) -> {
+                            // 如果有最后消息时间，使用消息时间；否则使用创建时间
+                            // 这样新创建的会话（没有消息）也会按创建时间倒序显示在前面
+                            return c.getLastMessageTime() != null ? c.getLastMessageTime() : c.getCreateTime();
+                        }, Comparator.reverseOrder())
                 )
                 .collect(Collectors.toList());
 

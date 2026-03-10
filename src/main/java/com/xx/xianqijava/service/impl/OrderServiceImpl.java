@@ -493,18 +493,24 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         OrderVO vo = new OrderVO();
         BeanUtil.copyProperties(order, vo);
 
+        // 手动转换 Long 和 BigDecimal 为 String（避免 JavaScript 精度丢失）
+        vo.setOrderId(order.getOrderId() != null ? String.valueOf(order.getOrderId()) : null);
+        vo.setProductId(order.getProductId() != null ? String.valueOf(order.getProductId()) : null);
+        vo.setBuyerId(order.getBuyerId() != null ? String.valueOf(order.getBuyerId()) : null);
+        vo.setSellerId(order.getSellerId() != null ? String.valueOf(order.getSellerId()) : null);
+
         // 查询商品信息
         Product product = productMapper.selectById(order.getProductId());
         if (product != null) {
             vo.setProductTitle(product.getTitle());
             // TODO: 从 product_image 表获取第一张图片
             // 计算单价
-            vo.setUnitPrice(product.getPrice());
+            vo.setUnitPrice(product.getPrice() != null ? String.valueOf(product.getPrice()) : null);
         }
 
         // 设置数量
         vo.setQuantity(quantity);
-        vo.setTotalPrice(order.getAmount());
+        vo.setTotalPrice(order.getAmount() != null ? String.valueOf(order.getAmount()) : null);
 
         // 查询买家信息
         User buyer = userMapper.selectById(order.getBuyerId());
@@ -545,13 +551,35 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
 
     @Override
     public int countByUserId(Long userId) {
-        // 统计作为买家和卖家的所有订单
-        long buyerCount = lambdaQuery()
-                .eq(Order::getBuyerId, userId)
-                .count();
-        long sellerCount = lambdaQuery()
-                .eq(Order::getSellerId, userId)
-                .count();
+        log.info("统计用户订单数量, userId={}", userId);
+
+        // 统计作为买家和卖家的所有订单（包括已取消、已退款）
+        // 使用 LambdaQueryWrapper 确保正确过滤用户ID
+        LambdaQueryWrapper<Order> buyerWrapper = new LambdaQueryWrapper<>();
+        buyerWrapper.eq(Order::getBuyerId, userId);
+        long buyerCount = count(buyerWrapper);
+
+        LambdaQueryWrapper<Order> sellerWrapper = new LambdaQueryWrapper<>();
+        sellerWrapper.eq(Order::getSellerId, userId);
+        long sellerCount = count(sellerWrapper);
+
+        log.info("用户订单统计结果, userId={}, buyerCount={}, sellerCount={}, total={}",
+            userId, buyerCount, sellerCount, buyerCount + sellerCount);
+
         return Math.toIntExact(buyerCount + sellerCount);
+    }
+
+    @Override
+    public int countBuyerOrders(Long userId) {
+        log.info("统计用户买家订单数量（我买到的）, userId={}", userId);
+
+        // 只统计作为买家的订单
+        LambdaQueryWrapper<Order> buyerWrapper = new LambdaQueryWrapper<>();
+        buyerWrapper.eq(Order::getBuyerId, userId);
+        long buyerCount = count(buyerWrapper);
+
+        log.info("用户买家订单统计结果, userId={}, buyerCount={}", userId, buyerCount);
+
+        return Math.toIntExact(buyerCount);
     }
 }

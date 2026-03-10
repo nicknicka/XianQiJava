@@ -54,6 +54,8 @@ public class ConversationController {
     public Result<ConversationVO> createOrUpdateConversation(@RequestBody Map<String, Object> requestBody) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
 
+        log.info("创建会话请求体: {}", requestBody);
+
         // 从请求体中获取参数
         Long targetUserId = requestBody.get("targetId") != null
             ? Long.valueOf(requestBody.get("targetId").toString())
@@ -61,14 +63,25 @@ public class ConversationController {
         Long relatedProductId = requestBody.get("relatedProductId") != null
             ? Long.valueOf(requestBody.get("relatedProductId").toString())
             : null;
+        Long relatedOrderId = requestBody.get("relatedOrderId") != null
+            ? Long.valueOf(requestBody.get("relatedOrderId").toString())
+            : null;
+
+        log.info("解析后的参数: userId={}, targetUserId={}, relatedProductId={}, relatedOrderId={}",
+                userId, targetUserId, relatedProductId, relatedOrderId);
 
         if (targetUserId == null) {
+            log.error("缺少必要参数: targetId, requestBody={}", requestBody);
             return Result.error(400, "缺少必要参数: targetId");
         }
 
-        log.info("创建或获取基于商品的会话, userId={}, targetUserId={}, relatedProductId={}",
-                userId, targetUserId, relatedProductId);
-        ConversationVO conversationVO = conversationService.createOrUpdateConversation(userId, targetUserId, relatedProductId);
+        log.info("创建或获取会话, userId={}, targetUserId={}, relatedProductId={}, relatedOrderId={}",
+                userId, targetUserId, relatedProductId, relatedOrderId);
+        ConversationVO conversationVO = conversationService.createOrUpdateConversation(userId, targetUserId, relatedProductId, relatedOrderId);
+
+        log.info("会话创建/获取成功, conversationId={}, conversationType={}",
+                conversationVO.getConversationId(), conversationVO.getConversationType());
+
         return Result.success(conversationVO);
     }
 

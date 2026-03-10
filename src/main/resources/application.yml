@@ -40,6 +40,10 @@ spring:
           max-idle: 8
           max-active: 8
           max-wait: -1ms
+  # 禁用 Redis（如不需要缓存功能，取消下面注释）
+  # autoconfigure:
+  #   exclude:
+  #     - org.springframework.boot.autoconfigure.data.redis.RedisAutoConfiguration
 
   # Jackson 配置
   jackson:

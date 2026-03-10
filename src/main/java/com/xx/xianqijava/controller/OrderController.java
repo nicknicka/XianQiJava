@@ -51,9 +51,11 @@ public class OrderController {
     @GetMapping("/{id}")
     @Operation(summary = "获取订单详情")
     public Result<OrderVO> getOrderDetail(
-            @Parameter(description = "订单ID") @PathVariable("id") Long id) {
+            @Parameter(description = "订单ID") @PathVariable("id") String id) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
-        OrderVO orderVO = orderService.getOrderDetail(id, userId);
+        // 将字符串转换为 Long（处理前端传递的大数值 ID）
+        Long orderId = Long.parseLong(id);
+        OrderVO orderVO = orderService.getOrderDetail(orderId, userId);
         return Result.success(orderVO);
     }
 
@@ -79,10 +81,11 @@ public class OrderController {
     @PutMapping("/{id}/confirm")
     @Operation(summary = "确认订单")
     public Result<Void> confirmOrder(
-            @Parameter(description = "订单ID") @PathVariable("id") Long id) {
+            @Parameter(description = "订单ID") @PathVariable("id") String id) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("确认订单, orderId={}, userId={}", id, userId);
-        orderService.confirmOrder(id, userId);
+        Long orderId = Long.parseLong(id);
+        log.info("确认订单, orderId={}, userId={}", orderId, userId);
+        orderService.confirmOrder(orderId, userId);
         return Result.success("订单确认成功");
     }
 
@@ -92,10 +95,11 @@ public class OrderController {
     @PutMapping("/{id}/cancel")
     @Operation(summary = "取消订单")
     public Result<Void> cancelOrder(
-            @Parameter(description = "订单ID") @PathVariable("id") Long id) {
+            @Parameter(description = "订单ID") @PathVariable("id") String id) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("取消订单, orderId={}, userId={}", id, userId);
-        orderService.cancelOrder(id, userId);
+        Long orderId = Long.parseLong(id);
+        log.info("取消订单, orderId={}, userId={}", orderId, userId);
+        orderService.cancelOrder(orderId, userId);
         return Result.success("订单取消成功");
     }
 
@@ -105,10 +109,11 @@ public class OrderController {
     @PutMapping("/{id}/complete")
     @Operation(summary = "完成订单")
     public Result<Void> completeOrder(
-            @Parameter(description = "订单ID") @PathVariable("id") Long id) {
+            @Parameter(description = "订单ID") @PathVariable("id") String id) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("完成订单, orderId={}, userId={}", id, userId);
-        orderService.completeOrder(id, userId);
+        Long orderId = Long.parseLong(id);
+        log.info("完成订单, orderId={}, userId={}", orderId, userId);
+        orderService.completeOrder(orderId, userId);
         return Result.success("订单完成成功");
     }
 
@@ -118,10 +123,11 @@ public class OrderController {
     @PutMapping("/{id}/refund-request")
     @Operation(summary = "申请退款")
     public Result<Void> requestRefund(
-            @Parameter(description = "订单ID") @PathVariable("id") Long id) {
+            @Parameter(description = "订单ID") @PathVariable("id") String id) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("申请退款, orderId={}, userId={}", id, userId);
-        orderService.requestRefund(id, userId);
+        Long orderId = Long.parseLong(id);
+        log.info("申请退款, orderId={}, userId={}", orderId, userId);
+        orderService.requestRefund(orderId, userId);
         return Result.success("退款申请已提交");
     }
 
@@ -131,10 +137,11 @@ public class OrderController {
     @PutMapping("/{id}/refund-approve")
     @Operation(summary = "同意退款")
     public Result<Void> approveRefund(
-            @Parameter(description = "订单ID") @PathVariable("id") Long id) {
+            @Parameter(description = "订单ID") @PathVariable("id") String id) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("同意退款, orderId={}, userId={}", id, userId);
-        orderService.approveRefund(id, userId);
+        Long orderId = Long.parseLong(id);
+        log.info("同意退款, orderId={}, userId={}", orderId, userId);
+        orderService.approveRefund(orderId, userId);
         return Result.success("退款成功");
     }
 
@@ -144,10 +151,11 @@ public class OrderController {
     @PutMapping("/{id}/refund-reject")
     @Operation(summary = "拒绝退款")
     public Result<Void> rejectRefund(
-            @Parameter(description = "订单ID") @PathVariable("id") Long id) {
+            @Parameter(description = "订单ID") @PathVariable("id") String id) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("拒绝退款, orderId={}, userId={}", id, userId);
-        orderService.rejectRefund(id, userId);
+        Long orderId = Long.parseLong(id);
+        log.info("拒绝退款, orderId={}, userId={}", orderId, userId);
+        orderService.rejectRefund(orderId, userId);
         return Result.success("已拒绝退款申请");
     }
 
@@ -157,10 +165,11 @@ public class OrderController {
     @GetMapping("/{id}/logs")
     @Operation(summary = "获取订单操作日志")
     public Result<List<OperationLogVO>> getOrderLogs(
-            @Parameter(description = "订单ID") @PathVariable("id") Long id) {
+            @Parameter(description = "订单ID") @PathVariable("id") String id) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
-        log.info("获取订单操作日志, orderId={}, userId={}", id, userId);
-        List<OperationLogVO> logs = operationLogService.getOrderLogs(id);
+        Long orderId = Long.parseLong(id);
+        log.info("获取订单操作日志, orderId={}, userId={}", orderId, userId);
+        List<OperationLogVO> logs = operationLogService.getOrderLogs(orderId);
         return Result.success(logs);
     }
 }
