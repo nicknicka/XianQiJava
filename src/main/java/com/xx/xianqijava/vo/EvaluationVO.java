@@ -61,6 +61,9 @@ public class EvaluationVO {
     @Schema(description = "商品图片")
     private String productImage;
 
+    @Schema(description = "商品价格（订单成交价）")
+    private java.math.BigDecimal productPrice;
+
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @Schema(description = "创建时间")
     private LocalDateTime createTime;

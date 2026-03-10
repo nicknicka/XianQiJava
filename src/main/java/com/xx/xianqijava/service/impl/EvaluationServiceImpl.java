@@ -239,6 +239,8 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
         if (order != null) {
             vo.setOrderNo(order.getOrderNo());
             vo.setProductId(order.getProductId());
+            // 设置商品价格（使用订单成交金额）
+            vo.setProductPrice(order.getAmount());
 
             // 查询商品信息
             Product product = productMapper.selectById(order.getProductId());
