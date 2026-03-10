@@ -100,6 +100,5 @@ public class Product extends BaseEntity {
     @Schema(description = "浏览次数")
     private Integer viewCount;
 
-    @Schema(description = "收藏次数")
-    private Integer favoriteCount;
+    // 注意：收藏次数不再维护缓存字段，改为实时查询 product_favorite 表统计
 }

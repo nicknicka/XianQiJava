@@ -12,6 +12,7 @@ import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.service.ProductFavoriteService;
 import com.xx.xianqijava.service.ProductService;
 import com.xx.xianqijava.vo.ProductVO;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,6 +22,7 @@ import java.util.Objects;
 /**
  * 商品收藏服务实现类
  */
+@Slf4j
 @Service
 public class ProductFavoriteServiceImpl extends ServiceImpl<ProductFavoriteMapper, ProductFavorite> implements ProductFavoriteService {
 
@@ -35,9 +37,12 @@ public class ProductFavoriteServiceImpl extends ServiceImpl<ProductFavoriteMappe
     @Override
     @Transactional
     public void addFavorite(Long userId, Long productId) {
+        log.info("📊 [收藏统计] 用户添加收藏, userId={}, productId={}", userId, productId);
+
         // 检查商品是否存在
         Product product = productMapper.selectById(productId);
         if (product == null || product.getDeleted() == 1) {
+            log.warn("❌ [收藏统计] 商品不存在或已删除, productId={}", productId);
             throw new BusinessException("商品不存在");
         }
 
@@ -47,6 +52,7 @@ public class ProductFavoriteServiceImpl extends ServiceImpl<ProductFavoriteMappe
                 .eq(ProductFavorite::getProductId, productId);
         Long count = baseMapper.selectCount(queryWrapper);
         if (count > 0) {
+            log.warn("⚠️  [收藏统计] 用户已收藏该商品, userId={}, productId={}", userId, productId);
             throw new BusinessException("已收藏该商品");
         }
 
@@ -55,14 +61,16 @@ public class ProductFavoriteServiceImpl extends ServiceImpl<ProductFavoriteMappe
         favorite.setUserId(userId);
         favorite.setProductId(productId);
         baseMapper.insert(favorite);
+        log.info("✅ [收藏统计] 收藏记录创建成功, userId={}, productId={}", userId, productId);
 
-        // 更新商品收藏量
-        productMapper.incrementFavoriteCount(productId);
+        // 注意：不再维护 product.favorite_count 缓存字段，改为实时查询统计
     }
 
     @Override
     @Transactional
     public void removeFavorite(Long userId, Long productId) {
+        log.info("📊 [收藏统计] 用户取消收藏, userId={}, productId={}", userId, productId);
+
         LambdaQueryWrapper<ProductFavorite> queryWrapper = new LambdaQueryWrapper<>();
         queryWrapper.eq(ProductFavorite::getUserId, userId)
                 .eq(ProductFavorite::getProductId, productId);
@@ -72,9 +80,11 @@ public class ProductFavoriteServiceImpl extends ServiceImpl<ProductFavoriteMappe
         if (count > 0) {
             // 删除收藏记录
             baseMapper.delete(queryWrapper);
+            log.info("✅ [收藏统计] 收藏记录删除成功, userId={}, productId={}", userId, productId);
 
-            // 减少商品收藏量
-            productMapper.decrementFavoriteCount(productId);
+            // 注意：不再维护 product.favorite_count 缓存字段，改为实时查询统计
+        } else {
+            log.warn("⚠️  [收藏统计] 未找到收藏记录, userId={}, productId={}", userId, productId);
         }
     }
 

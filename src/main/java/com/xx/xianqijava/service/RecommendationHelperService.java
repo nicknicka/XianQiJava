@@ -23,6 +23,7 @@ public class RecommendationHelperService {
      * 计算商品的综合推荐评分
      *
      * @param product           商品
+     * @param favoriteCount     收藏数量（从 ProductVO 获取或实时查询）
      * @param viewCountWeight   浏览量权重
      * @param favoriteCountWeight 收藏量权重
      * @param freshnessWeight   新鲜度权重
@@ -30,6 +31,7 @@ public class RecommendationHelperService {
      * @return 综合评分 (0-100)
      */
     public double calculateProductScore(Product product,
+                                        int favoriteCount,
                                         double viewCountWeight,
                                         double favoriteCountWeight,
                                         double freshnessWeight,
@@ -38,7 +40,7 @@ public class RecommendationHelperService {
         double viewScore = Math.min(30, Math.log10(product.getViewCount() + 1) * 10);
 
         // 归一化收藏量评分 (0-30分)
-        double favoriteScore = Math.min(30, Math.log10(product.getFavoriteCount() + 1) * 10);
+        double favoriteScore = Math.min(30, Math.log10(favoriteCount + 1) * 10);
 
         // 新鲜度评分 (0-40分，越新分数越高)
         double freshnessScore = Math.max(0, 40 - daysSinceCreated * freshnessWeight);

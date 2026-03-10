@@ -100,7 +100,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         wrapper.in(Product::getCategoryId, favoriteCategoryIds)
                 .eq(Product::getStatus, 1)
                 .notIn(Product::getProductId, favoriteProductIds)
-                .orderByDesc(Product::getFavoriteCount) // 按收藏量排序
+                .orderByDesc(Product::getViewCount) // 按浏览量排序（收藏数改为实时查询，不能在SQL层排序）
                 .last("LIMIT " + limit);
 
         List<Product> products = productService.list(wrapper);
@@ -152,7 +152,7 @@ public class RecommendationServiceImpl implements RecommendationService {
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
         wrapper.in(Product::getProductId, recommendedProductIds)
                 .eq(Product::getStatus, 1)
-                .orderByDesc(Product::getViewCount, Product::getFavoriteCount)
+                .orderByDesc(Product::getViewCount) // 按浏览量排序（收藏数改为实时查询，不能在SQL层排序）
                 .last("LIMIT " + limit);
 
         List<Product> products = productService.list(wrapper);
@@ -226,8 +226,7 @@ public class RecommendationServiceImpl implements RecommendationService {
 
         LambdaQueryWrapper<Product> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(Product::getStatus, 1) // 在售
-                .orderByDesc(Product::getViewCount) // 按浏览量排序
-                .orderByDesc(Product::getFavoriteCount); // 再按收藏量排序
+                .orderByDesc(Product::getViewCount); // 按浏览量排序（收藏数改为实时查询，不能在SQL层排序）
 
         if (categoryId != null) {
             wrapper.eq(Product::getCategoryId, categoryId);

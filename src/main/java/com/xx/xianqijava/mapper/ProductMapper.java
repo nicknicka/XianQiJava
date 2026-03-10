@@ -33,13 +33,6 @@ public interface ProductMapper extends BaseMapper<Product> {
      */
     void incrementViewCount(@Param("productId") Long productId);
 
-    /**
-     * 增加商品收藏量
-     */
-    void incrementFavoriteCount(@Param("productId") Long productId);
-
-    /**
-     * 减少商品收藏量
-     */
-    void decrementFavoriteCount(@Param("productId") Long productId);
+    // 注意：收藏计数不再维护缓存字段，已移除 incrementFavoriteCount 和 decrementFavoriteCount
+    // 收藏数通过实时查询 product_favorite 表统计
 }

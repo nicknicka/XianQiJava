@@ -138,7 +138,7 @@ public class RecommendationServiceImplV2 {
 
         for (Product product : products) {
             ProductVO vo = productService.convertToVO(product, userId);
-            double score = calculateProductScore(product, 0.4, 0.4, 0.2);
+            double score = calculateProductScore(product, vo, 0.4, 0.4, 0.2);
             scoredProducts.put(vo, score);
         }
 
@@ -179,7 +179,7 @@ public class RecommendationServiceImplV2 {
 
         for (Product product : products) {
             ProductVO vo = productService.convertToVO(product, userId);
-            double score = calculateProductScore(product, 0.3, 0.5, 0.2);
+            double score = calculateProductScore(product, vo, 0.3, 0.5, 0.2);
             scoredProducts.put(vo, score);
         }
 
@@ -236,7 +236,7 @@ public class RecommendationServiceImplV2 {
                     if (product != null && product.getStatus() == 1) {
                         ProductVO vo = productService.convertToVO(product, userId);
                         // 综合相似度和商品热度计算评分
-                        double score = similarity * 50 + calculateProductScore(product, 0.3, 0.3, 0.4);
+                        double score = similarity * 50 + calculateProductScore(product, vo, 0.3, 0.3, 0.4);
                         scoredProducts.put(vo, score);
                         recommendedIds.add(productId);
                     }
@@ -295,7 +295,7 @@ public class RecommendationServiceImplV2 {
                 // 距离评分 + 商品热度评分
                 double distanceScore = helperService.calculateDistanceScore(
                         distance, config.getGeo().getDistanceDecayFactor());
-                double productScore = calculateProductScore(product, 0.3, 0.3, 0.4);
+                double productScore = calculateProductScore(product, vo, 0.3, 0.3, 0.4);
                 double totalScore = distanceScore * 50 + productScore;
                 scoredProducts.put(vo, totalScore);
             }
@@ -328,9 +328,8 @@ public class RecommendationServiceImplV2 {
             wrapper.eq(Product::getCategoryId, categoryId);
         }
 
-        // 按浏览量和收藏量综合排序
+        // 按浏览量排序（收藏数改为实时查询，不能在SQL层排序）
         wrapper.orderByDesc(Product::getViewCount)
-                .orderByDesc(Product::getFavoriteCount)
                 .last("LIMIT " + (limit * 2)); // 多取一些用于排序
 
         List<Product> products = productService.list(wrapper);
@@ -339,7 +338,7 @@ public class RecommendationServiceImplV2 {
         Map<ProductVO, Double> scoredProducts = new HashMap<>();
         for (Product product : products) {
             ProductVO vo = productService.convertToVO(product, null);
-            double score = calculateProductScore(product, 0.5, 0.5, 0.0);
+            double score = calculateProductScore(product, vo, 0.5, 0.5, 0.0);
             scoredProducts.put(vo, score);
         }
 
@@ -381,12 +380,13 @@ public class RecommendationServiceImplV2 {
 
     /**
      * 计算商品评分
+     * 注意：需要传入 ProductVO 以获取实时的收藏数量
      */
-    private double calculateProductScore(Product product, double viewWeight,
+    private double calculateProductScore(Product product, ProductVO vo, double viewWeight,
                                          double favoriteWeight, double freshnessWeight) {
         long daysSinceCreated = helperService.calculateDaysSinceCreated(product.getCreateTime());
         return helperService.calculateProductScore(
-                product, viewWeight, favoriteWeight, freshnessWeight, daysSinceCreated);
+                product, vo.getFavoriteCount(), viewWeight, favoriteWeight, freshnessWeight, daysSinceCreated);
     }
 
     /**

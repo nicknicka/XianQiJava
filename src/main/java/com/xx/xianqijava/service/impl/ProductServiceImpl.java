@@ -169,19 +169,28 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
     @Override
     public ProductVO getProductDetail(Long productId, Long userId) {
-        log.info("获取商品详情, productId={}, userId={}", productId, userId);
+        log.info("📊 [浏览统计] 获取商品详情, productId={}, userId={}", productId, userId);
         Product product = getById(productId);
         if (product == null) {
             throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
 
+        // 记录当前浏览数
+        Integer currentViewCount = product.getViewCount() != null ? product.getViewCount() : 0;
+        log.info("📈 [浏览统计] 当前浏览数, productId={}, viewCount={}", productId, currentViewCount);
+
         // 记录浏览历史（仅登录用户）
         productViewHistoryService.recordViewHistory(userId, productId);
 
         // 更新商品浏览量（无论是否登录）
-        log.info("准备更新商品浏览量, productId={}", productId);
+        log.info("⏳ [浏览统计] 准备更新商品浏览量, productId={}", productId);
         baseMapper.incrementViewCount(productId);
-        log.info("商品浏览量更新完成, productId={}", productId);
+
+        // 手动更新对象中的浏览数，确保返回最新值
+        product.setViewCount(currentViewCount + 1);
+
+        log.info("✅ [浏览统计] 商品浏览量更新完成, productId={}, 之前={}, 之后={}",
+                productId, currentViewCount, product.getViewCount());
 
         return convertToVO(product, userId);
     }
@@ -200,16 +209,27 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
      * 获取秒杀商品详情
      */
     private ProductVO getFlashSaleProductDetail(Long productId, Long userId) {
+        log.info("📊 [浏览统计-秒杀] 获取秒杀商品详情, productId={}, userId={}", productId, userId);
         Product product = getById(productId);
         if (product == null) {
             throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
         }
+
+        // 记录当前浏览数
+        Integer currentViewCount = product.getViewCount() != null ? product.getViewCount() : 0;
+        log.info("📈 [浏览统计-秒杀] 当前浏览数, productId={}, viewCount={}", productId, currentViewCount);
 
         // 记录浏览历史（仅登录用户）
         productViewHistoryService.recordViewHistory(userId, productId);
 
         // 更新商品浏览量（无论是否登录）
         baseMapper.incrementViewCount(productId);
+
+        // 手动更新对象中的浏览数，确保返回最新值
+        product.setViewCount(currentViewCount + 1);
+
+        log.info("✅ [浏览统计-秒杀] 商品浏览量更新完成, productId={}, 之前={}, 之后={}",
+                productId, currentViewCount, product.getViewCount());
 
         // 转换为基础 VO
         ProductVO productVO = convertToVO(product, userId);
@@ -458,16 +478,18 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             vo.setCategoryName(category.getName());
         }
 
-        // 从 product_statistics 表获取统计数据
-        ProductStatistics statistics = productStatisticsMapper.selectById(product.getProductId());
-        if (statistics != null) {
-            vo.setViewCount(statistics.getViewCount());
-            vo.setFavoriteCount(statistics.getFavoriteCount());
-        } else {
-            // 如果统计数据不存在，使用默认值
-            vo.setViewCount(0);
-            vo.setFavoriteCount(0);
-        }
+        // 获取统计数据
+        // 浏览数直接从 product 表获取（已累计）
+        vo.setViewCount(product.getViewCount() != null ? product.getViewCount() : 0);
+
+        // 收藏数实时查询 product_favorite 表统计（不使用缓存的 favorite_count）
+        LambdaQueryWrapper<ProductFavorite> favoriteCountWrapper = new LambdaQueryWrapper<>();
+        favoriteCountWrapper.eq(ProductFavorite::getProductId, product.getProductId());
+        long favoriteCount = productFavoriteService.count(favoriteCountWrapper);
+        vo.setFavoriteCount((int) favoriteCount);
+
+        log.debug("📊 [统计数据] productId={}, 浏览数={}, 收藏数={}",
+                product.getProductId(), vo.getViewCount(), vo.getFavoriteCount());
 
         // 获取商品图片
         LambdaQueryWrapper<ProductImage> imageWrapper = new LambdaQueryWrapper<>();

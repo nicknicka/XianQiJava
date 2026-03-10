@@ -58,6 +58,7 @@
     </select>
 
     <!-- 增加商品浏览量 -->
+    <!-- 日志：每次访问商品详情页时自动+1，记录在 ProductServiceImpl.getProductDetail() -->
     <update id="incrementViewCount">
         UPDATE product
         SET view_count = COALESCE(view_count, 0) + 1
@@ -65,20 +66,7 @@
           AND deleted = 0
     </update>
 
-    <!-- 增加商品收藏量 -->
-    <update id="incrementFavoriteCount">
-        UPDATE product
-        SET favorite_count = COALESCE(favorite_count, 0) + 1
-        WHERE product_id = #{productId}
-          AND deleted = 0
-    </update>
-
-    <!-- 减少商品收藏量 -->
-    <update id="decrementFavoriteCount">
-        UPDATE product
-        SET favorite_count = GREATEST(COALESCE(favorite_count, 0) - 1, 0)
-        WHERE product_id = #{productId}
-          AND deleted = 0
-    </update>
+    <!-- 注意：收藏计数不再维护缓存字段，已移除 incrementFavoriteCount 和 decrementFavoriteCount -->
+    <!-- 收藏数通过实时查询 product_favorite 表统计：SELECT COUNT(*) FROM product_favorite WHERE product_id = ? -->
 
 </mapper>
