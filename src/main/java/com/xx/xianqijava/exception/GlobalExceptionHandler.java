@@ -78,6 +78,10 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(RuntimeException.class)
     public Result<?> handleRuntimeException(RuntimeException e) {
         log.error("运行时异常: ", e);
+        log.error("异常类型: {}", e.getClass().getName());
+        log.error("异常消息: {}", e.getMessage());
+        // 输出完整的堆栈跟踪到控制台
+        e.printStackTrace(System.out);
         return Result.error(ErrorCode.INTERNAL_ERROR.getCode(), "系统繁忙，请稍后重试");
     }
 
