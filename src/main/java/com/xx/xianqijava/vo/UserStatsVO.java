@@ -20,9 +20,9 @@ public class UserStatsVO {
     @Schema(description = "订单数")
     private Integer orderCount;
 
-    @Schema(description = "收藏数")
-    private Integer favoriteCount;
+    @Schema(description = "关注数")
+    private Integer followingCount;
 
-    @Schema(description = "评价数")
-    private Integer evaluationCount;
+    @Schema(description = "粉丝数")
+    private Integer followerCount;
 }

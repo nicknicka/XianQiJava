@@ -486,21 +486,21 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             int orderCount = orderService.countByUserId(userId);
             statsVO.setOrderCount(orderCount);
 
-            // 统计我的收藏数量
-            int favoriteCount = productFavoriteService.countByUserId(userId);
-            statsVO.setFavoriteCount(favoriteCount);
+            // 统计我的关注数量
+            int followingCount = userFollowService.countFollowing(userId);
+            statsVO.setFollowingCount(followingCount);
 
-            // 统计收到的评价数量
-            int evaluationCount = evaluationService.countByEvaluatedUserId(userId);
-            statsVO.setEvaluationCount(evaluationCount);
+            // 统计我的粉丝数量
+            int followerCount = userFollowService.countFollowers(userId);
+            statsVO.setFollowerCount(followerCount);
 
         } catch (Exception e) {
             log.error("获取用户统计数据失败, userId={}", userId, e);
             // 如果统计失败，设置默认值
             statsVO.setPublishCount(0);
             statsVO.setOrderCount(0);
-            statsVO.setFavoriteCount(0);
-            statsVO.setEvaluationCount(0);
+            statsVO.setFollowingCount(0);
+            statsVO.setFollowerCount(0);
         }
 
         return statsVO;

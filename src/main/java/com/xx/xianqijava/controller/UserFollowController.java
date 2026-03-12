@@ -66,13 +66,15 @@ public class UserFollowController {
 
     /**
      * 获取关注列表
+     * @param userId 用户ID，可选。不传则查询当前登录用户的关注列表
      */
     @Operation(summary = "获取关注列表")
     @GetMapping("/following")
     public Result<IPage<UserInfoVO>> getFollowingList(
+            @Parameter(description = "用户ID") @RequestParam(required = false) Long userId,
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
             @Parameter(description = "页大小") @RequestParam(defaultValue = "20") Integer size) {
-        Long followerId = SecurityUtil.getCurrentUserIdRequired();
+        Long followerId = userId != null ? userId : SecurityUtil.getCurrentUserIdRequired();
         log.info("获取关注列表请求, followerId={}, page={}, size={}", followerId, page, size);
 
         Page<UserFollow> pageParam = new Page<>(page, size);
@@ -82,13 +84,15 @@ public class UserFollowController {
 
     /**
      * 获取粉丝列表
+     * @param userId 用户ID，可选。不传则查询当前登录用户的粉丝列表
      */
     @Operation(summary = "获取粉丝列表")
     @GetMapping("/followers")
     public Result<IPage<UserInfoVO>> getFollowerList(
+            @Parameter(description = "用户ID") @RequestParam(required = false) Long userId,
             @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer page,
             @Parameter(description = "页大小") @RequestParam(defaultValue = "20") Integer size) {
-        Long followingId = SecurityUtil.getCurrentUserIdRequired();
+        Long followingId = userId != null ? userId : SecurityUtil.getCurrentUserIdRequired();
         log.info("获取粉丝列表请求, followingId={}, page={}, size={}", followingId, page, size);
 
         Page<UserFollow> pageParam = new Page<>(page, size);

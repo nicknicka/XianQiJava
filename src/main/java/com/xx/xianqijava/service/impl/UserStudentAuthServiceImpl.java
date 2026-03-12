@@ -124,6 +124,19 @@ public class UserStudentAuthServiceImpl extends ServiceImpl<UserStudentAuthMappe
         }
         updateById(auth);
 
+        // 4. 如果审核通过，同步更新用户表的学号、学院、专业
+        if (status == 2) {
+            User user = userService.getById(auth.getUserId());
+            if (user != null) {
+                user.setStudentId(auth.getStudentId());
+                user.setCollege(auth.getCollege());
+                user.setMajor(auth.getMajor());
+                userService.updateById(user);
+                log.info("同步更新用户信息成功, userId={}, studentId={}, college={}, major={}",
+                    user.getUserId(), auth.getStudentId(), auth.getCollege(), auth.getMajor());
+            }
+        }
+
         log.info("审核学生认证成功, authId={}, status={}", authId, status);
     }
 
