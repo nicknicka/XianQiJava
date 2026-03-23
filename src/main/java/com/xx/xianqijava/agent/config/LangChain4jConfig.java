@@ -11,8 +11,6 @@ import dev.langchain4j.service.AiServices;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -33,8 +31,6 @@ import java.time.Duration;
 @EnableConfigurationProperties(ZhipuAIConfig.class)
 @ConditionalOnProperty(name = "ai.enabled", havingValue = "true", matchIfMissing = true)
 public class LangChain4jConfig {
-
-    private static final Logger log = LoggerFactory.getLogger(LangChain4jConfig.class);
 
     private final ZhipuAIConfig zhipuAIConfig;
     private final UserTools userTools;

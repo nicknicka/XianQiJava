@@ -65,8 +65,8 @@ public class IntentClassifierService {
                - 示例："这个交易安全吗"、"怎么防骗"
 
             6. **GREETING** - 问候语
-               - 打招呼、感谢等
-               - 示例："你好"、"谢谢"、"在吗"
+               - 打招呼、感谢、自我介绍等
+               - 示例："你好"、"谢谢"、"在吗"、"介绍下你自己"、"你是谁"
 
             7. **GENERAL** - 一般咨询
                - 其他未分类咨询
@@ -136,7 +136,11 @@ public class IntentClassifierService {
         response = response.replaceAll("`", "").trim();
 
         // 验证是否为有效的意图类型
-        if (response.matches("CUSTOMER_SERVICE|RECOMMENDATION|DESCRIPTION|PRICING|SAFETY|GREETING|GENERAL")) {
+        if (response.matches("CUSTOMER_SERVICE|RECOMMENDATION|DESCRIPTION|PRICING|SAFETY|GREETING|GENERAL|UNKNOWN")) {
+            // 将 UNKNOWN 映射到 GENERAL
+            if ("UNKNOWN".equals(response)) {
+                return "GENERAL";
+            }
             return response;
         }
 
@@ -167,7 +171,7 @@ public class IntentClassifierService {
         String lowerMessage = message.toLowerCase();
 
         // 问候语
-        if (lowerMessage.matches(".*(你好|嗨|hello|hi|您好|在吗|帮忙|协助|谢谢|感谢|感谢).*")) {
+        if (lowerMessage.matches(".*(你好|嗨|hello|hi|您好|在吗|帮忙|协助|谢谢|感谢|介绍|你是谁|自我介绍|你是).*")) {
             return "GREETING";
         }
 

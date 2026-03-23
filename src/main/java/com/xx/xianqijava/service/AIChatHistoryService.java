@@ -63,7 +63,8 @@ public class AIChatHistoryService {
         try {
             QueryWrapper<AIChatHistory> wrapper = new QueryWrapper<>();
             wrapper.eq("user_id", userId);
-            wrapper.orderByDesc("created_at");
+            // 改为升序排列，使消息按时间顺序显示（最旧的在前）
+            wrapper.orderByAsc("created_at");
             wrapper.last("LIMIT " + (limit != null && limit > 0 ? limit : 20));
 
             List<AIChatHistory> histories = aiChatHistoryMapper.selectList(wrapper);
