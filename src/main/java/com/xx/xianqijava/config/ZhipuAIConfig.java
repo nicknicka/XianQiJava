@@ -3,6 +3,7 @@ package com.xx.xianqijava.config;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -21,6 +22,7 @@ public class ZhipuAIConfig {
      * API 密钥
      * 从环境变量或 .env 文件读取
      */
+    @Value("$")
     private String apiKey;
 
     /**

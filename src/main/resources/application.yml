@@ -222,7 +222,7 @@ recommendation:
 
 # 智谱 AI 配置
 zhipuai:
-  api-key: ${ZHIPUAI_API_KEY:}                    # 从环境变量读取 API Key
+  api-key: 3d3a55af11d54b239be9b17ed9d0bef8.B52KI6KVyBMqrITz                  # 从环境变量读取 API Key
   model: glm-4-flash                              # 使用的模型（免费版）
   vision-model: glm-4.6v-flash                    # 视觉识别模型
   timeout: 60000                                  # 请求超时时间（毫秒）
