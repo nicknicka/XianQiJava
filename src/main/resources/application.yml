@@ -219,3 +219,19 @@ recommendation:
     enabled: true             # 是否启用多样性推荐
     max-category-ratio: 0.6   # 同一分类商品最大占比
     freshness-factor: 0.2     # 新鲜度因子
+
+# 智谱 AI 配置
+zhipuai:
+  api-key: ${ZHIPUAI_API_KEY:}                    # 从环境变量读取 API Key
+  model: glm-4-flash                              # 使用的模型（免费版）
+  vision-model: glm-4.6v-flash                    # 视觉识别模型
+  timeout: 60000                                  # 请求超时时间（毫秒）
+  base-url: https://open.bigmodel.cn/api/paas/v4/chat/completions
+
+# AI 功能配置
+ai:
+  enabled: true                                    # 是否启用 AI 功能
+  max-tokens: 2000                                # 最大回复长度
+  temperature: 0.7                                # 温度参数（0-1，越高越随机）
+  chat-memory-size: 20                            # 对话记忆大小（消息数量）
+  stream-enabled: false                           # 是否启用流式输出（打字机效果）

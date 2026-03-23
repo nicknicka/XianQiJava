@@ -1,15 +1,15 @@
 # 校园二手交易与共享平台 - 开发待办清单
 
-> 更新时间：2026-02-18
+> 更新时间：2026-03-23
 > 状态：**已完成** ✅
-> 已完成：数据库初始化、用户注册、用户登录、个人信息管理、**更新头像**、文件上传、商品管理、订单管理、评价管理、商品收藏、浏览历史、商品图片管理、**用户中心（含统计数据）**、**商品信息更新**、即时通讯（WebSocket、会话管理、消息管理、消息已读、发送图片消息、消息撤回）、订单退款、信用积分自动计算、黑名单、举报、快捷回复、敏感词过滤、系统通知、轮播图、用户反馈、系统配置管理、共享物品、地理位置功能、**共享物品预约借用（含审批流程）**、**押金管理（含支付/退还/扣除）**、智能推荐、一键转赠、实名认证、操作日志、商品审核、数据统计
+> 已完成：数据库初始化、用户注册、用户登录、个人信息管理、**更新头像**、文件上传、商品管理、订单管理、评价管理、商品收藏、浏览历史、商品图片管理、**用户中心（含统计数据）**、**商品信息更新**、即时通讯（WebSocket、会话管理、消息管理、消息已读、发送图片消息、消息撤回）、订单退款、信用积分自动计算、黑名单、举报、快捷回复、敏感词过滤、系统通知、轮播图、用户反馈、系统配置管理、共享物品、地理位置功能、**共享物品预约借用（含审批流程）**、**押金管理（含支付/退还/扣除）**、智能推荐、一键转赠、实名认证、操作日志、商品审核、数据统计、**AI 智能助手集成（LangChain4j + 智谱 AI）**
 
 ---
 
 ## 📊 进度统计
 
-- **总任务数**: 48个
-- **已完成**: **48个 (100%)** ✅
+- **总任务数**: 49个
+- **已完成**: **49个 (100%)** ✅
 - **进行中**: 0个
 - **待开始**: 0个
 
@@ -18,6 +18,7 @@
 - **P1 (重要功能)**: 17个 ✅ (全部完成！)
 - **P2 (增强功能)**: 3/3个 ✅ (全部完成！)
 - **管理端**: 3/3个 ✅ (全部完成！)
+- **AI 功能**: 1个 ✅ (已完成！)
 
 ---
 
@@ -507,6 +508,37 @@
 - [x] 审核通过后自动上架商品
 - [x] 记录审核人和审核时间
 - [x] 支持审核意见记录
+
+### 42. ✅ AI 智能助手集成功能（LangChain4j + 智谱 AI）
+- [x] LangChain4j 0.36.2 集成
+- [x] 智谱 AI GLM-4-Flash 模型配置
+- [x] ZhipuAIConfig - 智谱 AI 配置类
+- [x] LangChain4jConfig - LangChain4j 配置类（所有 Agent Bean）
+- [x] CustomerServiceAgent - 客服助手 Agent
+- [x] ProductRecommendationAgent - 商品推荐助手 Agent
+- [x] ProductDescriptionAgent - 商品描述优化助手 Agent
+- [x] PricingAdvisorAgent - 定价助手 Agent
+- [x] TradeSafetyAgent - 交易安全顾问 Agent
+- [x] UserTools - 用户工具函数（getUserInfo、getUserCreditLevel）
+- [x] ProductTools - 商品工具函数（searchProducts、getHotProducts、getProductDetail）
+- [x] SystemTools - 系统工具函数（getSystemConfig、getTransactionRules、getHelpInfo）
+- [x] SafetyTools - 安全工具函数（checkUserCredit、getSafetyTips、assessTradeRisk）
+- [x] IntentClassifierService - 意图分类服务（AI 驱动 + 规则引擎降级）
+- [x] AIChatController - AI 聊天控制器
+- [x] POST `/api/ai/chat` - 统一聊天接口（自动意图识别和路由）
+- [x] GET `/api/ai/history/{userId}` - 获取聊天历史
+- [x] DELETE `/api/ai/history/{userId}` - 清除聊天历史
+- [x] GET `/api/ai/config` - 获取 AI 配置
+- [x] AIChatHistory - 聊天历史实体
+- [x] AIChatHistoryMapper - 聊天历史 Mapper
+- [x] AIChatHistoryService - 聊天历史服务
+- [x] AIChatRequest - 聊天请求 DTO
+- [x] AIChatHistoryVO - 聊天历史 VO
+- [x] AIConfigDTO - AI 配置 DTO
+- [x] ai_chat_history 数据库表创建
+- [x] ChatMemory 对话记忆管理（最近 20 条消息）
+- [x] 前端 AI API 模块创建（ai.ts）
+- [x] 前端 AI 聊天页面对接（ai-chat.vue）
 
 ---
 
@@ -1173,6 +1205,15 @@
 - **P1 重要功能**: 17个 ✅
 - **P2 增强功能**: 3个 ✅
 - **管理端功能**: 3个 ✅
+- **AI 智能功能**: 1个 ✅ (LangChain4j + 智谱 AI 完整集成)
+
+**AI 功能亮点**：
+- 🤖 5 个 AI Agent（客服、推荐、描述优化、定价、安全顾问）
+- 🛠️ 4 个工具类（用户、商品、系统、安全）
+- 🎯 智能意图识别和自动路由
+- 💾 对话记忆持久化
+- 🔄 规则引擎降级方案
+- 📱 前后端完整对接
 
 **最新完成的功能**:
 1. ✅ 更新头像接口 (`PUT /api/user/avatar`)
@@ -1180,6 +1221,7 @@
 3. ✅ 商品信息更新接口 (`PUT /api/product/{id}`)
 4. ✅ 共享物品预约借用功能 (完整流程)
 5. ✅ 押金管理功能 (支付/退还/扣除)
+6. ✅ **AI 智能助手完整集成（LangChain4j + 智谱 AI）**
 
 **下一步建议**:
 1. 进行系统集成测试和Bug修复

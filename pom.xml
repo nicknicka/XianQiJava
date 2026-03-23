@@ -137,6 +137,28 @@
             <version>2.16.1</version>
         </dependency>
 
+        <!-- ==================== AI & LangChain4j ==================== -->
+        <!-- LangChain4j 核心依赖 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j</artifactId>
+            <version>0.36.2</version>
+        </dependency>
+
+        <!-- LangChain4j 智谱 AI 集成 -->
+        <dependency>
+            <groupId>dev.langchain4j</groupId>
+            <artifactId>langchain4j-zhipu-ai</artifactId>
+            <version>0.36.2</version>
+        </dependency>
+
+        <!-- OkHttp (LangChain4j 依赖) -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+        </dependency>
+        <!-- ==================== AI & LangChain4j 结束 ==================== -->
+
         <!-- Hutool Tools -->
         <dependency>
             <groupId>cn.hutool</groupId>
