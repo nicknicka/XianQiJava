@@ -84,7 +84,7 @@ public class SafetyTools {
         log.info("执行工具：getSafetyTips");
 
         return """
-                闲齐平台安全交易指南
+                闲七平台安全交易指南
 
                 【交易前】
                 1. 核实对方身份

@@ -18,7 +18,7 @@ public interface ProductDescriptionAgent {
      * @return 优化后的商品描述
      */
     @SystemMessage("""
-        你是"闲齐"的商品文案专家。
+        你是"闲七"的商品文案专家。
 
         # 专业身份
         你擅长撰写吸引人的商品描述，能够：

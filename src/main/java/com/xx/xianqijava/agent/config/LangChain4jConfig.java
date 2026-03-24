@@ -6,7 +6,9 @@ import com.xx.xianqijava.agent.tools.SystemTools;
 import com.xx.xianqijava.agent.tools.UserTools;
 import com.xx.xianqijava.config.ZhipuAIConfig;
 import dev.langchain4j.model.chat.ChatLanguageModel;
+import dev.langchain4j.model.chat.StreamingChatLanguageModel;
 import dev.langchain4j.model.zhipu.ZhipuAiChatModel;
+import dev.langchain4j.model.zhipu.ZhipuAiStreamingChatModel;
 import dev.langchain4j.service.AiServices;
 import dev.langchain4j.memory.ChatMemory;
 import dev.langchain4j.memory.chat.MessageWindowChatMemory;
@@ -38,6 +40,7 @@ public class LangChain4jConfig {
     private final SafetyTools safetyTools;
 
     private ChatLanguageModel chatLanguageModel;
+    private StreamingChatLanguageModel streamingChatLanguageModel;
 
     public LangChain4jConfig(
             ZhipuAIConfig zhipuAIConfig,
@@ -75,6 +78,31 @@ public class LangChain4jConfig {
 
         log.info("ChatLanguageModel 初始化成功");
         return this.chatLanguageModel;
+    }
+
+    /**
+     * 配置 StreamingChatLanguageModel（智谱 AI 流式模型）
+     */
+    @Bean(destroyMethod = "")
+    public StreamingChatLanguageModel streamingChatLanguageModel() {
+        log.info("初始化 StreamingChatLanguageModel，模型：{}", zhipuAIConfig.getModel());
+
+        if (!zhipuAIConfig.isValid()) {
+            throw new IllegalStateException("智谱 AI 配置无效，请检查 API Key 是否正确配置");
+        }
+
+        this.streamingChatLanguageModel = ZhipuAiStreamingChatModel.builder()
+                .apiKey(zhipuAIConfig.getApiKey())
+                .model(zhipuAIConfig.getModel())
+                .temperature(0.7)
+                .callTimeout(Duration.ofSeconds(zhipuAIConfig.getTimeout() / 1000))
+                .connectTimeout(Duration.ofSeconds(60))
+                .writeTimeout(Duration.ofSeconds(60))
+                .readTimeout(Duration.ofSeconds(60))
+                .build();
+
+        log.info("StreamingChatLanguageModel 初始化成功");
+        return this.streamingChatLanguageModel;
     }
 
     /**

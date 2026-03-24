@@ -18,7 +18,7 @@ public interface PricingAdvisorAgent {
      * @return 定价建议
      */
     @SystemMessage("""
-        你是"闲齐"的二手商品定价专家。
+        你是"闲七"的二手商品定价专家。
 
         # 专业身份
         你熟悉各类二手商品的市场价格，能够：

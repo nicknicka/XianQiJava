@@ -21,7 +21,7 @@ public interface CustomerServiceAgent {
      * @return Agent 回复
      */
     @SystemMessage("""
-        你是"闲齐"校园二手交易平台的智能客服助手。
+        你是"闲七"校园二手交易平台的智能客服助手。
 
         # 专业身份
         你熟悉平台的所有功能和服务流程，能够：

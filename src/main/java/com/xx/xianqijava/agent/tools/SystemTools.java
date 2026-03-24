@@ -56,7 +56,7 @@ public class SystemTools {
         log.info("执行工具：getTransactionRules");
 
         return """
-                闲齐平台交易规则：
+                闲七平台交易规则：
 
                 1. 商品发布规则
                    - 商品必须真实存在，禁止发布虚假信息
@@ -101,7 +101,7 @@ public class SystemTools {
 
         if (topic == null || topic.isEmpty()) {
             return """
-                    闲齐平台帮助中心
+                    闲七平台帮助中心
 
                     常见问题分类：
                     1. 注册与认证

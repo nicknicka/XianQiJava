@@ -206,12 +206,16 @@ public class WebSocketHandler extends TextWebSocketHandler {
      * 处理 AI 聊天事件
      */
     private void handleAIChatEvent(Long userId, Object data, WebSocketSession session) {
+        long startTime = System.currentTimeMillis();
+        log.info("📥 [WS-AI聊天] 收到请求 | 用户ID: {} | SessionId: {}", userId, session.getId());
+
         try {
             // 解析请求数据
             Map<String, Object> requestData;
             if (data instanceof Map) {
                 requestData = (Map<String, Object>) data;
             } else {
+                log.warn("⚠️ [WS-AI聊天] 请求格式错误 | 用户ID: {} | 数据类型: {}", userId, data.getClass());
                 sendMessageToSession(session, createMessage("error", Map.of(
                         "code", "INVALID_REQUEST",
                         "message", "请求格式错误"
@@ -222,6 +226,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
             // 获取消息内容
             String message = (String) requestData.get("message");
             if (message == null || message.trim().isEmpty()) {
+                log.warn("⚠️ [WS-AI聊天] 消息为空 | 用户ID: {}", userId);
                 sendMessageToSession(session, createMessage("error", Map.of(
                         "code", "EMPTY_MESSAGE",
                         "message", "消息不能为空"
@@ -229,76 +234,105 @@ public class WebSocketHandler extends TextWebSocketHandler {
                 return;
             }
 
-            log.info("收到 AI 聊天请求: userId={}, message={}", userId, message);
+            log.info("💬 [WS-AI聊天] 开始处理 | 用户ID: {} | 消息: \"{}\"", userId, message);
 
             // 异步处理 AI 请求，避免阻塞 WebSocket 线程
             CompletableFuture.runAsync(() -> {
                 try {
-                    // 1. 构建带用户ID的消息
-                    String userMessage = String.format("[当前用户ID: %d] %s", userId, message);
+                    // 1. 意图分类
+                    long intentStartTime = System.currentTimeMillis();
+                    String intent = intentClassifierService.classifyIntent(message);
+                    long intentTime = System.currentTimeMillis() - intentStartTime;
 
-                    // 2. 意图分类
-                    String intent = intentClassifierService.classifyIntent(userMessage);
-                    log.info("AI 意图分类: userId={}, intent={}", userId, intent);
+                    log.info("🎯 [WS-AI聊天] 意图分类完成 | 用户ID: {} | 意图: {} | 耗时: {}ms",
+                            userId, intent, intentTime);
 
-                    // 3. 路由到对应 Agent 获取响应
-                    String response = getAIResponse(intent, userMessage);
+                    // 2. 路由到对应 Agent 获取响应
+                    long agentStartTime = System.currentTimeMillis();
+                    String response = getAIResponse(intent, message);
+                    long agentTime = System.currentTimeMillis() - agentStartTime;
 
-                    // 4. 流式发送响应（分块发送）
+                    log.info("🤖 [WS-AI聊天] Agent响应完成 | 用户ID: {} | 响应长度: {}字符 | 耗时: {}ms",
+                            userId, response.length(), agentTime);
+
+                    // 3. 流式发送响应（分块发送）
+                    log.info("📤 [WS-AI聊天] 开始流式推送 | 用户ID: {} | 分块大小: 10字符", userId);
+
                     int chunkSize = 10; // 每次发送10个字符
                     int sequenceId = 0;
+                    long streamStartTime = System.currentTimeMillis();
 
                     for (int i = 0; i < response.length(); i += chunkSize) {
                         int end = Math.min(i + chunkSize, response.length());
                         String chunk = response.substring(i, end);
 
-                        sendMessageToSession(session, createMessage("ai_chunk", Map.of(
+                        boolean sent = sendMessageToSession(session, createMessage("ai_chunk", Map.of(
                                 "content", chunk,
                                 "sequenceId", ++sequenceId
                         )));
+
+                        if (!sent) {
+                            log.warn("⚠️ [WS-AI聊天] 发送数据块失败 | 用户ID: {} | 序号: {}", userId, sequenceId);
+                        }
 
                         // 模拟打字延迟（每块50ms）
                         Thread.sleep(50);
                     }
 
-                    // 5. 保存聊天历史
+                    long streamTime = System.currentTimeMillis() - streamStartTime;
+                    long totalTime = System.currentTimeMillis() - startTime;
+
+                    log.info("✅ [WS-AI聊天] 流式推送完成 | 用户ID: {} | 分块数: {} | 推送耗时: {}ms | 总耗时: {}ms",
+                            userId, sequenceId, streamTime, totalTime);
+
+                    // 4. 保存聊天历史
                     try {
                         chatHistoryService.saveHistory(userId, message, response, intent);
+                        log.debug("💾 [WS-AI聊天] 聊天历史已保存 | 用户ID: {}", userId);
                     } catch (Exception e) {
-                        log.error("保存聊天历史失败: userId={}", userId, e);
+                        log.error("❌ [WS-AI聊天] 保存聊天历史失败 | 用户ID: {}", userId, e);
                     }
 
-                    // 6. 发送完成事件
+                    // 5. 发送完成事件
                     sendMessageToSession(session, createMessage("ai_complete", Map.of(
                             "messageId", System.currentTimeMillis(),
                             "intentType", intent
                     )));
 
+                    log.info("🎉 [WS-AI聊天] 请求处理完成 | 用户ID: {} | 总耗时: {}ms", userId, totalTime);
+
                 } catch (InterruptedException e) {
                     Thread.currentThread().interrupt();
-                    log.error("AI 聊天处理被中断: userId={}", userId, e);
+                    long errorTime = System.currentTimeMillis() - startTime;
+                    log.error("❌ [WS-AI聊天] 处理被中断 | 用户ID: {} | 耗时: {}ms", userId, errorTime, e);
+
                     sendMessageToSession(session, createMessage("error", Map.of(
                             "code", "PROCESS_INTERRUPTED",
                             "message", "AI 处理被中断"
                     )));
                 } catch (Exception e) {
-                    log.error("AI 聊天处理失败: userId={}", userId, e);
+                    long errorTime = System.currentTimeMillis() - startTime;
+                    log.error("❌ [WS-AI聊天] 处理失败 | 用户ID: {} | 耗时: {}ms | 错误: {}",
+                            userId, errorTime, e.getMessage(), e);
+
                     sendMessageToSession(session, createMessage("error", Map.of(
                             "code", "AI_SERVICE_ERROR",
-                            "message", "抱歉，AI助手暂时无法回复，请稍后再试。"
+                            "message", "⚠️ 抱歉，AI助手暂时无法回复，请稍后再试。"
                     )));
                 }
             });
 
         } catch (Exception e) {
-            log.error("处理 AI 聊天事件失败: userId={}", userId, e);
+            long errorTime = System.currentTimeMillis() - startTime;
+            log.error("❌ [WS-AI聊天] 事件处理失败 | 用户ID: {} | 耗时: {}ms", userId, errorTime, e);
+
             try {
                 sendMessageToSession(session, createMessage("error", Map.of(
                         "code", "EVENT_HANDLER_ERROR",
                         "message", "事件处理失败"
                 )));
             } catch (Exception ex) {
-                log.error("发送错误消息失败", ex);
+                log.error("❌ [WS-AI聊天] 发送错误消息失败", ex);
             }
         }
     }
@@ -314,7 +348,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
             case "PRICING" -> pricingAdvisorAgent.advisePrice(userMessage);
             case "SAFETY" -> safetyAgent.checkSafety(userMessage);
             case "GREETING" -> """
-                    你好！我是闲齐的智能助手 🎓
+                    你好！我是闲七的智能助手 🎓
 
                     我可以帮助你：
 

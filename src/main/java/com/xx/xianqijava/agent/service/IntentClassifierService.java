@@ -93,16 +93,20 @@ public class IntentClassifierService {
         // 检查缓存
         String cached = intentCache.get(userMessage);
         if (cached != null) {
-            log.debug("意图分类命中缓存：{} -> {}", userMessage, cached);
+            log.debug("🎯 [意图分类-缓存命中] 消息: \"{}\" -> 意图: {}", userMessage, cached);
             return cached;
         }
 
         try {
+            log.info("🤖 [意图分类-AI模式] 开始分类，消息: \"{}\"", userMessage);
+            long startTime = System.currentTimeMillis();
+
             // 构建提示词
             String prompt = String.format(INTENT_CLASSIFICATION_PROMPT, userMessage);
 
             // 调用AI模型
             String aiResponse = chatLanguageModel.generate(prompt);
+            long aiTime = System.currentTimeMillis() - startTime;
 
             // 解析AI响应
             String intent = parseIntent(aiResponse);
@@ -112,13 +116,22 @@ public class IntentClassifierService {
                 intentCache.put(userMessage, intent);
             }
 
-            log.info("AI意图分类：{} -> {}", userMessage, intent);
+            log.info("✅ [意图分类-AI成功] 消息: \"{}\" -> 意图: {} | 耗时: {}ms | 缓存大小: {}",
+                    userMessage, intent, aiTime, intentCache.size());
             return intent;
 
         } catch (Exception e) {
-            log.error("AI意图分类失败，降级到规则引擎", e);
+            long fallbackTime = System.currentTimeMillis();
+            log.warn("⚠️ [意图分类-AI失败] 开始降级到规则引擎 | 错误类型: {} | 错误信息: {}",
+                    e.getClass().getSimpleName(), e.getMessage());
+
             // 降级：使用规则引擎
-            return classifyIntentByRules(userMessage);
+            String fallbackIntent = classifyIntentByRules(userMessage);
+            long ruleTime = System.currentTimeMillis() - fallbackTime;
+
+            log.info("🔄 [意图分类-规则引擎] 消息: \"{}\" -> 意图: {} | 耗时: {}ms | 降级原因: AI调用失败",
+                    userMessage, fallbackIntent, ruleTime);
+            return fallbackIntent;
         }
     }
 
@@ -170,8 +183,11 @@ public class IntentClassifierService {
     private String classifyIntentByRules(String message) {
         String lowerMessage = message.toLowerCase();
 
+        log.debug("🔍 [规则引擎] 开始匹配，消息: \"{}\"", message);
+
         // 问候语
         if (lowerMessage.matches(".*(你好|嗨|hello|hi|您好|在吗|帮忙|协助|谢谢|感谢|介绍|你是谁|自我介绍|你是).*")) {
+            log.debug("  ✅ 匹配规则: GREETING (问候语)");
             return "GREETING";
         }
 
@@ -179,6 +195,7 @@ public class IntentClassifierService {
         if (lowerMessage.contains("安全") || lowerMessage.contains("防骗") ||
             lowerMessage.contains("风险") || lowerMessage.contains("可信") ||
             lowerMessage.contains("诈骗") || lowerMessage.contains("欺诈")) {
+            log.debug("  ✅ 匹配规则: SAFETY (安全相关)");
             return "SAFETY";
         }
 
@@ -186,12 +203,14 @@ public class IntentClassifierService {
         if (lowerMessage.contains("推荐") || lowerMessage.contains("搜索") ||
             lowerMessage.contains("有什么") || lowerMessage.contains("附近") ||
             lowerMessage.contains("热门") || lowerMessage.contains("想要")) {
+            log.debug("  ✅ 匹配规则: RECOMMENDATION (推荐相关)");
             return "RECOMMENDATION";
         }
 
         // 描述优化相关
         if (lowerMessage.contains("描述") || lowerMessage.contains("文案") ||
             lowerMessage.contains("写个") && lowerMessage.contains("描述")) {
+            log.debug("  ✅ 匹配规则: DESCRIPTION (描述优化)");
             return "DESCRIPTION";
         }
 
@@ -199,6 +218,7 @@ public class IntentClassifierService {
         if (lowerMessage.contains("价格") || lowerMessage.contains("多少钱") ||
             lowerMessage.contains("估价") || lowerMessage.contains("定价") ||
             lowerMessage.contains("卖多少钱") || lowerMessage.contains("值得")) {
+            log.debug("  ✅ 匹配规则: PRICING (定价相关)");
             return "PRICING";
         }
 
@@ -207,9 +227,11 @@ public class IntentClassifierService {
             lowerMessage.contains("流程") || lowerMessage.contains("规则") ||
             lowerMessage.contains("认证") || lowerMessage.contains("注册") ||
             lowerMessage.contains("登录") || lowerMessage.contains("发布")) {
+            log.debug("  ✅ 匹配规则: CUSTOMER_SERVICE (客服相关)");
             return "CUSTOMER_SERVICE";
         }
 
+        log.debug("  ⚠️ 未匹配到具体规则，使用默认: GENERAL");
         return "GENERAL";
     }
 

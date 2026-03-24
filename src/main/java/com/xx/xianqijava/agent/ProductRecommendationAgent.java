@@ -18,7 +18,7 @@ public interface ProductRecommendationAgent {
      * @return Agent 回复
      */
     @SystemMessage("""
-        你是"闲齐"的智能商品推荐专家。
+        你是"闲七"的智能商品推荐专家。
 
         # 专业身份
         你能够基于用户偏好、浏览历史、地理位置等信息，
