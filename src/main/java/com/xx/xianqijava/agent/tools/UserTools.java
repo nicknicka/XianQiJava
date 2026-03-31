@@ -1,5 +1,6 @@
 package com.xx.xianqijava.agent.tools;
 
+import com.xx.xianqijava.agent.context.AIContext;
 import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.service.UserService;
 import dev.langchain4j.agent.tool.Tool;
@@ -26,14 +27,17 @@ public class UserTools {
     private UserService userService;
 
     /**
-     * 获取用户信息
-     *
-     * @param userId 用户ID
-     * @return 用户信息
+     * 获取当前用户信息
+     * 从 AIContext 中自动获取当前用户ID
      */
-    @Tool("获取用户基本信息，包括用户名、昵称、信用分等")
-    public String getUserInfo(@P("用户ID") Long userId) {
-        log.info("执行工具：getUserInfo，参数：{}", userId);
+    @Tool("获取当前用户的基本信息，包括用户名、昵称、信用分等")
+    public String getCurrentUserInfo() {
+        Long userId = AIContext.getCurrentUserId();
+        log.info("执行工具：getCurrentUserInfo，参数：{}", userId);
+
+        if (userId == null) {
+            return "无法获取当前用户ID";
+        }
 
         try {
             User user = userService.getById(userId);
@@ -63,13 +67,17 @@ public class UserTools {
     }
 
     /**
-     * 检查用户信用等级
-     *
-     * @param userId 用户ID
-     * @return 信用等级信息
+     * 检查当前用户信用等级
+     * 从 AIContext 中自动获取当前用户ID
      */
-    @Tool("检查用户信用等级和信用分数")
-    public String getUserCreditLevel(@P("用户ID") Long userId) {
+    @Tool("检查当前用户的信用等级和信用分数")
+    public String getCurrentUserCreditLevel() {
+        Long userId = AIContext.getCurrentUserId();
+        log.info("执行工具：getCurrentUserCreditLevel，参数：{}", userId);
+
+        if (userId == null) {
+            return "无法获取当前用户ID";
+        }
         log.info("执行工具：getUserCreditLevel，参数：{}", userId);
 
         try {

@@ -3,6 +3,7 @@ package com.xx.xianqijava.websocket;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xx.xianqijava.agent.*;
+import com.xx.xianqijava.agent.context.AIContext;
 import com.xx.xianqijava.agent.service.IntentClassifierService;
 import com.xx.xianqijava.service.AIChatHistoryService;
 import jakarta.annotation.Resource;
@@ -65,11 +66,20 @@ public class WebSocketHandler extends TextWebSocketHandler {
             USER_SESSIONS.put(userId, session);
             log.info("WebSocket 连接建立成功: userId={}, sessionId={}", userId, session.getId());
 
-            // 发送连接成功消息
-            sendMessageToSession(session, createMessage("connected", Map.<String, Object>of(
-                    "userId", userId,
-                    "message", "连接成功"
-            )));
+            // 延迟发送连接成功消息（等待客户端完全准备好）
+            CompletableFuture.runAsync(() -> {
+                try {
+                    Thread.sleep(100); // 延迟100ms
+                    if (session.isOpen()) {
+                        sendMessageToSession(session, createMessage("connected", Map.<String, Object>of(
+                                "userId", userId,
+                                "message", "连接成功"
+                        )));
+                    }
+                } catch (Exception e) {
+                    log.debug("发送连接消息失败（可能已断开）: userId={}", userId);
+                }
+            });
         }
     }
 
@@ -86,22 +96,17 @@ public class WebSocketHandler extends TextWebSocketHandler {
             // 解析消息
             Map<String, Object> messageData = objectMapper.readValue(payload, new TypeReference<Map<String, Object>>() {});
 
-            // 兼容两种消息格式：{event: "..."} 和 {type: "..."}
-            String event = (String) messageData.get("event");
-            if (event == null) {
-                event = (String) messageData.get("type");
+            // 获取消息类型
+            String type = (String) messageData.get("type");
+            if (type == null) {
+                log.warn("消息格式错误，缺少 type 字段: {}", payload);
+                return;
             }
 
             Object data = messageData.get("data");
 
-            // 检查事件类型是否为空
-            if (event == null) {
-                log.warn("消息格式错误，缺少 event 或 type 字段: {}", payload);
-                return;
-            }
-
-            // 根据事件类型处理消息
-            switch (event) {
+            // 根据消息类型处理
+            switch (type) {
                 case "ping":
                     // 心跳检测
                     sendMessageToSession(session, createMessage("pong", null));
@@ -115,7 +120,7 @@ public class WebSocketHandler extends TextWebSocketHandler {
                     handleAIChatEvent(userId, data, session);
                     break;
                 default:
-                    log.warn("未知的事件类型: {}", event);
+                    log.warn("未知的消息类型: {}", type);
             }
         } catch (Exception e) {
             log.error("处理 WebSocket 消息失败: {}", e.getMessage(), e);
@@ -180,10 +185,10 @@ public class WebSocketHandler extends TextWebSocketHandler {
     /**
      * 创建消息
      */
-    private String createMessage(String event, Object data) {
+    private String createMessage(String type, Object data) {
         try {
             Map<String, Object> message = Map.<String, Object>of(
-                    "event", event,
+                    "type", type,
                     "data", data != null ? data : Map.<String, Object>of(),
                     "timestamp", System.currentTimeMillis()
             );
@@ -239,6 +244,9 @@ public class WebSocketHandler extends TextWebSocketHandler {
             // 异步处理 AI 请求，避免阻塞 WebSocket 线程
             CompletableFuture.runAsync(() -> {
                 try {
+                    // 设置 AI 上下文（供工具函数使用）
+                    AIContext.setCurrentUserId(userId);
+
                     // 1. 意图分类
                     long intentStartTime = System.currentTimeMillis();
                     String intent = intentClassifierService.classifyIntent(message);
@@ -319,6 +327,9 @@ public class WebSocketHandler extends TextWebSocketHandler {
                             "code", "AI_SERVICE_ERROR",
                             "message", "⚠️ 抱歉，AI助手暂时无法回复，请稍后再试。"
                     )));
+                } finally {
+                    // 清除 AI 上下文（重要：避免内存泄漏和线程污染）
+                    AIContext.clearCurrentUserId();
                 }
             });
 

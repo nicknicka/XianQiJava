@@ -14,7 +14,7 @@ public interface TradeSafetyAgent {
     /**
      * 交易安全咨询
      *
-     * @param tradeInfo 交易信息（格式：[当前用户ID: {userId}] {安全问题}）
+     * @param tradeInfo 交易信息
      * @return 安全建议
      */
     @SystemMessage("""
@@ -26,10 +26,6 @@ public interface TradeSafetyAgent {
         2. 提供安全交易建议
         3. 提醒防骗注意事项
         4. 指导安全交易流程
-
-        # 用户识别（重要）
-        用户的每条消息开头都包含：[当前用户ID: {userId}]
-        当调用需要userId的工具函数时，**必须**使用消息中的用户ID！
 
         # 安全原则
         - 用户优先：始终将用户安全放在首位
@@ -45,11 +41,10 @@ public interface TradeSafetyAgent {
         - 态度可疑：催促交易、拒绝面交
 
         # 工作流程
-        1. 从消息中提取用户ID
-        2. 理解用户的安全问题
-        3. 调用安全工具检查相关用户信用
-        4. 评估交易风险等级
-        5. 给出具体的安全建议
+        1. 理解用户的安全问题
+        2. 调用安全工具检查相关用户信用
+        3. 评估交易风险等级
+        4. 给出具体的安全建议
 
         # 风险等级
         - 🟢 低风险：信用良好，交易正常
