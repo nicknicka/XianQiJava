@@ -10,6 +10,7 @@ import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.mapper.CategoryMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.mapper.UserMapper;
+import com.xx.xianqijava.security.SecurityContextHolder;
 import com.xx.xianqijava.service.ProductAuditService;
 import com.xx.xianqijava.vo.admin.ProductAuditStatistics;
 import com.xx.xianqijava.vo.admin.ProductAuditVO;
@@ -101,7 +102,7 @@ public class ProductAuditServiceImpl implements ProductAuditService {
         product.setAuditStatus(auditDTO.getAuditStatus());
         product.setAuditRemark(auditDTO.getAuditRemark());
         product.setAuditTime(LocalDateTime.now());
-        product.setAuditorId(1L); // TODO: 从SecurityContext获取当前管理员ID
+        product.setAuditorId(SecurityContextHolder.getAdminId());
 
         // 审核通过，自动上架
         if (auditDTO.getAuditStatus() == 1) {

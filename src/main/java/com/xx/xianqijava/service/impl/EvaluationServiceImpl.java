@@ -12,8 +12,10 @@ import com.xx.xianqijava.entity.Order;
 import com.xx.xianqijava.entity.Product;
 import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.exception.BusinessException;
+import com.xx.xianqijava.entity.ProductImage;
 import com.xx.xianqijava.mapper.EvaluationMapper;
 import com.xx.xianqijava.mapper.OrderMapper;
+import com.xx.xianqijava.mapper.ProductImageMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.EvaluationService;
@@ -36,6 +38,7 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
     private final OrderMapper orderMapper;
     private final ProductMapper productMapper;
     private final UserMapper userMapper;
+    private final ProductImageMapper productImageMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -246,7 +249,8 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
             Product product = productMapper.selectById(order.getProductId());
             if (product != null) {
                 vo.setProductTitle(product.getTitle());
-                // TODO: 从 product_image 表获取第一张图片
+                // 获取商品封面图
+                vo.setProductCoverImage(getProductCoverImage(product.getProductId()));
             }
         }
 
@@ -400,5 +404,20 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
                 .mapToInt(Evaluation::getScore)
                 .average()
                 .orElse(0.0);
+    }
+
+    /**
+     * 获取商品封面图
+     */
+    private String getProductCoverImage(Long productId) {
+        // 从 product_image 表查询封面图
+        LambdaQueryWrapper<ProductImage> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ProductImage::getProductId, productId)
+               .eq(ProductImage::getIsCover, 1)
+               .eq(ProductImage::getStatus, 0)  // 0=正常，1=删除
+               .last("LIMIT 1");
+
+        ProductImage coverImage = productImageMapper.selectOne(wrapper);
+        return coverImage != null ? coverImage.getImageUrl() : "";
     }
 }

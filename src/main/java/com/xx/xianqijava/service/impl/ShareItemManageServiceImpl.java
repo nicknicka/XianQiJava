@@ -7,9 +7,11 @@ import com.xx.xianqijava.dto.admin.ShareItemStatusUpdateDTO;
 import com.xx.xianqijava.entity.Category;
 import com.xx.xianqijava.entity.ShareItem;
 import com.xx.xianqijava.entity.ShareItemBooking;
+import com.xx.xianqijava.entity.ShareItemImage;
 import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.mapper.CategoryMapper;
 import com.xx.xianqijava.mapper.ShareItemBookingMapper;
+import com.xx.xianqijava.mapper.ShareItemImageMapper;
 import com.xx.xianqijava.mapper.ShareItemMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.ShareItemManageService;
@@ -40,6 +42,7 @@ public class ShareItemManageServiceImpl implements ShareItemManageService {
     private final ShareItemBookingMapper shareItemBookingMapper;
     private final UserMapper userMapper;
     private final CategoryMapper categoryMapper;
+    private final ShareItemImageMapper shareItemImageMapper;
 
     @Override
     public Page<ShareItemManageVO> getShareItemList(ShareItemManageQueryDTO queryDTO) {
@@ -291,9 +294,24 @@ public class ShareItemManageServiceImpl implements ShareItemManageService {
         vo.setBorrowCount((int) borrowCount);
         vo.setCurrentBorrowCount((int) currentBorrowCount);
 
-        // TODO: 设置封面图片URL
-        vo.setCoverImageUrl("/images/default-share-item.png");
+        // 设置封面图片URL
+        vo.setCoverImageUrl(getShareItemCoverImage(shareItem.getShareId()));
 
         return vo;
+    }
+
+    /**
+     * 获取共享物品封面图
+     */
+    private String getShareItemCoverImage(Long shareId) {
+        // 从 share_item_image 表查询封面图
+        LambdaQueryWrapper<ShareItemImage> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ShareItemImage::getShareId, shareId)
+               .eq(ShareItemImage::getIsCover, 1)
+               .eq(ShareItemImage::getStatus, 0)  // 0=正常，1=删除
+               .last("LIMIT 1");
+
+        ShareItemImage coverImage = shareItemImageMapper.selectOne(wrapper);
+        return coverImage != null ? coverImage.getImageUrl() : "";
     }
 }

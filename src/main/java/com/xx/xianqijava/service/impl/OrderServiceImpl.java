@@ -9,9 +9,11 @@ import com.xx.xianqijava.common.ErrorCode;
 import com.xx.xianqijava.dto.OrderCreateDTO;
 import com.xx.xianqijava.entity.Order;
 import com.xx.xianqijava.entity.Product;
+import com.xx.xianqijava.entity.ProductImage;
 import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.mapper.OrderMapper;
+import com.xx.xianqijava.mapper.ProductImageMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.OperationLogService;
@@ -38,6 +40,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     private final ProductMapper productMapper;
     private final UserMapper userMapper;
     private final OperationLogService operationLogService;
+    private final ProductImageMapper productImageMapper;
 
     private static final AtomicInteger ORDER_COUNTER = new AtomicInteger(0);
 
@@ -290,6 +293,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 更新订单状态
         order.setStatus(2); // 已完成
         order.setFinishTime(LocalDateTime.now());
+        order.setConfirmTime(LocalDateTime.now()); // 设置确认收货时间
         updateById(order);
 
         // 记录操作日志
@@ -503,7 +507,8 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         Product product = productMapper.selectById(order.getProductId());
         if (product != null) {
             vo.setProductTitle(product.getTitle());
-            // TODO: 从 product_image 表获取第一张图片
+            // 获取商品封面图
+            vo.setProductCoverImage(getProductCoverImage(product.getProductId()));
             // 计算单价
             vo.setUnitPrice(product.getPrice() != null ? String.valueOf(product.getPrice()) : null);
         }
@@ -581,5 +586,20 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         log.info("用户买家订单统计结果, userId={}, buyerCount={}", userId, buyerCount);
 
         return Math.toIntExact(buyerCount);
+    }
+
+    /**
+     * 获取商品封面图
+     */
+    private String getProductCoverImage(Long productId) {
+        // 从 product_image 表查询封面图
+        LambdaQueryWrapper<ProductImage> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ProductImage::getProductId, productId)
+               .eq(ProductImage::getIsCover, 1)
+               .eq(ProductImage::getStatus, 0)  // 0=正常，1=删除
+               .last("LIMIT 1");
+
+        ProductImage coverImage = productImageMapper.selectOne(wrapper);
+        return coverImage != null ? coverImage.getImageUrl() : "";
     }
 }

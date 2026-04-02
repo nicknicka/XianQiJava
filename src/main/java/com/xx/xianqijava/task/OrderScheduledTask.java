@@ -81,7 +81,7 @@ public class OrderScheduledTask {
      * 自动完成超时进行中的订单
      * 每1小时执行一次
      * <p>
-     * 逻辑：订单确认后超过指定时间买家未确认完成，自动完成订单
+     * 逻辑：订单确认后超过指定时间买家未确认收货，自动完成订单
      * 适用于线下交易场景：双方已线下完成交易但忘记在平台上确认
      */
     @Scheduled(fixedRate = 3600000)
@@ -89,22 +89,24 @@ public class OrderScheduledTask {
         log.info("开始执行自动完成进行中订单任务");
 
         try {
-            // 查询订单确认时间（使用更新时间代替，因为实体中无confirmTime字段）
-            // TODO: 优化时应在Order实体中添加confirmTime字段
+            // 计算过期时间（当前时间减去配置的超时时间）
             LocalDateTime expireTime = LocalDateTime.now().minusSeconds(autoFinishTimeSeconds);
 
+            // 查询所有进行中且超过超时时间的订单
+            // 使用更新时间作为判断标准（卖家确认订单的时间）
             LambdaUpdateWrapper<Order> updateWrapper = new LambdaUpdateWrapper<>();
             updateWrapper.eq(Order::getStatus, OrderStatus.IN_PROGRESS.getCode())
                     .le(Order::getUpdateTime, expireTime)
                     .set(Order::getStatus, OrderStatus.COMPLETED.getCode())
-                    .set(Order::getFinishTime, LocalDateTime.now());
+                    .set(Order::getFinishTime, LocalDateTime.now())
+                    .set(Order::getConfirmTime, LocalDateTime.now()); // 设置自动确认收货时间
 
             int updatedCount = orderMapper.update(null, updateWrapper);
 
             if (updatedCount > 0) {
-                log.info("自动完成进行中订单任务完成，完成订单数：{}", updatedCount);
+                log.info("自动完成进行中订单任务完成，自动确认收货订单数：{}", updatedCount);
             } else {
-                log.debug("自动完成进行中订单任务完成，无需要完成的订单");
+                log.debug("自动完成进行中订单任务完成，无需要自动确认的订单");
             }
         } catch (Exception e) {
             log.error("自动完成进行中订单任务执行失败", e);

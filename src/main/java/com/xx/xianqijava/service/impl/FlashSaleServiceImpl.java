@@ -240,8 +240,15 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleSessionMapper, Fl
     }
 
     private String getProductCoverImage(Long productId) {
-        // TODO: 从 product_image 表查询封面图
-        return "";
+        // 从 product_image 表查询封面图
+        LambdaQueryWrapper<ProductImage> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(ProductImage::getProductId, productId)
+               .eq(ProductImage::getIsCover, 1)
+               .eq(ProductImage::getStatus, 0)  // 0=正常，1=删除
+               .last("LIMIT 1");
+
+        ProductImage coverImage = productImageMapper.selectOne(wrapper);
+        return coverImage != null ? coverImage.getImageUrl() : "";
     }
 
     // ========== 场次相关方法 ==========

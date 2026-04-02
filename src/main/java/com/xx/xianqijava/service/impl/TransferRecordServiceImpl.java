@@ -20,6 +20,7 @@ import com.xx.xianqijava.mapper.ShareItemImageMapper;
 import com.xx.xianqijava.mapper.TransferRecordMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.TransferRecordService;
+import com.xx.xianqijava.service.WebSocketMessageService;
 import com.xx.xianqijava.vo.TransferRecordVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,6 +44,7 @@ public class TransferRecordServiceImpl extends ServiceImpl<TransferRecordMapper,
     private final ShareItemImageMapper shareItemImageMapper;
     private final UserMapper userMapper;
     private final ShareItemBookingMapper shareItemBookingMapper;
+    private final WebSocketMessageService webSocketMessageService;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -110,7 +112,17 @@ public class TransferRecordServiceImpl extends ServiceImpl<TransferRecordMapper,
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "转赠记录创建失败");
         }
 
-        // TODO: 发送转赠通知给接收人
+        // 发送转赠通知给接收人
+        User fromUser = userMapper.selectById(fromUserId);
+        ShareItem item = shareItemMapper.selectById(createDTO.getShareId());
+        String notificationTitle = "转赠请求";
+        String notificationMessage = String.format(
+                "用户 %s 想要将「%s」转赠给您，请查看并确认",
+                fromUser != null ? fromUser.getNickname() : "未知用户",
+                item != null ? item.getTitle() : "物品"
+        );
+        webSocketMessageService.sendSystemNotification(createDTO.getToUserId(), notificationTitle, notificationMessage);
+        log.info("已发送转赠通知给接收人, toUserId={}", createDTO.getToUserId());
 
         log.info("转赠发起成功, transferId={}", record.getTransferId());
         return convertToVO(record);
@@ -194,8 +206,28 @@ public class TransferRecordServiceImpl extends ServiceImpl<TransferRecordMapper,
             log.info("自动拒绝{}条该物品的其他待确认转赠记录", otherTransfers.size());
         }
 
-        // TODO: 发送转赠完成通知给转出人
-        // TODO: 发送转赠拒绝通知给其他待确认的接收人
+        // 发送转赠完成通知给转出人
+        User toUser = userMapper.selectById(toUserId);
+        ShareItem transferredItem = shareItemMapper.selectById(record.getShareId());
+        String completeTitle = "转赠完成";
+        String completeMessage = String.format(
+                "您转赠的「%s」已被 %s 接收",
+                transferredItem != null ? transferredItem.getTitle() : "物品",
+                toUser != null ? toUser.getNickname() : "用户"
+        );
+        webSocketMessageService.sendSystemNotification(record.getFromUserId(), completeTitle, completeMessage);
+        log.info("已发送转赠完成通知给转出人, fromUserId={}", record.getFromUserId());
+
+        // 发送转赠拒绝通知给其他待确认的接收人
+        for (TransferRecord other : otherTransfers) {
+            String rejectTitle = "转赠已取消";
+            String rejectMessage = String.format(
+                    "您申请的「%s」已转赠给其他人",
+                    transferredItem != null ? transferredItem.getTitle() : "物品"
+            );
+            webSocketMessageService.sendSystemNotification(other.getToUserId(), rejectTitle, rejectMessage);
+        }
+        log.info("已发送转赠拒绝通知给{}个其他接收人", otherTransfers.size());
 
         log.info("转赠已完成, transferId={}, shareId={}, newOwnerId={}",
                 record.getTransferId(), record.getShareId(), toUserId);
@@ -227,7 +259,15 @@ public class TransferRecordServiceImpl extends ServiceImpl<TransferRecordMapper,
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "取消转赠失败");
         }
 
-        // TODO: 发送取消通知给接收人
+        // 发送取消通知给接收人
+        ShareItem item = shareItemMapper.selectById(record.getShareId());
+        String cancelTitle = "转赠已取消";
+        String cancelMessage = String.format(
+                "用户取消了对「%s」的转赠",
+                item != null ? item.getTitle() : "物品"
+        );
+        webSocketMessageService.sendSystemNotification(record.getToUserId(), cancelTitle, cancelMessage);
+        log.info("已发送取消通知给接收人, toUserId={}", record.getToUserId());
 
         log.info("转赠已取消, transferId={}", transferId);
     }

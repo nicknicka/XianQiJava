@@ -69,4 +69,7 @@ public class Order extends BaseEntity {
 
     @Schema(description = "完成时间")
     private LocalDateTime finishTime;
+
+    @Schema(description = "确认收货时间")
+    private LocalDateTime confirmTime;
 }
