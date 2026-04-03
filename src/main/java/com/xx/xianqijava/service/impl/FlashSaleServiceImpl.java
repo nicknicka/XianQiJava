@@ -8,11 +8,13 @@ import com.xx.xianqijava.entity.FlashSaleSession;
 import com.xx.xianqijava.entity.FlashSaleOrderExt;
 import com.xx.xianqijava.entity.Order;
 import com.xx.xianqijava.entity.Product;
+import com.xx.xianqijava.entity.ProductImage;
 import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.mapper.FlashSaleOrderExtMapper;
 import com.xx.xianqijava.mapper.FlashSaleProductMapper;
 import com.xx.xianqijava.mapper.FlashSaleSessionMapper;
 import com.xx.xianqijava.mapper.OrderMapper;
+import com.xx.xianqijava.mapper.ProductImageMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.service.FlashSaleService;
 import com.xx.xianqijava.util.ProductConditionUtil;
@@ -44,6 +46,7 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleSessionMapper, Fl
     private final FlashSaleSessionMapper flashSaleSessionMapper;
     private final FlashSaleOrderExtMapper flashSaleOrderExtMapper;
     private final OrderMapper orderMapper;
+    private final ProductImageMapper productImageMapper;
 
     @Override
     public FlashSaleSession getCurrentSession() {

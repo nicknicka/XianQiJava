@@ -508,7 +508,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         if (product != null) {
             vo.setProductTitle(product.getTitle());
             // 获取商品封面图
-            vo.setProductCoverImage(getProductCoverImage(product.getProductId()));
+            vo.setProductImage(getProductCoverImage(product.getProductId()));
             // 计算单价
             vo.setUnitPrice(product.getPrice() != null ? String.valueOf(product.getPrice()) : null);
         }

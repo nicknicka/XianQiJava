@@ -250,7 +250,7 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
             if (product != null) {
                 vo.setProductTitle(product.getTitle());
                 // 获取商品封面图
-                vo.setProductCoverImage(getProductCoverImage(product.getProductId()));
+                vo.setProductImage(getProductCoverImage(product.getProductId()));
             }
         }
 
