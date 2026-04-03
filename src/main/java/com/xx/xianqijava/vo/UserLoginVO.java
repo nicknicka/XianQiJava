@@ -31,6 +31,9 @@ public class UserLoginVO {
     @Schema(description = "手机号")
     private String phone;
 
+    @Schema(description = "是否为新用户")
+    private Boolean isNewUser;
+
     @Schema(description = "Token过期时间(毫秒时间戳)")
     private Long expiresIn;
 }

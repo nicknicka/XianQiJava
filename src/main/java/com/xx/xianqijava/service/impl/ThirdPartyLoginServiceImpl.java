@@ -90,6 +90,7 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
             String headImgUrl = (String) userInfo.get("headimgurl");
 
             // 3. 查找或创建用户
+            boolean isNewUser = false;
             User user = userMapper.selectOne(
                     new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<User>()
                             .eq(User::getWechatOpenid, openid)
@@ -97,11 +98,13 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
 
             if (user == null) {
                 // 创建新用户
+                isNewUser = true;
                 user = new User();
                 user.setWechatOpenid(openid);
                 user.setWechatUnionid(unionid);
                 user.setNickname(nickname);
                 user.setAvatar(headImgUrl);
+                user.setUsername("wx_" + openid.substring(0, Math.min(openid.length(), 8)));
                 user.setStatus(1); // 正常状态
 
                 userMapper.insert(user);
@@ -127,8 +130,9 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
             vo.setNickname(user.getNickname());
             vo.setAvatar(user.getAvatar());
             vo.setPhone(user.getPhone());
+            vo.setIsNewUser(isNewUser);
 
-            log.info("微信登录成功, userId={}, openid={}", user.getUserId(), openid);
+            log.info("微信登录成功, userId={}, openid={}, isNewUser={}", user.getUserId(), openid, isNewUser);
             return vo;
 
         } catch (BusinessException e) {
@@ -194,6 +198,7 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
             String headImgUrl = (String) userInfo.get("figureurl_qq_2"); // QQ头像100x100
 
             // 4. 查找或创建用户
+            boolean isNewUser = false;
             User user = userMapper.selectOne(
                     new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<User>()
                             .eq(User::getQqOpenid, openid)
@@ -201,10 +206,12 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
 
             if (user == null) {
                 // 创建新用户
+                isNewUser = true;
                 user = new User();
                 user.setQqOpenid(openid);
                 user.setNickname(nickname);
                 user.setAvatar(headImgUrl);
+                user.setUsername("qq_" + openid.substring(0, Math.min(openid.length(), 8)));
                 user.setStatus(1); // 正常状态
 
                 userMapper.insert(user);
@@ -227,8 +234,9 @@ public class ThirdPartyLoginServiceImpl implements ThirdPartyLoginService {
             vo.setNickname(user.getNickname());
             vo.setAvatar(user.getAvatar());
             vo.setPhone(user.getPhone());
+            vo.setIsNewUser(isNewUser);
 
-            log.info("QQ登录成功, userId={}, openid={}", user.getUserId(), openid);
+            log.info("QQ登录成功, userId={}, openid={}, isNewUser={}", user.getUserId(), openid, isNewUser);
             return vo;
 
         } catch (BusinessException e) {

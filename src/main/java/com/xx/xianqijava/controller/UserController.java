@@ -337,11 +337,9 @@ public class UserController {
      */
     @Operation(summary = "微信授权登录")
     @PostMapping("/login/wechat")
-    public Result<UserLoginVO> loginByWechat(@RequestParam("code") String code,
-                                              @RequestParam(value = "nickname", required = false) String nickname,
-                                              @RequestParam(value = "avatar", required = false) String avatar) {
-        log.info("微信授权登录请求, code={}", code);
-        UserLoginVO result = thirdPartyLoginService.loginByWechat(code);
+    public Result<UserLoginVO> loginByWechat(@Valid @RequestBody ThirdPartyLoginDTO dto) {
+        log.info("微信授权登录请求, code={}", dto.getCode());
+        UserLoginVO result = thirdPartyLoginService.loginByWechat(dto.getCode());
         return Result.success("登录成功", result);
     }
 
@@ -350,11 +348,9 @@ public class UserController {
      */
     @Operation(summary = "QQ授权登录")
     @PostMapping("/login/qq")
-    public Result<UserLoginVO> loginByQQ(@RequestParam("code") String code,
-                                         @RequestParam(value = "nickname", required = false) String nickname,
-                                         @RequestParam(value = "avatar", required = false) String avatar) {
-        log.info("QQ授权登录请求, code={}", code);
-        UserLoginVO result = thirdPartyLoginService.loginByQQ(code);
+    public Result<UserLoginVO> loginByQQ(@Valid @RequestBody ThirdPartyLoginDTO dto) {
+        log.info("QQ授权登录请求, code={}", dto.getCode());
+        UserLoginVO result = thirdPartyLoginService.loginByQQ(dto.getCode());
         return Result.success("登录成功", result);
     }
 
