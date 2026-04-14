@@ -13,10 +13,10 @@ import java.math.BigDecimal;
 public class ShareItemVO {
 
     @Schema(description = "共享物品ID")
-    private Long shareId;
+    private String shareId;
 
     @Schema(description = "所有者ID")
-    private Long ownerId;
+    private String ownerId;
 
     @Schema(description = "所有者昵称")
     private String ownerNickname;
@@ -34,7 +34,7 @@ public class ShareItemVO {
     private String description;
 
     @Schema(description = "分类ID")
-    private Long categoryId;
+    private String categoryId;
 
     @Schema(description = "分类名称")
     private String categoryName;

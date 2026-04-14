@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class ShareItemManageVO {
 
     @Schema(description = "共享物品ID")
-    private Long shareId;
+    private String shareId;
 
     @Schema(description = "物品标题")
     private String title;
@@ -24,7 +24,7 @@ public class ShareItemManageVO {
     private String description;
 
     @Schema(description = "分类ID")
-    private Long categoryId;
+    private String categoryId;
 
     @Schema(description = "分类名称")
     private String categoryName;
@@ -36,7 +36,7 @@ public class ShareItemManageVO {
     private BigDecimal dailyRent;
 
     @Schema(description = "封面图片ID")
-    private Long coverImageId;
+    private String coverImageId;
 
     @Schema(description = "封面图片URL")
     private String coverImageUrl;
@@ -51,7 +51,7 @@ public class ShareItemManageVO {
     private String availableTimes;
 
     @Schema(description = "所有者ID")
-    private Long ownerId;
+    private String ownerId;
 
     @Schema(description = "所有者昵称")
     private String ownerNickname;

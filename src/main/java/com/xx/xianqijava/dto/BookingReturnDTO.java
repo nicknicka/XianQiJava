@@ -13,7 +13,7 @@ public class BookingReturnDTO {
 
     @NotNull(message = "预约ID不能为空")
     @Schema(description = "预约ID")
-    private Long bookingId;
+    private String bookingId;
 
     @Schema(description = "归还备注")
     private String returnRemark;

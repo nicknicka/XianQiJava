@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -18,9 +20,11 @@ public class UserPreference {
 
     @Schema(description = "偏好设置ID")
     @TableId(type = IdType.AUTO)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long preferenceId;
 
     @Schema(description = "用户ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     @Schema(description = "主题：light-浅色，dark-深色，auto-跟随系统")

@@ -14,7 +14,7 @@ public class MessageSendDTO {
 
     @NotNull(message = "会话ID不能为空")
     @Schema(description = "会话ID")
-    private Long conversationId;
+    private String conversationId;
 
     @Schema(description = "消息内容（图片消息时为图片URL）")
     private String content;
@@ -24,7 +24,7 @@ public class MessageSendDTO {
     private Integer type;
 
     @Schema(description = "引用的父消息ID")
-    private Long parentMessageId;
+    private String parentMessageId;
 
     @Schema(description = "扩展数据（JSON）")
     private String extraData;

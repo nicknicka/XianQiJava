@@ -11,7 +11,7 @@ import lombok.Data;
 public class UserAddressVO {
 
     @Schema(description = "地址ID")
-    private Long addressId;
+    private String addressId;
 
     @Schema(description = "联系人姓名")
     private String contactName;

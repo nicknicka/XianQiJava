@@ -137,7 +137,7 @@ public class RecommendationHelperService {
 
         // 如果过滤后数量不足，从剩余商品中补充
         if (result.size() < limit) {
-            Set<Long> addedIds = result.stream()
+            Set<String> addedIds = result.stream()
                     .map(ProductVO::getProductId)
                     .collect(Collectors.toSet());
 

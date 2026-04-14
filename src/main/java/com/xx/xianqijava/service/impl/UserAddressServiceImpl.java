@@ -206,7 +206,7 @@ public class UserAddressServiceImpl extends ServiceImpl<UserAddressMapper, UserA
      */
     private UserAddressVO convertToVO(UserAddress address) {
         UserAddressVO vo = new UserAddressVO();
-        vo.setAddressId(address.getAddressId());
+        vo.setAddressId(String.valueOf(address.getAddressId()));
         vo.setContactName(address.getContactName());
         vo.setContactPhone(address.getContactPhone());
         vo.setProvince(address.getProvince());

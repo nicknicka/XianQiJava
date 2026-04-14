@@ -14,10 +14,10 @@ import java.time.LocalDateTime;
 public class UserCouponVO {
 
     @Schema(description = "用户优惠券ID")
-    private Long userCouponId;
+    private String userCouponId;
 
     @Schema(description = "优惠券ID")
-    private Long couponId;
+    private String couponId;
 
     @Schema(description = "优惠券名称")
     private String name;

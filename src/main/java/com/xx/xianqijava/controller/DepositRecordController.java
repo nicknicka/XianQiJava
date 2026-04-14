@@ -71,10 +71,10 @@ public class DepositRecordController {
                     ShareItem shareItem = shareItemMapper.selectById(booking.getShareId());
 
                     DepositRecordVO vo = new DepositRecordVO();
-                    vo.setRecordId(booking.getBookingId());
-                    vo.setBookingId(booking.getBookingId());
-                    vo.setShareId(booking.getShareId());
-                    vo.setUserId(userId);
+                    vo.setRecordId(String.valueOf(booking.getBookingId()));
+                    vo.setBookingId(String.valueOf(booking.getBookingId()));
+                    vo.setShareId(String.valueOf(booking.getShareId()));
+                    vo.setUserId(String.valueOf(userId));
                     vo.setAmount(booking.getDeposit());
                     vo.setStatus(booking.getDepositReturned() == 1 ? 2 : 1); // 1-已支付, 2-已退还
 

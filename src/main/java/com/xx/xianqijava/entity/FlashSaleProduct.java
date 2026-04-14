@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,12 +25,15 @@ public class FlashSaleProduct extends BaseEntity {
 
     @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "秒杀商品ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     @Schema(description = "场次ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long sessionId;
 
     @Schema(description = "商品ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long productId;
 
     @Schema(description = "秒杀价格")

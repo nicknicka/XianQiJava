@@ -15,10 +15,10 @@ import java.time.LocalDateTime;
 public class ShareItemBookingVO {
 
     @Schema(description = "预约ID")
-    private Long bookingId;
+    private String bookingId;
 
     @Schema(description = "共享物品ID")
-    private Long shareId;
+    private String shareId;
 
     @Schema(description = "物品标题")
     private String shareItemTitle;
@@ -27,7 +27,7 @@ public class ShareItemBookingVO {
     private String coverImageUrl;
 
     @Schema(description = "物品所有者ID")
-    private Long ownerId;
+    private String ownerId;
 
     @Schema(description = "所有者昵称")
     private String ownerNickname;
@@ -36,7 +36,7 @@ public class ShareItemBookingVO {
     private String ownerAvatar;
 
     @Schema(description = "借用者ID")
-    private Long borrowerId;
+    private String borrowerId;
 
     @Schema(description = "借用者昵称")
     private String borrowerNickname;

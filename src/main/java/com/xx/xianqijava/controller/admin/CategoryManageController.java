@@ -6,6 +6,7 @@ import com.xx.xianqijava.annotation.OperationLog;
 import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.entity.Category;
 import com.xx.xianqijava.mapper.CategoryMapper;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.vo.CategoryVO;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -308,14 +309,14 @@ public class CategoryManageController {
         List<CategoryVO> tree = new ArrayList<>();
 
         for (CategoryVO node : allNodes) {
-            Long nodeParentId = node.getParentId();
+            Long nodeParentId = IdConverter.toLong(node.getParentId());
             if (nodeParentId == null) {
                 nodeParentId = 0L;
             }
 
             if ((parentId == null && nodeParentId == 0) || (parentId != null && nodeParentId.equals(parentId))) {
                 // 递归查找子节点
-                List<CategoryVO> children = buildTree(allNodes, node.getCategoryId());
+                List<CategoryVO> children = buildTree(allNodes, IdConverter.toLong(node.getCategoryId()));
                 if (!children.isEmpty()) {
                     node.setChildren(children);
                 }
@@ -331,12 +332,12 @@ public class CategoryManageController {
      */
     private CategoryVO convertToVO(Category category) {
         CategoryVO vo = new CategoryVO();
-        vo.setCategoryId(category.getCategoryId());
+        vo.setCategoryId(String.valueOf(category.getCategoryId()));
         vo.setName(category.getName());
         vo.setIcon(category.getIcon());
         vo.setSortOrder(category.getSortOrder());
         vo.setStatus(category.getStatus());
-        vo.setParentId(category.getParentId());
+        vo.setParentId(String.valueOf(category.getParentId()));
         vo.setCreateTime(category.getCreateTime() != null ?
             category.getCreateTime().toString() : null);
         vo.setUpdateTime(category.getUpdateTime() != null ?

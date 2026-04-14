@@ -13,11 +13,11 @@ public class TransferCreateDTO {
 
     @NotNull(message = "共享物品ID不能为空")
     @Schema(description = "共享物品ID")
-    private Long shareId;
+    private String shareId;
 
     @NotNull(message = "接收人ID不能为空")
     @Schema(description = "接收人ID")
-    private Long toUserId;
+    private String toUserId;
 
     @Schema(description = "转赠说明")
     private String transferNote;

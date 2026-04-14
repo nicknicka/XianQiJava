@@ -1,6 +1,8 @@
 package com.xx.xianqijava.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,18 +24,23 @@ public class FlashSaleOrderExt implements Serializable {
 
     @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "主键ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     @Schema(description = "订单ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long orderId;
 
     @Schema(description = "用户ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     @Schema(description = "商品ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long productId;
 
     @Schema(description = "秒杀场次ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long sessionId;
 
     @Schema(description = "秒杀成交价")

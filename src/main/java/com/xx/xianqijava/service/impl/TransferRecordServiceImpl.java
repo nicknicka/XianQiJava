@@ -21,6 +21,7 @@ import com.xx.xianqijava.mapper.TransferRecordMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.TransferRecordService;
 import com.xx.xianqijava.service.WebSocketMessageService;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.vo.TransferRecordVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -101,9 +102,9 @@ public class TransferRecordServiceImpl extends ServiceImpl<TransferRecordMapper,
 
         // 7. 创建转赠记录
         TransferRecord record = new TransferRecord();
-        record.setShareId(createDTO.getShareId());
+        record.setShareId(IdConverter.toLong(createDTO.getShareId()));
         record.setFromUserId(fromUserId);
-        record.setToUserId(createDTO.getToUserId());
+        record.setToUserId(IdConverter.toLong(createDTO.getToUserId()));
         record.setTransferNote(createDTO.getTransferNote());
         record.setAcceptStatus(0); // 待确认
 
@@ -121,7 +122,7 @@ public class TransferRecordServiceImpl extends ServiceImpl<TransferRecordMapper,
                 fromUser != null ? fromUser.getNickname() : "未知用户",
                 item != null ? item.getTitle() : "物品"
         );
-        webSocketMessageService.sendSystemNotification(createDTO.getToUserId(), notificationTitle, notificationMessage);
+        webSocketMessageService.sendSystemNotification(IdConverter.toLong(createDTO.getToUserId()), notificationTitle, notificationMessage);
         log.info("已发送转赠通知给接收人, toUserId={}", createDTO.getToUserId());
 
         log.info("转赠发起成功, transferId={}", record.getTransferId());

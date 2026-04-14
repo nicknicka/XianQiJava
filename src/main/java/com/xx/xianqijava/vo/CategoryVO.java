@@ -11,7 +11,7 @@ import lombok.Data;
 public class CategoryVO {
 
     @Schema(description = "分类ID")
-    private Long categoryId;
+    private String categoryId;
 
     @Schema(description = "分类名称")
     private String name;
@@ -32,7 +32,7 @@ public class CategoryVO {
     private Integer status;
 
     @Schema(description = "父分类ID")
-    private Long parentId;
+    private String parentId;
 
     @Schema(description = "创建时间")
     private String createTime;

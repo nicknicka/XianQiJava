@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,9 +22,11 @@ public class UserFeedback extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "反馈ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long feedbackId;
 
     @Schema(description = "用户ID（可为空，匿名反馈）")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     @Schema(description = "联系方式")
@@ -44,6 +48,7 @@ public class UserFeedback extends BaseEntity {
     private Integer status;
 
     @Schema(description = "处理人ID（管理员）")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long handlerId;
 
     @Schema(description = "处理备注")

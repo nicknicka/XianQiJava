@@ -15,7 +15,7 @@ public class DepositPayDTO {
 
     @NotNull(message = "预约ID不能为空")
     @Schema(description = "预约ID")
-    private Long bookingId;
+    private String bookingId;
 
     @NotNull(message = "支付方式不能为空")
     @Schema(description = "支付方式：1-余额，2-支付宝，3-微信")

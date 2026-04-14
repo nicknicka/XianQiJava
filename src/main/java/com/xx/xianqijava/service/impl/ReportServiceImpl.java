@@ -13,6 +13,7 @@ import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.mapper.ReportMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.ReportService;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.vo.ReportVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -48,9 +49,9 @@ public class ReportServiceImpl extends ServiceImpl<ReportMapper, Report> impleme
         // 创建举报记录
         Report report = new Report();
         report.setReporterId(reporterId);
-        report.setReportedUserId(createDTO.getReportedUserId());
-        report.setConversationId(createDTO.getConversationId());
-        report.setMessageId(createDTO.getMessageId());
+        report.setReportedUserId(IdConverter.toLong(createDTO.getReportedUserId()));
+        report.setConversationId(IdConverter.toLong(createDTO.getConversationId()));
+        report.setMessageId(IdConverter.toLong(createDTO.getMessageId()));
         report.setReason(createDTO.getReason());
         report.setDescription(createDTO.getDescription());
         report.setEvidenceImages(createDTO.getEvidenceImages());

@@ -23,7 +23,7 @@ public class ShareItemCreateDTO {
 
     @NotNull(message = "分类ID不能为空")
     @Schema(description = "分类ID")
-    private Long categoryId;
+    private String categoryId;
 
     @NotNull(message = "押金不能为空")
     @Schema(description = "押金")

@@ -32,18 +32,19 @@ public class ImageUrlBuilder {
 
     /**
      * 构建图片访问URL（使用伪地址接口）
+     * 返回相对路径，由前端拼接完整URL
      * 前端访问: /api/image/{uuid}
      * 后端读取真实文件并返回
      *
      * @param uuid         图片UUID
      * @param extension    文件扩展名
-     * @return 完整的图片访问URL
+     * @return 图片访问相对路径
      */
     public String buildImageUrl(String uuid, String extension) {
         if (uuid == null || extension == null) {
             return null;
         }
-        return baseUrl + imageUrlPrefix + "/" + uuid + "." + extension;
+        return imageUrlPrefix + "/" + uuid + "." + extension;
     }
 
     /**
@@ -51,13 +52,13 @@ public class ImageUrlBuilder {
      *
      * @param uuid      图片UUID
      * @param extension 文件扩展名
-     * @return 缩略图URL
+     * @return 缩略图相对路径
      */
     public String buildThumbnailUrl(String uuid, String extension) {
         if (uuid == null || extension == null) {
             return null;
         }
-        return baseUrl + imageUrlPrefix + "/thumbnail/" + uuid + "." + extension;
+        return imageUrlPrefix + "/thumbnail/" + uuid + "." + extension;
     }
 
     /**
@@ -65,13 +66,13 @@ public class ImageUrlBuilder {
      *
      * @param uuid      图片UUID
      * @param extension 文件扩展名
-     * @return 中等尺寸图片URL
+     * @return 中等尺寸图片相对路径
      */
     public String buildMediumUrl(String uuid, String extension) {
         if (uuid == null || extension == null) {
             return null;
         }
-        return baseUrl + imageUrlPrefix + "/medium/" + uuid + "." + extension;
+        return imageUrlPrefix + "/medium/" + uuid + "." + extension;
     }
 
     /**

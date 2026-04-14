@@ -13,7 +13,7 @@ public class OrderRefundProcessDTO {
 
     @NotNull(message = "订单ID不能为空")
     @Schema(description = "订单ID", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Long orderId;
+    private String orderId;
 
     @NotNull(message = "处理结果不能为空")
     @Schema(description = "处理结果：1-同意退款，2-拒绝退款", requiredMode = Schema.RequiredMode.REQUIRED)

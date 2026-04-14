@@ -18,6 +18,7 @@ import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.OperationLogService;
 import com.xx.xianqijava.service.OrderService;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.vo.OrderVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +28,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -85,7 +87,7 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
         // 7. 创建订单
         Order order = new Order();
         order.setOrderNo(generateOrderNo());
-        order.setProductId(createDTO.getProductId());
+        order.setProductId(IdConverter.toLong(createDTO.getProductId()));
         order.setBuyerId(buyerId);
         order.setSellerId(product.getSellerId());
         order.setType(1); // 1-购买
@@ -163,13 +165,17 @@ public class OrderServiceImpl extends ServiceImpl<OrderMapper, Order> implements
     public void confirmOrder(Long orderId, Long sellerId) {
         log.info("确认订单, orderId={}, sellerId={}", orderId, sellerId);
 
+        if (sellerId == null) {
+            throw new BusinessException(ErrorCode.UNAUTHORIZED, "未登录或用户信息无效");
+        }
+
         Order order = getById(orderId);
         if (order == null) {
             throw new BusinessException(ErrorCode.ORDER_NOT_FOUND);
         }
 
         // 检查权限：只有卖家可以确认订单
-        if (!order.getSellerId().equals(sellerId)) {
+        if (order.getSellerId() == null || !Objects.equals(order.getSellerId(), sellerId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "只有卖家可以确认订单");
         }
 

@@ -13,7 +13,7 @@ public class BannerUpdateDTO {
 
     @NotNull(message = "轮播图ID不能为空")
     @Schema(description = "轮播图ID", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Long bannerId;
+    private String bannerId;
 
     @Schema(description = "轮播图标题")
     private String title;
@@ -31,7 +31,7 @@ public class BannerUpdateDTO {
     private String linkUrl;
 
     @Schema(description = "关联商品ID")
-    private Long linkProductId;
+    private String linkProductId;
 
     @Schema(description = "功能页面路径")
     private String linkPagePath;

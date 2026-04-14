@@ -15,13 +15,13 @@ import java.time.LocalDateTime;
 public class OrderManageVO {
 
     @Schema(description = "订单ID")
-    private Long orderId;
+    private String orderId;
 
     @Schema(description = "订单号")
     private String orderNo;
 
     @Schema(description = "商品ID")
-    private Long productId;
+    private String productId;
 
     @Schema(description = "商品标题")
     private String productTitle;
@@ -39,7 +39,7 @@ public class OrderManageVO {
     private Integer status;
 
     @Schema(description = "买家ID")
-    private Long buyerId;
+    private String buyerId;
 
     @Schema(description = "买家昵称")
     private String buyerNickname;
@@ -48,7 +48,7 @@ public class OrderManageVO {
     private String buyerPhone;
 
     @Schema(description = "卖家ID")
-    private Long sellerId;
+    private String sellerId;
 
     @Schema(description = "卖家昵称")
     private String sellerNickname;

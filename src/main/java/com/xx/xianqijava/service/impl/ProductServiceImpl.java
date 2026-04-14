@@ -28,6 +28,7 @@ import com.xx.xianqijava.mapper.ProductImageMapper;
 import com.xx.xianqijava.mapper.ProductStatisticsMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.ProductService;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.service.ProductFavoriteService;
 import com.xx.xianqijava.service.ProductViewHistoryService;
 import com.xx.xianqijava.vo.ProductAuditVO;
@@ -155,7 +156,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
         FlashSaleProduct flashProduct = new FlashSaleProduct();
         flashProduct.setProductId(productId);
-        flashProduct.setSessionId(createDTO.getSessionId());
+        flashProduct.setSessionId(IdConverter.toLong(createDTO.getSessionId()));
         flashProduct.setFlashPrice(createDTO.getFlashPrice());
         flashProduct.setStockCount(createDTO.getFlashSaleStock());
         flashProduct.setSoldCount(0);
@@ -281,7 +282,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             // 设置活动ID
             Object activityId = flashSaleInfo.get("activity_id");
             if (activityId != null) {
-                productVO.setActivityId(((Number) activityId).longValue());
+                productVO.setActivityId(String.valueOf(((Number) activityId).longValue()));
             }
         } else {
             productVO.setIsFlashSale(false);
@@ -408,7 +409,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             if (category == null || category.getDeleted() == 1) {
                 throw new BusinessException(ErrorCode.CATEGORY_NOT_FOUND);
             }
-            product.setCategoryId(updateDTO.getCategoryId());
+            product.setCategoryId(IdConverter.toLong(updateDTO.getCategoryId()));
         }
 
         // 更新商品信息
@@ -466,7 +467,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
         vo.setCreateTime(product.getCreateTime().toString());
 
         // 设置前端兼容字段
-        vo.setId(product.getProductId());
+        vo.setId(String.valueOf(product.getProductId()));
 
         // 将成色等级转换为字符串供前端使用
         if (product.getConditionLevel() != null) {
@@ -481,7 +482,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
             vo.setSellerCreditScore(seller.getCreditScore());
 
             // 设置前端兼容字段
-            vo.setUserId(product.getSellerId());
+            vo.setUserId(String.valueOf(product.getSellerId()));
             vo.setUserName(seller.getNickname());
             vo.setUserAvatar(seller.getAvatar());
             vo.setCreditLevel(seller.getCreditScore());
@@ -1041,7 +1042,7 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
 
         Product product = getById(draftId);
         if (product == null) {
-            throw new BusinessException(ErrorCode.PRODUCT_NOT_FOUND);
+            throw new BusinessException(ErrorCode.DRAFT_NOT_FOUND);
         }
         if (!product.getSellerId().equals(userId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
@@ -1125,8 +1126,8 @@ public class ProductServiceImpl extends ServiceImpl<ProductMapper, Product> impl
     private ProductDraftVO convertToDraftVO(Product product) {
         ProductDraftVO vo = new ProductDraftVO();
         BeanUtil.copyProperties(product, vo);
-        vo.setDraftId(product.getProductId());
-        vo.setProductId(product.getProductId());
+        vo.setDraftId(String.valueOf(product.getProductId()));
+        vo.setProductId(String.valueOf(product.getProductId()));
 
         // 将成色等级转换为字符串供前端使用
         if (product.getConditionLevel() != null) {

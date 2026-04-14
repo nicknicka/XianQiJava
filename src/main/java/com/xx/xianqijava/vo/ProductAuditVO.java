@@ -13,7 +13,7 @@ import java.util.List;
 public class ProductAuditVO {
 
     @Schema(description = "商品ID")
-    private Long productId;
+    private String productId;
 
     @Schema(description = "商品标题")
     private String title;
@@ -28,13 +28,13 @@ public class ProductAuditVO {
     private String conditionDesc;
 
     @Schema(description = "分类ID")
-    private Long categoryId;
+    private String categoryId;
 
     @Schema(description = "分类名称")
     private String categoryName;
 
     @Schema(description = "卖家ID")
-    private Long sellerId;
+    private String sellerId;
 
     @Schema(description = "卖家昵称")
     private String sellerNickname;
@@ -55,7 +55,7 @@ public class ProductAuditVO {
     private String auditTime;
 
     @Schema(description = "审核人ID")
-    private Long auditorId;
+    private String auditorId;
 
     @Schema(description = "商品图片列表")
     private List<String> images;

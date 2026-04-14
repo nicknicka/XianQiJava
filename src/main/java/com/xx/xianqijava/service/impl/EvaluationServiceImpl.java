@@ -19,6 +19,7 @@ import com.xx.xianqijava.mapper.ProductImageMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.EvaluationService;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.vo.EvaluationVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -101,7 +102,7 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
 
             // 5. 创建评价
             Evaluation evaluation = new Evaluation();
-            evaluation.setOrderId(createDTO.getOrderId());
+            evaluation.setOrderId(IdConverter.toLong(createDTO.getOrderId()));
             evaluation.setFromUserId(evaluatorId);
             evaluation.setToUserId(evaluatedUserId);
             evaluation.setScore(createDTO.getRating());
@@ -229,9 +230,9 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
         BeanUtil.copyProperties(evaluation, vo);
 
         // Map entity fields to VO fields
-        vo.setEvaluationId(evaluation.getEvalId());
-        vo.setEvaluatorId(evaluation.getFromUserId());
-        vo.setEvaluatedUserId(evaluation.getToUserId());
+        vo.setEvaluationId(String.valueOf(evaluation.getEvalId()));
+        vo.setEvaluatorId(String.valueOf(evaluation.getFromUserId()));
+        vo.setEvaluatedUserId(String.valueOf(evaluation.getToUserId()));
         vo.setRating(evaluation.getScore());
 
         // Set target type based on role
@@ -241,7 +242,7 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
         Order order = orderMapper.selectById(evaluation.getOrderId());
         if (order != null) {
             vo.setOrderNo(order.getOrderNo());
-            vo.setProductId(order.getProductId());
+            vo.setProductId(String.valueOf(order.getProductId()));
             // 设置商品价格（使用订单成交金额）
             vo.setProductPrice(order.getAmount());
 

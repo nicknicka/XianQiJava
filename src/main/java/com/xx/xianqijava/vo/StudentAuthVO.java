@@ -13,10 +13,10 @@ import java.util.List;
 public class StudentAuthVO {
 
     @Schema(description = "认证ID")
-    private Long id;
+    private String id;
 
     @Schema(description = "用户ID")
-    private Long userId;
+    private String userId;
 
     @Schema(description = "用户名")
     private String username;

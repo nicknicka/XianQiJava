@@ -14,10 +14,10 @@ public class ProductAuditQueryDTO {
     private String title;
 
     @Schema(description = "卖家ID")
-    private Long sellerId;
+    private String sellerId;
 
     @Schema(description = "分类ID")
-    private Long categoryId;
+    private String categoryId;
 
     @Schema(description = "审核状态：0-待审核，1-已通过，2-已拒绝")
     private Integer auditStatus;

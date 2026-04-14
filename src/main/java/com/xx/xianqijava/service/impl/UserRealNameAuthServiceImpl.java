@@ -89,15 +89,15 @@ public class UserRealNameAuthServiceImpl extends ServiceImpl<UserRealNameAuthMap
         // 2. 如果没有认证记录，返回默认状态
         if (auth == null) {
             RealNameAuthVO vo = new RealNameAuthVO();
-            vo.setUserId(userId);
+            vo.setUserId(String.valueOf(userId));
             vo.setStatus(0); // 未认证
             return vo;
         }
 
         // 3. 转换为VO
         RealNameAuthVO vo = new RealNameAuthVO();
-        vo.setId(auth.getId());
-        vo.setUserId(auth.getUserId());
+        vo.setId(String.valueOf(auth.getId()));
+        vo.setUserId(String.valueOf(auth.getUserId()));
         vo.setRealName(auth.getRealName());
         // 身份证号脱敏
         vo.setIdCard(maskIdCard(auth.getIdCard()));
@@ -185,8 +185,8 @@ public class UserRealNameAuthServiceImpl extends ServiceImpl<UserRealNameAuthMap
         User user = userService.getById(auth.getUserId());
 
         RealNameAuthVO vo = new RealNameAuthVO();
-        vo.setId(auth.getId());
-        vo.setUserId(auth.getUserId());
+        vo.setId(String.valueOf(auth.getId()));
+        vo.setUserId(String.valueOf(auth.getUserId()));
 
         // 添加用户信息
         if (user != null) {

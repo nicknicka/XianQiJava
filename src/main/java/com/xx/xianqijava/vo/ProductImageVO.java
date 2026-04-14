@@ -13,10 +13,10 @@ import java.time.LocalDateTime;
 public class ProductImageVO {
 
     @Schema(description = "图片ID")
-    private Long imageId;
+    private String imageId;
 
     @Schema(description = "商品ID")
-    private Long productId;
+    private String productId;
 
     @Schema(description = "图片URL")
     private String imageUrl;

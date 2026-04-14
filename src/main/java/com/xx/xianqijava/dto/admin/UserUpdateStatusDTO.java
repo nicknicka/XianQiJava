@@ -13,7 +13,7 @@ public class UserUpdateStatusDTO {
 
     @NotNull(message = "用户ID不能为空")
     @Schema(description = "用户ID", requiredMode = Schema.RequiredMode.REQUIRED)
-    private Long userId;
+    private String userId;
 
     @NotNull(message = "状态不能为空")
     @Schema(description = "状态：0-正常，1-封禁", requiredMode = Schema.RequiredMode.REQUIRED)

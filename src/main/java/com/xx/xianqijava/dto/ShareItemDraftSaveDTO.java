@@ -17,7 +17,7 @@ import java.util.List;
 public class ShareItemDraftSaveDTO {
 
     @Schema(description = "草稿ID（更新时传入）")
-    private Long draftId;
+    private String draftId;
 
     @Schema(description = "物品标题")
     @Size(max = 50, message = "物品标题长度不能超过50个字符")
@@ -28,7 +28,7 @@ public class ShareItemDraftSaveDTO {
     private String description;
 
     @Schema(description = "分类ID")
-    private Long categoryId;
+    private String categoryId;
 
     @Schema(description = "押金")
     @DecimalMin(value = "0", message = "押金不能小于0")

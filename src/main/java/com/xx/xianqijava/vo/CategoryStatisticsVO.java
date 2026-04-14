@@ -11,7 +11,7 @@ import lombok.Data;
 public class CategoryStatisticsVO {
 
     @Schema(description = "分类ID")
-    private Long categoryId;
+    private String categoryId;
 
     @Schema(description = "分类名称")
     private String categoryName;

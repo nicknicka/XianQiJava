@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -19,6 +21,7 @@ public class ProductStatistics {
 
     @TableId(type = IdType.INPUT)
     @Schema(description = "商品ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long productId;
 
     @Schema(description = "浏览次数")
@@ -35,6 +38,7 @@ public class ProductStatistics {
 
     @Schema(description = "封面图片ID")
     @TableField("cover_image_id")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long coverImageId;
 
     @Schema(description = "封面图片URL")

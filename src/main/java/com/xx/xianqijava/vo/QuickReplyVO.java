@@ -13,10 +13,10 @@ import java.time.LocalDateTime;
 public class QuickReplyVO {
 
     @Schema(description = "回复ID")
-    private Long replyId;
+    private String replyId;
 
     @Schema(description = "用户ID（0表示系统预设）")
-    private Long userId;
+    private String userId;
 
     @Schema(description = "回复内容")
     private String content;

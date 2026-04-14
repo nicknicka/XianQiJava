@@ -19,6 +19,7 @@ import com.xx.xianqijava.mapper.ShareItemMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.DepositRecordService;
 import com.xx.xianqijava.service.PaymentService;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.vo.DepositRecordVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -74,7 +75,7 @@ public class DepositRecordServiceImpl extends ServiceImpl<DepositRecordMapper, D
 
         // 5. 创建押金记录
         DepositRecord record = new DepositRecord();
-        record.setBookingId(payDTO.getBookingId());
+        record.setBookingId(IdConverter.toLong(payDTO.getBookingId()));
         record.setShareId(booking.getShareId());
         record.setUserId(userId);
         record.setAmount(booking.getDeposit());

@@ -13,7 +13,7 @@ public class EvaluationCreateDTO {
 
     @Schema(description = "订单ID")
     @NotNull(message = "订单ID不能为空")
-    private Long orderId;
+    private String orderId;
 
     @Schema(description = "评分：1-5星")
     @NotNull(message = "评分不能为空")

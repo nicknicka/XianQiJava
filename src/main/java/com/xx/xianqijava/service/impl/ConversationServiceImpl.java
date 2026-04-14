@@ -23,6 +23,7 @@ import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.ConversationService;
 import com.xx.xianqijava.service.ProductImageService;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.util.SecurityUtil;
 import com.xx.xianqijava.vo.ConversationVO;
 import com.xx.xianqijava.vo.MessageVO;
@@ -415,12 +416,12 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
 
         // 创建消息
         Message message = new Message();
-        message.setConversationId(sendDTO.getConversationId());
+        message.setConversationId(IdConverter.toLong(sendDTO.getConversationId()));
         message.setFromUserId(userId);
         message.setToUserId(toUserId);
         message.setContent(sendDTO.getContent());
         message.setType(sendDTO.getType());
-        message.setParentMessageId(sendDTO.getParentMessageId());
+        message.setParentMessageId(IdConverter.toLong(sendDTO.getParentMessageId()));
         message.setIsRead(0);
         message.setSendStatus(1); // 默认发送成功
         message.setStatus(0);
@@ -561,12 +562,12 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
 
         // 创建消息
         Message message = new Message();
-        message.setConversationId(sendDTO.getConversationId());
+        message.setConversationId(IdConverter.toLong(sendDTO.getConversationId()));
         message.setFromUserId(userId);
         message.setToUserId(toUserId);
         message.setContent(sendDTO.getImageUrl()); // content存储图片URL
         message.setType(2); // 2-图片消息
-        message.setParentMessageId(sendDTO.getParentMessageId());
+        message.setParentMessageId(IdConverter.toLong(sendDTO.getParentMessageId()));
         message.setIsRead(0);
         message.setSendStatus(1);
         message.setStatus(0);
@@ -772,7 +773,7 @@ public class ConversationServiceImpl extends ServiceImpl<ConversationMapper, Con
         // 确定对方用户ID
         Long otherUserId = conversation.getUserId1().equals(currentUserId)
                 ? conversation.getUserId2() : conversation.getUserId1();
-        vo.setOtherUserId(otherUserId);
+        vo.setOtherUserId(String.valueOf(otherUserId));
 
         // 获取对方用户信息
         User otherUser = userMapper.selectById(otherUserId);

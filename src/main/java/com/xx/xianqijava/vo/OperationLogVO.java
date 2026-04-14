@@ -11,22 +11,22 @@ import lombok.Data;
 public class OperationLogVO {
 
     @Schema(description = "日志ID")
-    private Long logId;
+    private String logId;
 
     @Schema(description = "操作用户ID")
-    private Long userId;
+    private String userId;
 
     @Schema(description = "用户名")
     private String username;
 
     @Schema(description = "业务对象ID")
-    private Long bizId;
+    private String bizId;
 
     @Schema(description = "业务对象类型")
     private String bizType;
 
     @Schema(description = "订单ID（当bizType为order时）")
-    private Long orderId;
+    private String orderId;
 
     @Schema(description = "操作文本（用于前端显示）")
     private String actionText;

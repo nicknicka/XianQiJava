@@ -13,7 +13,7 @@ public class ProductAuditDTO {
 
     @NotNull(message = "商品ID不能为空")
     @Schema(description = "商品ID")
-    private Long productId;
+    private String productId;
 
     @NotNull(message = "审核状态不能为空")
     @Schema(description = "审核状态：1-审核通过，2-审核拒绝")

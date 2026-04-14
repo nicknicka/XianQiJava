@@ -95,7 +95,7 @@ public class CampusLocationController {
      */
     private CampusLocationVO convertToVO(CampusLocation location) {
         CampusLocationVO vo = new CampusLocationVO();
-        vo.setLocationId(location.getLocationId());
+        vo.setLocationId(String.valueOf(location.getLocationId()));
         vo.setName(location.getName());
         vo.setCode(location.getCode());
         vo.setDescription(location.getDescription());

@@ -89,7 +89,7 @@ public class CategoryController {
      */
     private CategoryVO convertToVO(Category category) {
         CategoryVO vo = new CategoryVO();
-        vo.setCategoryId(category.getCategoryId());
+        vo.setCategoryId(String.valueOf(category.getCategoryId()));
         vo.setName(category.getName());
         vo.setIcon(category.getIcon());
         vo.setSortOrder(category.getSortOrder());

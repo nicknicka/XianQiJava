@@ -123,7 +123,12 @@ public class SecurityConfig {
                                 "/recommend/**",
                                 "/config/public",
                                 "/notification/unread-count",  // 允许未登录访问未读数（返回0）
-                                "/flash-sale/**"  // 限时秒杀接口（无需认证即可浏览）
+                                "/flash-sale/**",  // 限时秒杀接口（无需认证即可浏览）
+                                "/auth/**",  // 验证码等认证相关接口
+                                "/user/send-code",  // 发送验证码
+                                "/user/verify-code",  // 验证验证码
+                                "/user/reset-password",  // 重置密码
+                                "/user/login/phone"  // 手机号验证码登录
                         ).permitAll()
 
                         // 其他所有请求需要认证

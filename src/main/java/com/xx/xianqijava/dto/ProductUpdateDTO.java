@@ -40,7 +40,7 @@ public class ProductUpdateDTO {
     private Integer conditionLevel;
 
     @Schema(description = "分类ID")
-    private Long categoryId;
+    private String categoryId;
 
     @Schema(description = "交易地点")
     private String location;

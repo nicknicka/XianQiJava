@@ -13,13 +13,13 @@ import java.math.BigDecimal;
 public class DepositRecordVO {
 
     @Schema(description = "记录ID")
-    private Long recordId;
+    private String recordId;
 
     @Schema(description = "预约ID")
-    private Long bookingId;
+    private String bookingId;
 
     @Schema(description = "共享物品ID")
-    private Long shareId;
+    private String shareId;
 
     @Schema(description = "共享物品标题")
     private String shareItemTitle;
@@ -28,7 +28,7 @@ public class DepositRecordVO {
     private String shareItemCover;
 
     @Schema(description = "支付用户ID")
-    private Long userId;
+    private String userId;
 
     @Schema(description = "支付用户昵称")
     private String userNickname;

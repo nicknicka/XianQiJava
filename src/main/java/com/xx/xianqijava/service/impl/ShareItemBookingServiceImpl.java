@@ -18,6 +18,7 @@ import com.xx.xianqijava.mapper.ShareItemBookingMapper;
 import com.xx.xianqijava.mapper.ShareItemMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.ShareItemBookingService;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.vo.ShareItemBookingVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -96,7 +97,7 @@ public class ShareItemBookingServiceImpl extends ServiceImpl<ShareItemBookingMap
 
         // 7. 创建预约记录
         ShareItemBooking booking = new ShareItemBooking();
-        booking.setShareId(createDTO.getShareId());
+        booking.setShareId(IdConverter.toLong(createDTO.getShareId()));
         booking.setOwnerId(shareItem.getOwnerId());
         booking.setBorrowerId(borrowerId);
         booking.setStartDate(startDate);
@@ -154,14 +155,9 @@ public class ShareItemBookingServiceImpl extends ServiceImpl<ShareItemBookingMap
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "审批失败");
         }
 
-        // 如果批准，更新共享物品状态为借用中
-        if (status == 1) {
-            ShareItem shareItem = shareItemMapper.selectById(booking.getShareId());
-            if (shareItem != null) {
-                shareItem.setStatus(2); // 借用中
-                shareItemMapper.updateById(shareItem);
-            }
-        }
+        // 注意：审批通过时不改变共享物品状态
+        // 物品状态只有在借用者支付押金后才变为"借用中"
+        // 这样可以防止审批后借用者不付押金导致物品被锁定
 
         log.info("预约审批成功, bookingId={}, status={}", booking.getBookingId(), status);
         return convertToVO(booking);
@@ -197,8 +193,10 @@ public class ShareItemBookingServiceImpl extends ServiceImpl<ShareItemBookingMap
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "取消预约失败");
         }
 
-        // 如果是已批准状态，需要恢复物品状态
-        if (originalStatus == 1) {
+        // 如果取消的是借用中(status=4)的预约，需要恢复物品状态
+        // 注意：审批通过(status=1)后物品状态仍为"可借用"，所以不需要恢复
+        // 只有支付押金后(status=4)物品才变为"借用中"，取消时需要恢复
+        if (originalStatus == 4) {
             ShareItem shareItem = shareItemMapper.selectById(booking.getShareId());
             if (shareItem != null && shareItem.getStatus() == 2) {
                 shareItem.setStatus(1); // 恢复为可借用

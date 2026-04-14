@@ -25,7 +25,7 @@ public class AIChatHistoryVO {
     private Long id;
 
     @Schema(description = "用户ID", example = "1")
-    private Long userId;
+    private String userId;
 
     @Schema(description = "用户消息", example = "推荐一些手机")
     private String userMessage;

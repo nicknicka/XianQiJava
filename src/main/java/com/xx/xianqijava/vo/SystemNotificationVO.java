@@ -13,7 +13,7 @@ import java.time.LocalDateTime;
 public class SystemNotificationVO {
 
     @Schema(description = "通知ID")
-    private Long notificationId;
+    private String notificationId;
 
     @Schema(description = "通知标题")
     private String title;
@@ -37,10 +37,10 @@ public class SystemNotificationVO {
     private String linkUrl;
 
     @Schema(description = "关联商品ID")
-    private Long linkProductId;
+    private String linkProductId;
 
     @Schema(description = "关联订单ID")
-    private Long linkOrderId;
+    private String linkOrderId;
 
     @Schema(description = "发布时间")
     private LocalDateTime publishTime;

@@ -10,6 +10,7 @@ import com.xx.xianqijava.entity.Product;
 import com.xx.xianqijava.mapper.BannerMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.service.BannerManageService;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.vo.admin.BannerManageVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -133,7 +134,7 @@ public class BannerManageServiceImpl implements BannerManageService {
             banner.setLinkUrl(updateDTO.getLinkUrl());
         }
         if (updateDTO.getLinkProductId() != null) {
-            banner.setLinkProductId(updateDTO.getLinkProductId());
+            banner.setLinkProductId(IdConverter.toLong(updateDTO.getLinkProductId()));
         }
         if (updateDTO.getLinkPagePath() != null) {
             banner.setLinkPagePath(updateDTO.getLinkPagePath());

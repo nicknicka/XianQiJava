@@ -1,6 +1,8 @@
 package com.xx.xianqijava.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
@@ -24,11 +26,13 @@ public class AdminSession implements Serializable {
      * 会话ID
      */
     @TableId(type = IdType.ASSIGN_ID)
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long id;
 
     /**
      * 管理员ID
      */
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long adminId;
 
     /**

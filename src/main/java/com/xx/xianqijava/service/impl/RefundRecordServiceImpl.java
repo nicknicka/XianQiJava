@@ -23,6 +23,7 @@ import com.xx.xianqijava.mapper.ProductImageMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.mapper.RefundRecordMapper;
 import com.xx.xianqijava.service.RefundRecordService;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.vo.RefundVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -88,7 +89,7 @@ public class RefundRecordServiceImpl extends ServiceImpl<RefundRecordMapper, Ref
         // 6. 创建退款记录
         RefundRecord refund = new RefundRecord();
         refund.setRefundNo(generateRefundNo());
-        refund.setOrderId(createDTO.getOrderId());
+        refund.setOrderId(IdConverter.toLong(createDTO.getOrderId()));
         refund.setRefundAmount(createDTO.getRefundAmount());
         refund.setRefundReason(createDTO.getRefundReason());
         refund.setRefundType(createDTO.getRefundType());
@@ -421,11 +422,11 @@ public class RefundRecordServiceImpl extends ServiceImpl<RefundRecordMapper, Ref
         BeanUtil.copyProperties(refund, vo);
 
         // 设置订单信息
-        vo.setOrderId(order.getOrderId());
+        vo.setOrderId(String.valueOf(order.getOrderId()));
         vo.setOrderNo(order.getOrderNo());
-        vo.setBuyerId(order.getBuyerId());
-        vo.setSellerId(order.getSellerId());
-        vo.setProductId(order.getProductId());
+        vo.setBuyerId(String.valueOf(order.getBuyerId()));
+        vo.setSellerId(String.valueOf(order.getSellerId()));
+        vo.setProductId(String.valueOf(order.getProductId()));
 
         // 查询商品信息
         Product product = productMapper.selectById(order.getProductId());

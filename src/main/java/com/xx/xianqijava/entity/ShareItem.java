@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,9 +24,11 @@ public class ShareItem extends BaseEntity {
 
     @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "共享物品ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long shareId;
 
     @Schema(description = "所有者ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long ownerId;
 
     @Schema(description = "物品标题")
@@ -34,6 +38,7 @@ public class ShareItem extends BaseEntity {
     private String description;
 
     @Schema(description = "分类ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long categoryId;
 
     @Schema(description = "押金")
@@ -43,6 +48,7 @@ public class ShareItem extends BaseEntity {
     private BigDecimal dailyRent;
 
     @Schema(description = "封面图片ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long coverImageId;
 
     @Schema(description = "图片数量")

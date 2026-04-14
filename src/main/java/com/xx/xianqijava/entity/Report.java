@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -18,18 +20,23 @@ public class Report {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "举报ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long reportId;
 
     @Schema(description = "举报人ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long reporterId;
 
     @Schema(description = "被举报人ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long reportedUserId;
 
     @Schema(description = "会话ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long conversationId;
 
     @Schema(description = "消息ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long messageId;
 
     @Schema(description = "举报原因：欺诈/骚扰/虚假信息/其他")

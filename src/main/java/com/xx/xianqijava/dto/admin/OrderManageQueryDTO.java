@@ -17,10 +17,10 @@ public class OrderManageQueryDTO {
     private String productTitle;
 
     @Schema(description = "买家ID")
-    private Long buyerId;
+    private String buyerId;
 
     @Schema(description = "卖家ID")
-    private Long sellerId;
+    private String sellerId;
 
     @Schema(description = "订单状态：0-待确认，1-进行中，2-已完成，3-已取消，4-退款中")
     private Integer status;

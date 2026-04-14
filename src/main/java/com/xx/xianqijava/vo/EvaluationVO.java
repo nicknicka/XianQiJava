@@ -14,10 +14,10 @@ import java.time.LocalDateTime;
 public class EvaluationVO {
 
     @Schema(description = "评价ID")
-    private Long evaluationId;
+    private String evaluationId;
 
     @Schema(description = "订单ID")
-    private Long orderId;
+    private String orderId;
 
     @Schema(description = "订单号")
     private String orderNo;
@@ -32,7 +32,7 @@ public class EvaluationVO {
     private String tags;
 
     @Schema(description = "评价人ID")
-    private Long evaluatorId;
+    private String evaluatorId;
 
     @Schema(description = "评价人昵称")
     private String evaluatorNickname;
@@ -41,7 +41,7 @@ public class EvaluationVO {
     private String evaluatorAvatar;
 
     @Schema(description = "被评价人ID")
-    private Long evaluatedUserId;
+    private String evaluatedUserId;
 
     @Schema(description = "被评价人昵称")
     private String evaluatedUserNickname;
@@ -53,7 +53,7 @@ public class EvaluationVO {
     private Integer targetType;
 
     @Schema(description = "商品ID")
-    private Long productId;
+    private String productId;
 
     @Schema(description = "商品标题")
     private String productTitle;

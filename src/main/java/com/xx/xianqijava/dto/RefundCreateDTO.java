@@ -16,7 +16,7 @@ public class RefundCreateDTO {
 
     @Schema(description = "订单ID")
     @NotNull(message = "订单ID不能为空")
-    private Long orderId;
+    private String orderId;
 
     @Schema(description = "退款金额")
     @NotNull(message = "退款金额不能为空")

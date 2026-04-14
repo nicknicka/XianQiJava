@@ -13,10 +13,10 @@ import java.math.BigDecimal;
 public class ProductDraftVO {
 
     @Schema(description = "草稿ID")
-    private Long draftId;
+    private String draftId;
 
     @Schema(description = "商品ID（同draftId）")
-    private Long productId;
+    private String productId;
 
     @Schema(description = "商品标题")
     private String title;

@@ -16,19 +16,19 @@ import java.util.List;
 public class RefundVO {
 
     @Schema(description = "退款记录ID")
-    private Long refundId;
+    private String refundId;
 
     @Schema(description = "退款单号")
     private String refundNo;
 
     @Schema(description = "订单ID")
-    private Long orderId;
+    private String orderId;
 
     @Schema(description = "订单号")
     private String orderNo;
 
     @Schema(description = "商品ID")
-    private Long productId;
+    private String productId;
 
     @Schema(description = "商品名称")
     private String productName;
@@ -40,13 +40,13 @@ public class RefundVO {
     private String productImage;
 
     @Schema(description = "买家ID")
-    private Long buyerId;
+    private String buyerId;
 
     @Schema(description = "买家昵称")
     private String buyerNickname;
 
     @Schema(description = "卖家ID")
-    private Long sellerId;
+    private String sellerId;
 
     @Schema(description = "卖家昵称")
     private String sellerNickname;

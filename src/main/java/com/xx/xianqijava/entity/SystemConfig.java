@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,6 +22,7 @@ public class SystemConfig extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "配置ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long configId;
 
     @Schema(description = "配置键（唯一）")

@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,15 +24,19 @@ public class Message extends BaseEntity {
 
     @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "消息ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long messageId;
 
     @Schema(description = "会话ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long conversationId;
 
     @Schema(description = "发送者ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long fromUserId;
 
     @Schema(description = "接收者ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long toUserId;
 
     @Schema(description = "消息内容")
@@ -40,6 +46,7 @@ public class Message extends BaseEntity {
     private Integer type;
 
     @Schema(description = "引用的父消息ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long parentMessageId;
 
     @Schema(description = "是否已读：0-未读，1-已读")

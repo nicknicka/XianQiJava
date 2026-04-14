@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -18,15 +20,19 @@ public class Evaluation {
 
     @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "评价ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long evalId;
 
     @Schema(description = "订单ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long orderId;
 
     @Schema(description = "评价人ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long fromUserId;
 
     @Schema(description = "被评价人ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long toUserId;
 
     @Schema(description = "评分：1-5星")

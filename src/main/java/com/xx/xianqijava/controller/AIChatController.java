@@ -7,6 +7,7 @@ import com.xx.xianqijava.common.Result;
 import com.xx.xianqijava.dto.AIChatHistoryVO;
 import com.xx.xianqijava.dto.AIChatRequest;
 import com.xx.xianqijava.service.AIChatHistoryService;
+import com.xx.xianqijava.util.IdConverter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.extern.slf4j.Slf4j;
@@ -94,7 +95,7 @@ public class AIChatController {
 
             // 3. 保存聊天历史
             chatHistoryService.saveHistory(
-                    request.getUserId(),
+                    IdConverter.toLong(request.getUserId()),
                     request.getMessage(),
                     response,
                     intent
@@ -133,7 +134,7 @@ public class AIChatController {
         executor.execute(() -> {
             try {
                 String userMessage = request.getMessage();
-                Long userId = request.getUserId();
+                Long userId = IdConverter.toLong(request.getUserId());
 
                 log.info("🔄 [AI聊天-流式] 开始处理 | 用户ID: {}", userId);
 

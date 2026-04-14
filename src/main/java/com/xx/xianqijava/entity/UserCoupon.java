@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,12 +24,15 @@ public class UserCoupon extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "用户优惠券ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userCouponId;
 
     @Schema(description = "用户ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     @Schema(description = "优惠券ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long couponId;
 
     @Schema(description = "优惠券状态：1-未使用，2-已使用，3-已过期")
@@ -37,6 +42,7 @@ public class UserCoupon extends BaseEntity {
     private LocalDateTime usedTime;
 
     @Schema(description = "关联订单ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long orderId;
 
     @Schema(description = "过期时间")

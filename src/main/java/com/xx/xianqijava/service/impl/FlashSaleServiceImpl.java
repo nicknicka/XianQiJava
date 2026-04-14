@@ -17,6 +17,7 @@ import com.xx.xianqijava.mapper.OrderMapper;
 import com.xx.xianqijava.mapper.ProductImageMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.service.FlashSaleService;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.util.ProductConditionUtil;
 import com.xx.xianqijava.vo.FlashSaleProductVO;
 import com.xx.xianqijava.vo.FlashSaleSessionVO;
@@ -135,10 +136,10 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleSessionMapper, Fl
         BeanUtil.copyProperties(product, vo);
 
         // 设置商品ID（兼容前端使用的 id 字段）
-        vo.setId(product.getProductId());
+        vo.setId(String.valueOf(product.getProductId()));
 
         // 设置卖家信息兼容字段
-        vo.setUserId(product.getSellerId());
+        vo.setUserId(String.valueOf(product.getSellerId()));
         vo.setUserName(vo.getSellerNickname());
         vo.setUserAvatar(vo.getSellerAvatar());
         vo.setCreditLevel(vo.getSellerCreditScore());
@@ -172,7 +173,7 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleSessionMapper, Fl
 
         FlashSaleSession session = flashSaleSessionMapper.selectById(flashProduct.getSessionId());
         if (session != null) {
-            vo.setSessionId(session.getSessionId());
+            vo.setSessionId(String.valueOf(session.getSessionId()));
             vo.setEndTime(session.getEndTime().toString());
             vo.setStartTime(session.getStartTime().toString());
 
@@ -196,7 +197,7 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleSessionMapper, Fl
     private FlashSaleProductVO convertToFlashSaleProductVO(FlashSaleProduct flashProduct, FlashSaleSession session) {
         FlashSaleProductVO vo = new FlashSaleProductVO();
         vo.setId(flashProduct.getProductId());
-        vo.setSessionId(flashProduct.getSessionId());
+        vo.setSessionId(String.valueOf(flashProduct.getSessionId()));
         vo.setSeckillPrice(flashProduct.getFlashPrice());
         vo.setStock(flashProduct.getStockCount());
         vo.setSoldCount(flashProduct.getSoldCount());
@@ -274,7 +275,7 @@ public class FlashSaleServiceImpl extends ServiceImpl<FlashSaleSessionMapper, Fl
         return sessions.stream()
                 .map(session -> {
                     FlashSaleSessionVO vo = new FlashSaleSessionVO();
-                    vo.setSessionId(session.getSessionId());
+                    vo.setSessionId(String.valueOf(session.getSessionId()));
                     vo.setName(session.getName());
                     vo.setDescription(session.getDescription());
 

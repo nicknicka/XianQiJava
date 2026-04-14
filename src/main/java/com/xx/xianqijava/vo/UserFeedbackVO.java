@@ -13,10 +13,10 @@ import java.time.LocalDateTime;
 public class UserFeedbackVO {
 
     @Schema(description = "反馈ID")
-    private Long feedbackId;
+    private String feedbackId;
 
     @Schema(description = "用户ID")
-    private Long userId;
+    private String userId;
 
     @Schema(description = "用户昵称")
     private String userNickname;

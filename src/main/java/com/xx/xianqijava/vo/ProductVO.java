@@ -13,16 +13,16 @@ import java.math.BigDecimal;
 public class ProductVO {
 
     @Schema(description = "商品ID（前端兼容字段）")
-    private Long id;
+    private String id;
 
     @Schema(description = "商品ID")
-    private Long productId;
+    private String productId;
 
     @Schema(description = "卖家ID")
-    private Long sellerId;
+    private String sellerId;
 
     @Schema(description = "前端兼容字段：用户ID（同sellerId）")
-    private Long userId;
+    private String userId;
 
     @Schema(description = "卖家昵称")
     private String sellerNickname;
@@ -135,10 +135,10 @@ public class ProductVO {
     private Boolean isFlashSale;
 
     @Schema(description = "秒杀活动ID")
-    private Long activityId;
+    private String activityId;
 
     @Schema(description = "秒杀场次ID")
-    private Long sessionId;
+    private String sessionId;
 
     @Schema(description = "场次状态：upcoming-即将开始, ongoing-进行中, ended-已结束")
     private String sessionStatus;

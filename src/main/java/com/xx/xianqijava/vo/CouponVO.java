@@ -14,7 +14,7 @@ import java.time.LocalDateTime;
 public class CouponVO {
 
     @Schema(description = "优惠券ID")
-    private Long couponId;
+    private String couponId;
 
     @Schema(description = "优惠券名称")
     private String name;

@@ -71,7 +71,7 @@ public class ProductCreateDTO {
     private Boolean isFlashSale;
 
     @Schema(description = "秒杀场次ID")
-    private Long sessionId;
+    private String sessionId;
 
     @Schema(description = "秒杀价格")
     @DecimalMin(value = "0.01", message = "秒杀价格不能小于0.01元")

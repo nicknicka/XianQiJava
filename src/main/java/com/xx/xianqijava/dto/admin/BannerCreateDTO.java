@@ -31,7 +31,7 @@ public class BannerCreateDTO {
     private String linkUrl;
 
     @Schema(description = "关联商品ID（link_type=3时必填）")
-    private Long linkProductId;
+    private String linkProductId;
 
     @Schema(description = "功能页面路径（link_type=4时必填）")
     private String linkPagePath;

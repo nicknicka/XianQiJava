@@ -8,6 +8,7 @@ import com.xx.xianqijava.service.ProductFavoriteService;
 import com.xx.xianqijava.service.ProductService;
 import com.xx.xianqijava.service.ProductViewHistoryService;
 import com.xx.xianqijava.service.RecommendationService;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.vo.ProductVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -178,15 +179,15 @@ public class RecommendationServiceImpl implements RecommendationService {
         int historyCount = (int) Math.ceil(limit * 0.4);
         List<ProductVO> historyRec = getRecommendationsByHistory(userId, historyCount);
         recommendations.addAll(historyRec);
-        historyRec.forEach(vo -> recommendedIds.add(vo.getProductId()));
+        historyRec.forEach(vo -> recommendedIds.add(IdConverter.toLong(vo.getProductId())));
 
         // 2. 基于收藏推荐（30%）
         int favoriteCount = (int) Math.ceil(limit * 0.3);
         List<ProductVO> favoriteRec = getRecommendationsByFavorites(userId, favoriteCount);
         for (ProductVO vo : favoriteRec) {
-            if (!recommendedIds.contains(vo.getProductId())) {
+            if (!recommendedIds.contains(IdConverter.toLong(vo.getProductId()))) {
                 recommendations.add(vo);
-                recommendedIds.add(vo.getProductId());
+                recommendedIds.add(IdConverter.toLong(vo.getProductId()));
             }
         }
 
@@ -194,9 +195,9 @@ public class RecommendationServiceImpl implements RecommendationService {
         int collabCount = (int) Math.ceil(limit * 0.2);
         List<ProductVO> collabRec = getRecommendationsByCollaborative(userId, collabCount);
         for (ProductVO vo : collabRec) {
-            if (!recommendedIds.contains(vo.getProductId())) {
+            if (!recommendedIds.contains(IdConverter.toLong(vo.getProductId()))) {
                 recommendations.add(vo);
-                recommendedIds.add(vo.getProductId());
+                recommendedIds.add(IdConverter.toLong(vo.getProductId()));
             }
         }
 
@@ -205,9 +206,9 @@ public class RecommendationServiceImpl implements RecommendationService {
             int remainCount = limit - recommendations.size();
             List<ProductVO> hotProducts = getHotProducts(null, remainCount + 5);
             for (ProductVO vo : hotProducts) {
-                if (!recommendedIds.contains(vo.getProductId())) {
+                if (!recommendedIds.contains(IdConverter.toLong(vo.getProductId()))) {
                     recommendations.add(vo);
-                    recommendedIds.add(vo.getProductId());
+                    recommendedIds.add(IdConverter.toLong(vo.getProductId()));
                     if (recommendations.size() >= limit) {
                         break;
                     }

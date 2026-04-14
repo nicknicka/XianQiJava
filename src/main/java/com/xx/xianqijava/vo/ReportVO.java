@@ -13,10 +13,10 @@ import java.time.LocalDateTime;
 public class ReportVO {
 
     @Schema(description = "举报ID")
-    private Long reportId;
+    private String reportId;
 
     @Schema(description = "举报人ID")
-    private Long reporterId;
+    private String reporterId;
 
     @Schema(description = "举报人昵称")
     private String reporterNickname;
@@ -25,7 +25,7 @@ public class ReportVO {
     private String reporterAvatar;
 
     @Schema(description = "被举报人ID")
-    private Long reportedUserId;
+    private String reportedUserId;
 
     @Schema(description = "被举报人昵称")
     private String reportedUserNickname;
@@ -34,10 +34,10 @@ public class ReportVO {
     private String reportedUserAvatar;
 
     @Schema(description = "会话ID")
-    private Long conversationId;
+    private String conversationId;
 
     @Schema(description = "消息ID")
-    private Long messageId;
+    private String messageId;
 
     @Schema(description = "举报原因")
     private String reason;

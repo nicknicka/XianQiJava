@@ -13,7 +13,7 @@ public class BookingApproveDTO {
 
     @NotNull(message = "预约ID不能为空")
     @Schema(description = "预约ID")
-    private Long bookingId;
+    private String bookingId;
 
     @NotNull(message = "审批状态不能为空")
     @Schema(description = "审批状态：1-批准，2-拒绝")

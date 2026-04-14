@@ -11,10 +11,10 @@ import lombok.Data;
 public class TransferRecordVO {
 
     @Schema(description = "转赠记录ID")
-    private Long transferId;
+    private String transferId;
 
     @Schema(description = "共享物品ID")
-    private Long shareId;
+    private String shareId;
 
     @Schema(description = "共享物品标题")
     private String shareItemTitle;
@@ -23,7 +23,7 @@ public class TransferRecordVO {
     private String shareItemImage;
 
     @Schema(description = "转出人ID")
-    private Long fromUserId;
+    private String fromUserId;
 
     @Schema(description = "转出人昵称")
     private String fromUserNickname;
@@ -32,7 +32,7 @@ public class TransferRecordVO {
     private String fromUserAvatar;
 
     @Schema(description = "接收人ID")
-    private Long toUserId;
+    private String toUserId;
 
     @Schema(description = "接收人昵称")
     private String toUserNickname;

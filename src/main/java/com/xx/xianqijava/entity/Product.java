@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,9 +25,11 @@ public class Product extends BaseEntity {
 
     @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "商品ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long productId;
 
     @Schema(description = "卖家ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long sellerId;
 
     @Schema(description = "商品标题")
@@ -35,6 +39,7 @@ public class Product extends BaseEntity {
     private String description;
 
     @Schema(description = "分类ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long categoryId;
 
     @Schema(description = "价格")
@@ -47,6 +52,7 @@ public class Product extends BaseEntity {
     private Integer conditionLevel;
 
     @Schema(description = "封面图片ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long coverImageId;
 
     @Schema(description = "图片数量")
@@ -101,6 +107,7 @@ public class Product extends BaseEntity {
     private LocalDateTime auditTime;
 
     @Schema(description = "审核人ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long auditorId;
 
     @Schema(description = "浏览次数")

@@ -14,10 +14,10 @@ public class ShareItemManageQueryDTO {
     private String title;
 
     @Schema(description = "所有者ID")
-    private Long ownerId;
+    private String ownerId;
 
     @Schema(description = "分类ID")
-    private Long categoryId;
+    private String categoryId;
 
     @Schema(description = "状态：0-下架，1-可借用，2-借用中，4-草稿")
     private Integer status;

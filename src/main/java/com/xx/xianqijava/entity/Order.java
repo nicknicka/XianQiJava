@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,21 +25,26 @@ public class Order extends BaseEntity {
 
     @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "订单ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long orderId;
 
     @Schema(description = "订单号")
     private String orderNo;
 
     @Schema(description = "买家ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long buyerId;
 
     @Schema(description = "卖家ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long sellerId;
 
     @Schema(description = "商品ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long productId;
 
     @Schema(description = "共享物品ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long shareId;
 
     @Schema(description = "类型：1-购买，2-共享")

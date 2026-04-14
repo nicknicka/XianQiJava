@@ -11,13 +11,13 @@ import lombok.Data;
 public class MessageVO {
 
     @Schema(description = "消息ID")
-    private Long messageId;
+    private String messageId;
 
     @Schema(description = "会话ID")
-    private Long conversationId;
+    private String conversationId;
 
     @Schema(description = "发送者ID")
-    private Long fromUserId;
+    private String fromUserId;
 
     @Schema(description = "发送者昵称")
     private String fromUserNickname;
@@ -26,7 +26,7 @@ public class MessageVO {
     private String fromUserAvatar;
 
     @Schema(description = "接收者ID")
-    private Long toUserId;
+    private String toUserId;
 
     @Schema(description = "消息内容")
     private String content;
@@ -35,7 +35,7 @@ public class MessageVO {
     private Integer type;
 
     @Schema(description = "引用的父消息ID")
-    private Long parentMessageId;
+    private String parentMessageId;
 
     @Schema(description = "引用的父消息内容")
     private String parentMessageContent;

@@ -11,7 +11,7 @@ import lombok.Data;
 public class HotTagVO {
 
     @Schema(description = "标签ID")
-    private Long tagId;
+    private String tagId;
 
     @Schema(description = "关键词")
     private String keyword;

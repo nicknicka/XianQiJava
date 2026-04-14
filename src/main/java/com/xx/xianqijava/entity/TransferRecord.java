@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,15 +24,19 @@ public class TransferRecord extends BaseEntity {
 
     @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "转赠记录ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long transferId;
 
     @Schema(description = "共享物品ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long shareId;
 
     @Schema(description = "转出人ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long fromUserId;
 
     @Schema(description = "接收人ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long toUserId;
 
     @Schema(description = "转赠说明")

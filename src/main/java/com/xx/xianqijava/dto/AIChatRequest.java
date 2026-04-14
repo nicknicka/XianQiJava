@@ -17,7 +17,7 @@ public class AIChatRequest {
 
     @NotNull(message = "用户ID不能为空")
     @Schema(description = "用户ID", required = true, example = "1")
-    private Long userId;
+    private String userId;
 
     @NotBlank(message = "消息内容不能为空")
     @Schema(description = "用户消息内容", required = true, example = "推荐一些手机")

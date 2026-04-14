@@ -56,7 +56,7 @@ public class FlashSaleProductVO {
 
     // 场次关联
     @Schema(description = "所属场次ID")
-    private Long sessionId;
+    private String sessionId;
 
     // 商品详细信息
     @Schema(description = "分类ID")
@@ -73,7 +73,7 @@ public class FlashSaleProductVO {
 
     // 卖家信息
     @Schema(description = "卖家ID")
-    private Long userId;
+    private String userId;
 
     @Schema(description = "卖家昵称")
     private String userName;

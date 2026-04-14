@@ -6,6 +6,7 @@ import com.xx.xianqijava.entity.HotTag;
 import com.xx.xianqijava.entity.SystemNotification;
 import com.xx.xianqijava.mapper.HotTagMapper;
 import com.xx.xianqijava.mapper.SystemNotificationMapper;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.vo.HotTagVO;
 import com.xx.xianqijava.vo.SystemNotificationVO;
 import io.swagger.v3.oas.annotations.Operation;
@@ -76,7 +77,7 @@ public class PublicController {
 
         List<HotTagVO> voList = hotTags.stream().map(tag -> {
             HotTagVO vo = new HotTagVO();
-            vo.setTagId(tag.getId());
+            vo.setTagId(String.valueOf(tag.getId()));
             vo.setKeyword(tag.getKeyword());
             vo.setSearchCount(tag.getSearchCount());
             vo.setSortOrder(tag.getSortOrder());
@@ -128,15 +129,15 @@ public class PublicController {
      */
     private SystemNotificationVO convertToVO(SystemNotification notification) {
         SystemNotificationVO vo = new SystemNotificationVO();
-        vo.setNotificationId(notification.getNotificationId());
+        vo.setNotificationId(String.valueOf(notification.getNotificationId()));
         vo.setTitle(notification.getTitle());
         vo.setContent(notification.getContent());
         vo.setType(notification.getType());
         vo.setTypeDesc(getTypeDesc(notification.getType()));
         vo.setLinkType(notification.getLinkType());
         vo.setLinkUrl(notification.getLinkUrl());
-        vo.setLinkProductId(notification.getLinkProductId());
-        vo.setLinkOrderId(notification.getLinkOrderId());
+        vo.setLinkProductId(String.valueOf(notification.getLinkProductId()));
+        vo.setLinkOrderId(String.valueOf(notification.getLinkOrderId()));
         vo.setPublishTime(notification.getPublishTime());
         vo.setPriority(notification.getPriority());
         return vo;

@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,6 +22,7 @@ public class Banner extends BaseEntity {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "轮播图ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long bannerId;
 
     @Schema(description = "轮播图标题")
@@ -38,6 +41,7 @@ public class Banner extends BaseEntity {
     private String linkUrl;
 
     @Schema(description = "关联商品ID（link_type=3时使用）")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long linkProductId;
 
     @Schema(description = "功能页面路径（link_type=4时使用）")

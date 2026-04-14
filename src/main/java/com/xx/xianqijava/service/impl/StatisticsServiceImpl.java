@@ -385,7 +385,7 @@ public class StatisticsServiceImpl implements StatisticsService {
         return categories.stream()
                 .map(category -> {
                     CategoryStatisticsVO vo = new CategoryStatisticsVO();
-                    vo.setCategoryId(category.getCategoryId());
+                    vo.setCategoryId(String.valueOf(category.getCategoryId()));
                     vo.setCategoryName(category.getName());
 
                     LambdaQueryWrapper<Product> productWrapper = new LambdaQueryWrapper<>();

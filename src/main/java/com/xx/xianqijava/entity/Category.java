@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -20,6 +22,7 @@ public class Category extends BaseEntity {
 
     @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "分类ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long categoryId;
 
     @Schema(description = "分类名称")
@@ -29,6 +32,7 @@ public class Category extends BaseEntity {
     private String code;
 
     @Schema(description = "父分类ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long parentId;
 
     @Schema(description = "图标（emoji）")

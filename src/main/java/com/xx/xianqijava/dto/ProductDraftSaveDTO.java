@@ -16,7 +16,7 @@ import java.time.LocalDate;
 public class ProductDraftSaveDTO {
 
     @Schema(description = "草稿ID（更新时传入）")
-    private Long draftId;
+    private String draftId;
 
     @Schema(description = "商品标题")
     @Size(max = 50, message = "商品标题长度不能超过50个字符")
@@ -67,7 +67,7 @@ public class ProductDraftSaveDTO {
     private Boolean isFlashSale;
 
     @Schema(description = "秒杀场次ID")
-    private Long sessionId;
+    private String sessionId;
 
     @Schema(description = "秒杀价格")
     private BigDecimal flashPrice;

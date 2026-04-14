@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -23,12 +25,14 @@ public class RefundRecord extends BaseEntity {
 
     @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "退款记录ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long refundId;
 
     @Schema(description = "退款单号")
     private String refundNo;
 
     @Schema(description = "订单ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long orderId;
 
     @Schema(description = "退款金额")

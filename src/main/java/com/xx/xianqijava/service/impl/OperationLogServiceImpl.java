@@ -166,7 +166,7 @@ public class OperationLogServiceImpl extends ServiceImpl<OperationLogMapper, Ope
 
         // 设置订单ID
         if ("order".equals(log.getBizType())) {
-            vo.setOrderId(log.getBizId());
+            vo.setOrderId(String.valueOf(log.getBizId()));
         }
 
         // 设置操作文本

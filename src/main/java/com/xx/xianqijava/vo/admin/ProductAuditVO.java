@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class ProductAuditVO {
 
     @Schema(description = "商品ID")
-    private Long productId;
+    private String productId;
 
     @Schema(description = "商品名称")
     private String title;
@@ -43,14 +43,14 @@ public class ProductAuditVO {
     private LocalDateTime auditTime;
 
     @Schema(description = "审核人ID")
-    private Long auditorId;
+    private String auditorId;
 
     @Schema(description = "创建时间")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
     @Schema(description = "卖家ID")
-    private Long sellerId;
+    private String sellerId;
 
     @Schema(description = "卖家昵称")
     private String sellerNickname;
@@ -59,7 +59,7 @@ public class ProductAuditVO {
     private String sellerPhone;
 
     @Schema(description = "分类ID")
-    private Long categoryId;
+    private String categoryId;
 
     @Schema(description = "分类名称")
     private String categoryName;

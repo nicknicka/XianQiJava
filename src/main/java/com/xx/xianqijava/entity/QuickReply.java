@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -18,9 +20,11 @@ public class QuickReply {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "回复ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long replyId;
 
     @Schema(description = "用户ID（0表示系统预设）")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     @Schema(description = "回复内容")

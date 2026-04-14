@@ -1,7 +1,5 @@
 package com.xx.xianqijava.vo;
 
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -15,8 +13,7 @@ import java.time.LocalDateTime;
 public class FlashSaleSessionVO {
 
     @Schema(description = "场次ID")
-    @JsonSerialize(using = ToStringSerializer.class)
-    private Long sessionId;
+    private String sessionId;
 
     @Schema(description = "场次名称")
     private String name;

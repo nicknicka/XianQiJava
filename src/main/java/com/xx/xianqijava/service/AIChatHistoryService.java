@@ -115,7 +115,7 @@ public class AIChatHistoryService {
     private AIChatHistoryVO convertToVO(AIChatHistory history) {
         return AIChatHistoryVO.builder()
                 .id(history.getId())
-                .userId(history.getUserId())
+                .userId(String.valueOf(history.getUserId()))
                 .userMessage(history.getUserMessage())
                 .aiResponse(history.getAiResponse())
                 .intentType(history.getIntentType())

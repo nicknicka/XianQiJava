@@ -21,6 +21,7 @@ import com.xx.xianqijava.mapper.OrderMapper;
 import com.xx.xianqijava.mapper.ProductMapper;
 import com.xx.xianqijava.mapper.UserCouponMapper;
 import com.xx.xianqijava.service.CouponService;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.util.SecurityUtil;
 import com.xx.xianqijava.vo.CouponVO;
 import com.xx.xianqijava.vo.UserCouponVO;
@@ -307,7 +308,7 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
      */
     private CouponVO convertToVO(Coupon coupon, Long userId) {
         CouponVO vo = new CouponVO();
-        vo.setCouponId(coupon.getCouponId());
+        vo.setCouponId(String.valueOf(coupon.getCouponId()));
         vo.setName(coupon.getName());
         vo.setDescription(coupon.getDescription());
         vo.setType(coupon.getType());
@@ -372,8 +373,8 @@ public class CouponServiceImpl extends ServiceImpl<CouponMapper, Coupon> impleme
         Coupon coupon = baseMapper.selectById(userCoupon.getCouponId());
 
         UserCouponVO vo = new UserCouponVO();
-        vo.setUserCouponId(userCoupon.getUserCouponId());
-        vo.setCouponId(userCoupon.getCouponId());
+        vo.setUserCouponId(String.valueOf(userCoupon.getUserCouponId()));
+        vo.setCouponId(String.valueOf(userCoupon.getCouponId()));
 
         if (coupon != null) {
             vo.setName(coupon.getName());

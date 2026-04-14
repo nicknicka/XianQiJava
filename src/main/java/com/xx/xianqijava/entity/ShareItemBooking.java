@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,15 +27,19 @@ public class ShareItemBooking extends BaseEntity {
 
     @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "预约ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long bookingId;
 
     @Schema(description = "共享物品ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long shareId;
 
     @Schema(description = "物品所有者ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long ownerId;
 
     @Schema(description = "借用者ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long borrowerId;
 
     @Schema(description = "预约借用开始日期")

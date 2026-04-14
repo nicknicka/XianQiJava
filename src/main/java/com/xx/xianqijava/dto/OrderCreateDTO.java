@@ -15,7 +15,7 @@ public class OrderCreateDTO {
 
     @Schema(description = "商品ID")
     @NotNull(message = "商品ID不能为空")
-    private Long productId;
+    private String productId;
 
     @Schema(description = "购买数量")
     @NotNull(message = "购买数量不能为空")

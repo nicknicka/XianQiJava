@@ -27,6 +27,7 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletRequest;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 用户控制器
@@ -264,8 +265,9 @@ public class UserController {
      */
     @Operation(summary = "发送验证码")
     @PostMapping("/send-code")
-    public Result<Void> sendVerifyCode(@RequestParam("phone") String phone,
-                                       @RequestParam(value = "type", defaultValue = "login") String type) {
+    public Result<Void> sendVerifyCode(@RequestBody Map<String, String> params) {
+        String phone = params.get("phone");
+        String type = params.getOrDefault("type", "login");
         log.info("发送验证码请求, phone={}, type={}", phone, type);
         userService.sendVerifyCode(phone, type);
         return Result.success("验证码发送成功");
@@ -276,8 +278,9 @@ public class UserController {
      */
     @Operation(summary = "验证验证码")
     @PostMapping("/verify-code")
-    public Result<Boolean> verifyCode(@RequestParam("phone") String phone,
-                                      @RequestParam("code") String code) {
+    public Result<Boolean> verifyCode(@RequestBody Map<String, String> params) {
+        String phone = params.get("phone");
+        String code = params.get("code");
         log.info("验证验证码请求, phone={}", phone);
         boolean isValid = userService.verifyCode(phone, code);
         return Result.success(isValid);
@@ -288,9 +291,10 @@ public class UserController {
      */
     @Operation(summary = "重置密码")
     @PostMapping("/reset-password")
-    public Result<Void> resetPassword(@RequestParam("phone") String phone,
-                                      @RequestParam("code") String code,
-                                      @RequestParam("newPassword") String newPassword) {
+    public Result<Void> resetPassword(@RequestBody Map<String, String> params) {
+        String phone = params.get("phone");
+        String code = params.get("code");
+        String newPassword = params.get("newPassword");
         log.info("重置密码请求, phone={}", phone);
         userService.resetPassword(phone, code, newPassword);
         return Result.success("密码重置成功");

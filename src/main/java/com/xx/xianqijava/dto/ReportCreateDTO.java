@@ -14,13 +14,13 @@ public class ReportCreateDTO {
 
     @NotNull(message = "被举报人ID不能为空")
     @Schema(description = "被举报人ID")
-    private Long reportedUserId;
+    private String reportedUserId;
 
     @Schema(description = "会话ID")
-    private Long conversationId;
+    private String conversationId;
 
     @Schema(description = "消息ID")
-    private Long messageId;
+    private String messageId;
 
     @NotBlank(message = "举报原因不能为空")
     @Schema(description = "举报原因：欺诈/骚扰/虚假信息/其他")

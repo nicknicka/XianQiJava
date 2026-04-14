@@ -11,7 +11,7 @@ import lombok.Data;
 public class SystemConfigVO {
 
     @Schema(description = "配置ID")
-    private Long configId;
+    private String configId;
 
     @Schema(description = "配置键")
     private String configKey;

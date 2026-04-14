@@ -19,6 +19,7 @@ import com.xx.xianqijava.mapper.ShareItemImageMapper;
 import com.xx.xianqijava.mapper.ShareItemMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.ShareItemService;
+import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.vo.ShareItemDraftVO;
 import com.xx.xianqijava.vo.ShareItemVO;
 import lombok.RequiredArgsConstructor;
@@ -422,7 +423,7 @@ public class ShareItemServiceImpl extends ServiceImpl<ShareItemMapper, ShareItem
             shareItem.setDescription(draftDTO.getDescription());
         }
         if (draftDTO.getCategoryId() != null) {
-            shareItem.setCategoryId(draftDTO.getCategoryId());
+            shareItem.setCategoryId(IdConverter.toLong(draftDTO.getCategoryId()));
         }
         if (draftDTO.getDeposit() != null) {
             shareItem.setDeposit(draftDTO.getDeposit());
@@ -519,7 +520,7 @@ public class ShareItemServiceImpl extends ServiceImpl<ShareItemMapper, ShareItem
 
         ShareItem shareItem = getById(draftId);
         if (shareItem == null) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST, "共享物品不存在");
+            throw new BusinessException(ErrorCode.DRAFT_NOT_FOUND);
         }
         if (!shareItem.getOwnerId().equals(ownerId)) {
             throw new BusinessException(ErrorCode.FORBIDDEN);
@@ -603,8 +604,8 @@ public class ShareItemServiceImpl extends ServiceImpl<ShareItemMapper, ShareItem
     private ShareItemDraftVO convertToDraftVO(ShareItem shareItem) {
         ShareItemDraftVO vo = new ShareItemDraftVO();
         BeanUtil.copyProperties(shareItem, vo);
-        vo.setDraftId(shareItem.getShareId());
-        vo.setShareId(shareItem.getShareId());
+        vo.setDraftId(String.valueOf(shareItem.getShareId()));
+        vo.setShareId(String.valueOf(shareItem.getShareId()));
 
         // 格式化时间
         if (shareItem.getCreateTime() != null) {

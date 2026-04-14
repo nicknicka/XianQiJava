@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -18,15 +20,18 @@ public class OperationLog {
 
     @TableId(type = IdType.AUTO)
     @Schema(description = "日志ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long logId;
 
     @Schema(description = "操作用户ID（0表示系统操作）")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId;
 
     @Schema(description = "用户名")
     private String username;
 
     @Schema(description = "业务对象ID（如订单ID、商品ID等）")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long bizId;
 
     @Schema(description = "业务对象类型（如order、product等）")

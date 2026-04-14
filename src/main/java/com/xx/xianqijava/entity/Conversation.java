@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -21,6 +23,7 @@ public class Conversation extends BaseEntity {
 
     @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "会话ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long conversationId;
 
     @Schema(description = "会话类型：1-单聊，2-群聊")
@@ -28,20 +31,25 @@ public class Conversation extends BaseEntity {
 
     @Schema(description = "用户1ID")
     @TableField("user_id_1")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId1;
 
     @Schema(description = "用户2ID")
     @TableField("user_id_2")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long userId2;
 
     @Schema(description = "关联订单ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long relatedOrderId;
 
     @Schema(description = "关联商品ID")
     @TableField("related_product_id")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long relatedProductId;
 
     @Schema(description = "最后一条消息ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long lastMessageId;
 
     @Schema(description = "最后一条消息内容")

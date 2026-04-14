@@ -11,7 +11,7 @@ import lombok.Data;
 public class CampusLocationVO {
 
     @Schema(description = "位置ID")
-    private Long locationId;
+    private String locationId;
 
     @Schema(description = "位置名称")
     private String name;

@@ -13,7 +13,7 @@ public class DepositRefundDTO {
 
     @NotNull(message = "押金记录ID不能为空")
     @Schema(description = "押金记录ID")
-    private Long recordId;
+    private String recordId;
 
     @Schema(description = "扣除原因（如果需要扣除押金）")
     private String deductReason;

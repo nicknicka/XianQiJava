@@ -3,6 +3,8 @@ package com.xx.xianqijava.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.ser.std.ToStringSerializer;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Data;
 
@@ -18,9 +20,11 @@ public class ShareItemImage {
 
     @TableId(type = IdType.ASSIGN_ID)
     @Schema(description = "图片ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long imageId;
 
     @Schema(description = "共享物品ID")
+    @JsonSerialize(using = ToStringSerializer.class)
     private Long shareId;
 
     @Schema(description = "图片URL")

@@ -3,8 +3,10 @@ package com.xx.xianqijava.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xx.xianqijava.common.Result;
+import com.xx.xianqijava.common.ErrorCode;
 import com.xx.xianqijava.dto.OrderCreateDTO;
 import com.xx.xianqijava.entity.Order;
+import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.service.OperationLogService;
 import com.xx.xianqijava.service.OrderService;
 import com.xx.xianqijava.util.SecurityUtil;
@@ -83,7 +85,12 @@ public class OrderController {
     public Result<Void> confirmOrder(
             @Parameter(description = "订单ID") @PathVariable("id") String id) {
         Long userId = SecurityUtil.getCurrentUserIdRequired();
-        Long orderId = Long.parseLong(id);
+        Long orderId;
+        try {
+            orderId = Long.parseLong(id);
+        } catch (NumberFormatException e) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "订单ID格式错误");
+        }
         log.info("确认订单, orderId={}, userId={}", orderId, userId);
         orderService.confirmOrder(orderId, userId);
         return Result.success("订单确认成功");

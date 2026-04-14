@@ -90,7 +90,7 @@ public class UserStudentAuthServiceImpl extends ServiceImpl<UserStudentAuthMappe
         // 2. 如果没有认证记录，返回默认状态
         if (auth == null) {
             StudentAuthVO vo = new StudentAuthVO();
-            vo.setUserId(userId);
+            vo.setUserId(String.valueOf(userId));
             vo.setStatus(0); // 未认证
             return vo;
         }
@@ -186,8 +186,8 @@ public class UserStudentAuthServiceImpl extends ServiceImpl<UserStudentAuthMappe
         User user = userService.getById(auth.getUserId());
 
         StudentAuthVO vo = new StudentAuthVO();
-        vo.setId(auth.getId());
-        vo.setUserId(auth.getUserId());
+        vo.setId(String.valueOf(auth.getId()));
+        vo.setUserId(String.valueOf(auth.getUserId()));
 
         // 添加用户信息
         if (user != null) {

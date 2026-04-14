@@ -14,7 +14,7 @@ public class ImageMessageSendDTO {
 
     @NotNull(message = "会话ID不能为空")
     @Schema(description = "会话ID")
-    private Long conversationId;
+    private String conversationId;
 
     @NotBlank(message = "图片URL不能为空")
     @Schema(description = "图片URL")
@@ -33,5 +33,5 @@ public class ImageMessageSendDTO {
     private String thumbnailUrl;
 
     @Schema(description = "引用的父消息ID")
-    private Long parentMessageId;
+    private String parentMessageId;
 }

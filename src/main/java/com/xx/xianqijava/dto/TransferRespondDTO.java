@@ -13,7 +13,7 @@ public class TransferRespondDTO {
 
     @NotNull(message = "转赠记录ID不能为空")
     @Schema(description = "转赠记录ID")
-    private Long transferId;
+    private String transferId;
 
     @NotNull(message = "响应状态不能为空")
     @Schema(description = "响应状态：1-接受，2-拒绝")
