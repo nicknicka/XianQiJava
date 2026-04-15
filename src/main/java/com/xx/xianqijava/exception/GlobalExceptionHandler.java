@@ -5,6 +5,8 @@ import com.xx.xianqijava.common.Result;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.validation.BindException;
 import org.springframework.validation.FieldError;
+import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -60,6 +62,32 @@ public class GlobalExceptionHandler {
         FieldError fieldError = e.getFieldError();
         String message = fieldError != null ? fieldError.getDefaultMessage() : "参数绑定失败";
         log.error("参数绑定异常: {}", message);
+        return Result.error(ErrorCode.BAD_REQUEST.getCode(), message);
+    }
+
+    /**
+     * 请求体解析异常处理
+     */
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public Result<?> handleHttpMessageNotReadableException(HttpMessageNotReadableException e) {
+        String message = "请求体格式错误";
+        if (e.getMostSpecificCause() != null && e.getMostSpecificCause().getMessage() != null) {
+            message = "请求体格式错误: " + e.getMostSpecificCause().getMessage();
+        }
+        log.error("请求体解析异常: {}", message);
+        return Result.error(ErrorCode.BAD_REQUEST.getCode(), message);
+    }
+
+    /**
+     * 方法参数类型不匹配异常处理
+     */
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public Result<?> handleMethodArgumentTypeMismatchException(MethodArgumentTypeMismatchException e) {
+        String message = "参数类型错误";
+        if (e.getName() != null) {
+            message = "参数类型错误: " + e.getName();
+        }
+        log.error("方法参数类型异常: {}", message);
         return Result.error(ErrorCode.BAD_REQUEST.getCode(), message);
     }
 

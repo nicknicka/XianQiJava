@@ -4,6 +4,7 @@ import com.xx.xianqijava.security.AdminJwtAuthenticationFilter;
 import com.xx.xianqijava.security.JwtAuthenticationFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -31,11 +32,17 @@ public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
     private final AdminJwtAuthenticationFilter adminJwtAuthenticationFilter;
+    private final RestAuthenticationEntryPoint restAuthenticationEntryPoint;
+    private final RestAccessDeniedHandler restAccessDeniedHandler;
 
     public SecurityConfig(JwtAuthenticationFilter jwtAuthenticationFilter,
-                          AdminJwtAuthenticationFilter adminJwtAuthenticationFilter) {
+                          AdminJwtAuthenticationFilter adminJwtAuthenticationFilter,
+                          RestAuthenticationEntryPoint restAuthenticationEntryPoint,
+                          RestAccessDeniedHandler restAccessDeniedHandler) {
         this.jwtAuthenticationFilter = jwtAuthenticationFilter;
         this.adminJwtAuthenticationFilter = adminJwtAuthenticationFilter;
+        this.restAuthenticationEntryPoint = restAuthenticationEntryPoint;
+        this.restAccessDeniedHandler = restAccessDeniedHandler;
     }
 
     /**
@@ -98,6 +105,11 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
 
+                // 统一认证/鉴权失败响应
+                .exceptionHandling(exception -> exception
+                        .authenticationEntryPoint(restAuthenticationEntryPoint)
+                        .accessDeniedHandler(restAccessDeniedHandler))
+
                 // 配置请求授权
                 .authorizeHttpRequests(auth -> auth
                         // 公开接口
@@ -130,6 +142,7 @@ public class SecurityConfig {
                                 "/user/reset-password",  // 重置密码
                                 "/user/login/phone"  // 手机号验证码登录
                         ).permitAll()
+                        .requestMatchers(HttpMethod.GET, "/share-item", "/share-item/*").permitAll()
 
                         // 其他所有请求需要认证
                         .anyRequest().authenticated()

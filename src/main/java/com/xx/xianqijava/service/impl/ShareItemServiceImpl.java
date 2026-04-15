@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xx.xianqijava.common.ErrorCode;
 import com.xx.xianqijava.dto.ShareItemCreateDTO;
 import com.xx.xianqijava.dto.ShareItemDraftSaveDTO;
@@ -42,6 +44,7 @@ public class ShareItemServiceImpl extends ServiceImpl<ShareItemMapper, ShareItem
     private final ShareItemImageMapper shareItemImageMapper;
     private final UserMapper userMapper;
     private final CategoryMapper categoryMapper;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -60,6 +63,7 @@ public class ShareItemServiceImpl extends ServiceImpl<ShareItemMapper, ShareItem
         shareItem.setOwnerId(ownerId);
         shareItem.setStatus(1); // 默认可借用
         shareItem.setImageCount(createDTO.getImageUrls() != null ? createDTO.getImageUrls().size() : 0);
+        shareItem.setAvailableTimes(normalizeAvailableTimes(createDTO.getAvailableTimes()));
 
         save(shareItem);
 
@@ -115,6 +119,7 @@ public class ShareItemServiceImpl extends ServiceImpl<ShareItemMapper, ShareItem
         if (createDTO.getImageUrls() != null) {
             shareItem.setImageCount(createDTO.getImageUrls().size());
         }
+        shareItem.setAvailableTimes(normalizeAvailableTimes(createDTO.getAvailableTimes()));
         updateById(shareItem);
 
         // 先添加新图片，成功后再删除旧图片（避免数据丢失）
@@ -322,6 +327,8 @@ public class ShareItemServiceImpl extends ServiceImpl<ShareItemMapper, ShareItem
                 return "可借用";
             case 2:
                 return "借用中";
+            case 4:
+                return "草稿";
             default:
                 return "未知状态";
         }
@@ -432,7 +439,7 @@ public class ShareItemServiceImpl extends ServiceImpl<ShareItemMapper, ShareItem
             shareItem.setDailyRent(draftDTO.getDailyRent());
         }
         if (draftDTO.getAvailableTimes() != null) {
-            shareItem.setAvailableTimes(draftDTO.getAvailableTimes());
+            shareItem.setAvailableTimes(normalizeAvailableTimes(draftDTO.getAvailableTimes()));
         }
 
         // 4. 保存共享物品
@@ -500,6 +507,7 @@ public class ShareItemServiceImpl extends ServiceImpl<ShareItemMapper, ShareItem
 
         // 验证必填字段
         validateRequiredFields(shareItem);
+        shareItem.setAvailableTimes(normalizeAvailableTimes(shareItem.getAvailableTimes()));
 
         // 更新状态为可借用
         shareItem.setStatus(ShareItem.STATUS_AVAILABLE);
@@ -574,6 +582,21 @@ public class ShareItemServiceImpl extends ServiceImpl<ShareItemMapper, ShareItem
         if (!missingFields.isEmpty()) {
             throw new BusinessException(ErrorCode.BAD_REQUEST,
                 "发布前请完善以下必填信息：" + String.join("、", missingFields));
+        }
+    }
+
+    /**
+     * 规范化可借用时间段 JSON，避免非法字符串直接写入 JSON 列。
+     */
+    private String normalizeAvailableTimes(String availableTimes) {
+        if (StrUtil.isBlank(availableTimes)) {
+            return null;
+        }
+
+        try {
+            return objectMapper.writeValueAsString(objectMapper.readTree(availableTimes));
+        } catch (JsonProcessingException e) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "availableTimes 必须为合法JSON格式");
         }
     }
 

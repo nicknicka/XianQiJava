@@ -9,9 +9,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 @EnableScheduling
 @EnableAsync
 public class XianQiJavaApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(XianQiJavaApplication.class, args);
     }
-
 }

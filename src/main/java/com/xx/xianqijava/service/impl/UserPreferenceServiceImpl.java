@@ -9,6 +9,7 @@ import com.xx.xianqijava.mapper.UserPreferenceMapper;
 import com.xx.xianqijava.service.UserPreferenceService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,10 +47,21 @@ public class UserPreferenceServiceImpl extends ServiceImpl<UserPreferenceMapper,
             preference.setTheme("light");
             preference.setAutoDarkMode(0);
             preference.setFontSize(16);
+            preference.setDeviceType("unknown");
+            preference.setLanguage("zh-CN");
             preference.setNotificationEnabled(1);
             preference.setSoundEnabled(1);
             preference.setVibrationEnabled(1);
-            userPreferenceMapper.insert(preference);
+            try {
+                userPreferenceMapper.insert(preference);
+            } catch (DuplicateKeyException e) {
+                // 首次进入主题页时，读取和更新接口可能并发触发，唯一键冲突后重查即可。
+                log.warn("用户偏好设置已被并发创建，重新读取, userId={}", userId);
+                preference = getUserPreference(userId);
+                if (preference == null) {
+                    throw e;
+                }
+            }
             log.info("创建默认用户偏好设置, userId={}", userId);
         }
 

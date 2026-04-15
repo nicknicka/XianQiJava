@@ -36,6 +36,12 @@ public class UserPreference {
     @Schema(description = "字体大小（px）")
     private Integer fontSize;
 
+    @Schema(description = "设备类型")
+    private String deviceType;
+
+    @Schema(description = "语言")
+    private String language;
+
     @Schema(description = "是否启用通知：0-关闭，1-开启")
     private Integer notificationEnabled;
 
