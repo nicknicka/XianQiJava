@@ -11,6 +11,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 import org.springframework.http.HttpHeaders;
@@ -23,6 +24,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -36,6 +38,10 @@ import java.util.Map;
 @RequiredArgsConstructor
 @Tag(name = "图片访问", description = "图片访问相关接口")
 public class ImageController {
+
+    private static final byte[] FALLBACK_PNG = Base64.getDecoder().decode(
+            "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9p4nHCsAAAAASUVORK5CYII="
+    );
 
     private final ProductImageMapper productImageMapper;
     private final OssService ossService;
@@ -73,8 +79,8 @@ public class ImageController {
             Path filePath = Paths.get(uploadPath, actualFilename);
 
             if (!Files.exists(filePath)) {
-                log.warn("✗ 文件不存在: {}", filePath.toAbsolutePath());
-                return ResponseEntity.notFound().build();
+                log.warn("✗ 文件不存在，返回占位图: {}", filePath.toAbsolutePath());
+                return buildFallbackImageResponse();
             }
 
             // 读取文件
@@ -138,8 +144,8 @@ public class ImageController {
 
             // 检查文件是否存在
             if (!Files.exists(filePath)) {
-                log.warn("✗ 文件不存在: {}", filePath.toAbsolutePath());
-                return ResponseEntity.notFound().build();
+                log.warn("✗ 文件不存在，返回占位图: {}", filePath.toAbsolutePath());
+                return buildFallbackImageResponse();
             }
 
             // 尝试从数据库查询（用于商品图片）
@@ -320,5 +326,14 @@ public class ImageController {
             case "bmp" -> MediaType.valueOf("image/bmp");
             default -> MediaType.APPLICATION_OCTET_STREAM;
         };
+    }
+
+    private ResponseEntity<Resource> buildFallbackImageResponse() {
+        ByteArrayResource resource = new ByteArrayResource(FALLBACK_PNG);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.IMAGE_PNG);
+        headers.setContentLength(FALLBACK_PNG.length);
+        headers.setCacheControl("public, max-age=300");
+        return ResponseEntity.ok().headers(headers).body(resource);
     }
 }

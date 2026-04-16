@@ -2,6 +2,7 @@ package com.xx.xianqijava.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.xx.xianqijava.entity.UserCreditExt;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -24,7 +25,7 @@ public interface UserCreditExtMapper extends BaseMapper<UserCreditExt> {
     /**
      * 更新用户最后活跃时间
      */
-    @Update("INSERT INTO user_credit_ext (user_id, last_active_time, updated_at) " +
+    @Insert("INSERT INTO user_credit_ext (user_id, last_active_time, updated_at) " +
             "VALUES (#{userId}, #{activeTime}, NOW()) " +
             "ON DUPLICATE KEY UPDATE " +
             "  last_active_time = #{activeTime}, " +
@@ -34,7 +35,7 @@ public interface UserCreditExtMapper extends BaseMapper<UserCreditExt> {
     /**
      * 更新信用分
      */
-    @Update("INSERT INTO user_credit_ext (user_id, credit_level, updated_at) " +
+    @Insert("INSERT INTO user_credit_ext (user_id, credit_level, updated_at) " +
             "VALUES (#{userId}, #{creditLevel}, NOW()) " +
             "ON DUPLICATE KEY UPDATE " +
             "  credit_level = #{creditLevel}, " +
@@ -44,7 +45,7 @@ public interface UserCreditExtMapper extends BaseMapper<UserCreditExt> {
     /**
      * 更新评价统计
      */
-    @Update("INSERT INTO user_credit_ext (user_id, total_positive_evaluations, total_neutral_evaluations, total_negative_evaluations, updated_at) " +
+    @Insert("INSERT INTO user_credit_ext (user_id, total_positive_evaluations, total_neutral_evaluations, total_negative_evaluations, updated_at) " +
             "VALUES (#{userId}, #{positive}, #{neutral}, #{negative}, NOW()) " +
             "ON DUPLICATE KEY UPDATE " +
             "  total_positive_evaluations = #{positive}, " +

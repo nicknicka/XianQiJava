@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 @Slf4j
 @Tag(name = "用户活跃时间")
 @RestController
-@RequestMapping("/api/user-active")
+@RequestMapping("/user-active")
 public class UserActiveController {
 
     @Autowired
