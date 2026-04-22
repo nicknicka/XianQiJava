@@ -7,6 +7,11 @@ import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.mapper.OrderMapper;
 import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.DataExportService;
+import com.xx.xianqijava.service.StatisticsService;
+import com.xx.xianqijava.vo.OrderStatisticsVO;
+import com.xx.xianqijava.vo.ProductStatisticsVO;
+import com.xx.xianqijava.vo.StatisticsVO;
+import com.xx.xianqijava.vo.UserStatisticsVO;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -31,6 +36,7 @@ public class DataExportServiceImpl implements DataExportService {
 
     private final OrderMapper orderMapper;
     private final UserMapper userMapper;
+    private final StatisticsService statisticsService;
 
     private static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
@@ -167,8 +173,10 @@ public class DataExportServiceImpl implements DataExportService {
         String filename = URLEncoder.encode("统计数据_" + DateUtil.today(), StandardCharsets.UTF_8) + ".csv";
         response.setHeader("Content-Disposition", "attachment; filename=" + filename);
 
-        // TODO: 实现统计数据导出
-        // 这里需要查询统计数据，包括用户统计、订单统计、商品统计等
+        StatisticsVO overview = statisticsService.getOverviewStatistics();
+        UserStatisticsVO userStatistics = statisticsService.getUserStatistics();
+        ProductStatisticsVO productStatistics = statisticsService.getProductStatistics();
+        OrderStatisticsVO orderStatistics = statisticsService.getOrderStatistics();
 
         try (OutputStream out = response.getOutputStream();
              PrintWriter writer = new PrintWriter(out, true, StandardCharsets.UTF_8)) {
@@ -176,12 +184,63 @@ public class DataExportServiceImpl implements DataExportService {
             // 写入 BOM
             out.write(new byte[]{(byte) 0xEF, (byte) 0xBB, (byte) 0xBF});
 
-            // 写入表头
-            writer.println("统计项,统计值,日期");
+            writer.println("统计分组,统计项,统计值,统计日期");
 
-            // 写入示例数据
-            writer.println(String.format("统计天数,%s,%s", days != null ? days : 7, DateUtil.date()));
-            writer.println("更多统计数据待实现...,");
+            String exportDate = DateUtil.today();
+            int statDays = days != null ? days : 7;
+            writer.println(row("导出参数", "统计周期(天)", statDays, exportDate));
+
+            writer.println(row("总览", "总用户数", overview.getTotalUsers(), exportDate));
+            writer.println(row("总览", "今日新增用户", overview.getTodayNewUsers(), exportDate));
+            writer.println(row("总览", "活跃用户数", overview.getActiveUsers(), exportDate));
+            writer.println(row("总览", "总商品数", overview.getTotalProducts(), exportDate));
+            writer.println(row("总览", "在售商品数", overview.getOnSaleProducts(), exportDate));
+            writer.println(row("总览", "今日新增商品", overview.getTodayNewProducts(), exportDate));
+            writer.println(row("总览", "总订单数", overview.getTotalOrders(), exportDate));
+            writer.println(row("总览", "今日新增订单", overview.getTodayNewOrders(), exportDate));
+            writer.println(row("总览", "待处理订单数", overview.getPendingOrders(), exportDate));
+            writer.println(row("总览", "已完成订单数", overview.getCompletedOrders(), exportDate));
+            writer.println(row("总览", "总交易金额", overview.getTotalAmount(), exportDate));
+            writer.println(row("总览", "今日交易金额", overview.getTodayAmount(), exportDate));
+            writer.println(row("总览", "本月交易金额", overview.getMonthAmount(), exportDate));
+            writer.println(row("总览", "待审核商品数", overview.getPendingProducts(), exportDate));
+            writer.println(row("总览", "待审核认证数", overview.getPendingVerifications(), exportDate));
+            writer.println(row("总览", "系统通知数", overview.getSystemNotifications(), exportDate));
+            writer.println(row("总览", "用户反馈数", overview.getUserFeedbacks(), exportDate));
+            writer.println(row("总览", "待处理举报数", overview.getPendingReports(), exportDate));
+
+            writer.println(row("用户", "总用户数", userStatistics.getTotalUsers(), exportDate));
+            writer.println(row("用户", "今日新增用户", userStatistics.getTodayNewUsers(), exportDate));
+            writer.println(row("用户", "本周新增用户", userStatistics.getWeekNewUsers(), exportDate));
+            writer.println(row("用户", "本月新增用户", userStatistics.getMonthNewUsers(), exportDate));
+            writer.println(row("用户", "活跃用户数", userStatistics.getActiveUsers(), exportDate));
+            writer.println(row("用户", "实名认证用户数", userStatistics.getVerifiedUsers(), exportDate));
+            writer.println(row("用户", "封禁用户数", userStatistics.getBannedUsers(), exportDate));
+
+            writer.println(row("商品", "总商品数", productStatistics.getTotalProducts(), exportDate));
+            writer.println(row("商品", "在售商品数", productStatistics.getOnSaleProducts(), exportDate));
+            writer.println(row("商品", "已售商品数", productStatistics.getSoldProducts(), exportDate));
+            writer.println(row("商品", "下架商品数", productStatistics.getOfflineProducts(), exportDate));
+            writer.println(row("商品", "今日新增商品", productStatistics.getTodayNewProducts(), exportDate));
+            writer.println(row("商品", "本周新增商品", productStatistics.getWeekNewProducts(), exportDate));
+            writer.println(row("商品", "本月新增商品", productStatistics.getMonthNewProducts(), exportDate));
+            writer.println(row("商品", "待审核商品数", productStatistics.getPendingProducts(), exportDate));
+            writer.println(row("商品", "审核通过商品数", productStatistics.getApprovedProducts(), exportDate));
+            writer.println(row("商品", "审核拒绝商品数", productStatistics.getRejectedProducts(), exportDate));
+
+            writer.println(row("订单", "总订单数", orderStatistics.getTotalOrders(), exportDate));
+            writer.println(row("订单", "待确认订单数", orderStatistics.getPendingOrders(), exportDate));
+            writer.println(row("订单", "进行中订单数", orderStatistics.getInProgressOrders(), exportDate));
+            writer.println(row("订单", "已完成订单数", orderStatistics.getCompletedOrders(), exportDate));
+            writer.println(row("订单", "已取消订单数", orderStatistics.getCancelledOrders(), exportDate));
+            writer.println(row("订单", "退款中订单数", orderStatistics.getRefundingOrders(), exportDate));
+            writer.println(row("订单", "今日新增订单", orderStatistics.getTodayNewOrders(), exportDate));
+            writer.println(row("订单", "本周新增订单", orderStatistics.getWeekNewOrders(), exportDate));
+            writer.println(row("订单", "本月新增订单", orderStatistics.getMonthNewOrders(), exportDate));
+            writer.println(row("订单", "总交易金额", orderStatistics.getTotalAmount(), exportDate));
+            writer.println(row("订单", "今日交易金额", orderStatistics.getTodayAmount(), exportDate));
+            writer.println(row("订单", "本周交易金额", orderStatistics.getWeekAmount(), exportDate));
+            writer.println(row("订单", "本月交易金额", orderStatistics.getMonthAmount(), exportDate));
 
             log.info("导出统计数据成功");
         } catch (Exception e) {
@@ -212,6 +271,14 @@ public class DataExportServiceImpl implements DataExportService {
             return "\"" + field.replace("\"", "\"\"") + "\"";
         }
         return field;
+    }
+
+    private String row(String group, String item, Object value, String date) {
+        return String.format("%s,%s,%s,%s",
+                escapeCsv(group),
+                escapeCsv(item),
+                escapeCsv(value == null ? "" : String.valueOf(value)),
+                escapeCsv(date));
     }
 
     /**

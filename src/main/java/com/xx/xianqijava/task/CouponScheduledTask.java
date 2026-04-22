@@ -1,5 +1,6 @@
 package com.xx.xianqijava.task;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.xx.xianqijava.entity.Coupon;
 import com.xx.xianqijava.entity.UserCoupon;
@@ -8,10 +9,13 @@ import com.xx.xianqijava.mapper.UserCouponMapper;
 import com.xx.xianqijava.service.BusinessNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 优惠券定时任务
@@ -27,6 +31,7 @@ public class CouponScheduledTask {
     private final CouponMapper couponMapper;
     private final UserCouponMapper userCouponMapper;
     private final BusinessNotificationService businessNotificationService;
+    private final StringRedisTemplate stringRedisTemplate;
 
     /**
      * 过期用户优惠券
@@ -87,14 +92,37 @@ public class CouponScheduledTask {
         log.info("开始执行发送即将过期优惠券提醒任务");
 
         try {
-            // 查询即将过期（3天内）且状态为未使用的用户优惠券
+            LocalDateTime now = LocalDateTime.now();
             LocalDateTime threeDaysLater = LocalDateTime.now().plusDays(3);
+            LambdaQueryWrapper<UserCoupon> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(UserCoupon::getStatus, 1)
+                    .gt(UserCoupon::getExpireTime, now)
+                    .le(UserCoupon::getExpireTime, threeDaysLater);
 
-            // TODO: 查询即将过期的用户优惠券并发送提醒通知
-            // 注意：避免重复提醒，需要记录已提醒过的优惠券
-            // 可以在 user_coupon 表中添加一个提醒字段
+            List<UserCoupon> coupons = userCouponMapper.selectList(wrapper);
+            int reminderCount = 0;
+            for (UserCoupon userCoupon : coupons) {
+                String reminderKey = "coupon:expire:reminded:" + userCoupon.getUserCouponId();
+                Boolean firstReminder = stringRedisTemplate.opsForValue()
+                        .setIfAbsent(reminderKey, "1", 4, TimeUnit.DAYS);
+                if (!Boolean.TRUE.equals(firstReminder)) {
+                    continue;
+                }
 
-            log.info("发送即将过期优惠券提醒任务完成");
+                Coupon coupon = couponMapper.selectById(userCoupon.getCouponId());
+                String couponName = coupon != null ? coupon.getName() : "优惠券";
+                String content = String.format("您的优惠券「%s」将在 %s 到期，请及时使用。",
+                        couponName,
+                        userCoupon.getExpireTime());
+                businessNotificationService.sendAccountReminder(
+                        userCoupon.getUserId(),
+                        "优惠券即将到期",
+                        content
+                );
+                reminderCount++;
+            }
+
+            log.info("发送即将过期优惠券提醒任务完成，发送数量：{}", reminderCount);
         } catch (Exception e) {
             log.error("发送即将过期优惠券提醒任务执行失败", e);
         }
@@ -109,13 +137,13 @@ public class CouponScheduledTask {
         log.info("开始执行清理过期用户优惠券记录任务");
 
         try {
-            // 删除过期时间超过90天的已过期用户优惠券记录
             LocalDateTime ninetyDaysAgo = LocalDateTime.now().minusDays(90);
+            LambdaQueryWrapper<UserCoupon> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(UserCoupon::getStatus, 3)
+                    .lt(UserCoupon::getExpireTime, ninetyDaysAgo);
 
-            // TODO: 执行软删除或硬删除
-            // 建议使用逻辑删除，保留记录用于数据分析
-
-            log.info("清理过期用户优惠券记录任务完成");
+            int deletedCount = userCouponMapper.delete(wrapper);
+            log.info("清理过期用户优惠券记录任务完成，清理数量：{}", deletedCount);
         } catch (Exception e) {
             log.error("清理过期用户优惠券记录任务执行失败", e);
         }

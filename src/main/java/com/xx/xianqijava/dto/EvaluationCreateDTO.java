@@ -4,6 +4,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 
+import java.util.List;
+
 /**
  * 创建评价 DTO
  */
@@ -29,4 +31,8 @@ public class EvaluationCreateDTO {
     @Schema(description = "评价标签（多个标签用逗号分隔）")
     @Size(max = 100, message = "标签长度不能超过100个字符")
     private String tags;
+
+    @Schema(description = "评价图片URL列表，最多3张")
+    @Size(max = 3, message = "评价图片最多上传3张")
+    private List<@Size(max = 1024, message = "图片地址长度不能超过1024个字符") String> images;
 }

@@ -7,8 +7,10 @@ import com.xx.xianqijava.entity.User;
 import com.xx.xianqijava.exception.BusinessException;
 import com.xx.xianqijava.service.FileUploadService;
 import com.xx.xianqijava.service.ThirdPartyLoginService;
+import com.xx.xianqijava.service.UserPreferenceService;
 import com.xx.xianqijava.service.UserService;
 import com.xx.xianqijava.util.SecurityUtil;
+import com.xx.xianqijava.vo.NotificationSettingsVO;
 import com.xx.xianqijava.vo.PayPasswordCheckVO;
 import com.xx.xianqijava.vo.PrivacySettingsVO;
 import com.xx.xianqijava.vo.UserCenterVO;
@@ -40,6 +42,7 @@ import java.util.Map;
 public class UserController {
 
     private final UserService userService;
+    private final UserPreferenceService userPreferenceService;
     private final FileUploadService fileUploadService;
     private final LoginDeviceService loginDeviceService;
     private final ThirdPartyLoginService thirdPartyLoginService;
@@ -261,6 +264,19 @@ public class UserController {
     }
 
     /**
+     * 搜索用户
+     */
+    @Operation(summary = "搜索用户")
+    @GetMapping("/search")
+    public Result<com.baomidou.mybatisplus.core.metadata.IPage<UserInfoVO>> searchUsers(
+            @Parameter(description = "搜索关键词") @RequestParam String keyword,
+            @Parameter(description = "页码") @RequestParam(defaultValue = "1") Integer current,
+            @Parameter(description = "每页数量") @RequestParam(defaultValue = "10") Integer size) {
+        log.info("搜索用户, keyword={}, current={}, size={}", keyword, current, size);
+        return Result.success(userService.searchUsers(keyword, current, size));
+    }
+
+    /**
      * 发送验证码
      */
     @Operation(summary = "发送验证码")
@@ -305,11 +321,10 @@ public class UserController {
      */
     @Operation(summary = "手机号验证码登录")
     @PostMapping("/login/phone")
-    public Result<UserLoginVO> loginByPhone(@RequestParam("phone") String phone,
-                                            @RequestParam("code") String code,
+    public Result<UserLoginVO> loginByPhone(@Valid @RequestBody PhoneLoginDTO loginDTO,
                                             HttpServletRequest request) {
-        log.info("手机号验证码登录请求, phone={}", phone);
-        UserLoginVO result = userService.loginByPhone(phone, code);
+        log.info("手机号验证码登录请求, phone={}", loginDTO.getPhone());
+        UserLoginVO result = userService.loginByPhone(loginDTO.getPhone(), loginDTO.getCode());
 
         // 记录登录设备信息
         try {
@@ -454,6 +469,41 @@ public class UserController {
         log.info("获取隐私设置, userId={}", userId);
         PrivacySettingsVO settings = userService.getPrivacySettings(userId);
         return Result.success(settings);
+    }
+
+    /**
+     * 获取通知设置
+     */
+    @Operation(summary = "获取通知设置")
+    @GetMapping("/notification-settings")
+    public Result<NotificationSettingsVO> getNotificationSettings() {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("获取通知设置, userId={}", userId);
+
+        var preference = userPreferenceService.getOrCreateUserPreference(userId);
+        NotificationSettingsVO settings = new NotificationSettingsVO(
+                preference.getNotificationEnabled() == null || preference.getNotificationEnabled() == 1,
+                preference.getSoundEnabled() == null || preference.getSoundEnabled() == 1,
+                preference.getVibrationEnabled() == null || preference.getVibrationEnabled() == 1
+        );
+        return Result.success(settings);
+    }
+
+    /**
+     * 更新通知设置
+     */
+    @Operation(summary = "更新通知设置")
+    @PutMapping("/notification-settings")
+    public Result<Void> updateNotificationSettings(@RequestBody UpdateNotificationSettingsDTO settingsDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("更新通知设置, userId={}", userId);
+        userPreferenceService.updateNotificationSettings(
+                userId,
+                settingsDTO.getNotificationEnabled(),
+                settingsDTO.getSoundEnabled(),
+                settingsDTO.getVibrationEnabled()
+        );
+        return Result.success("通知设置更新成功");
     }
 
     /**

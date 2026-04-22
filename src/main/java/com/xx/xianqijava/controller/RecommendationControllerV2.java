@@ -22,7 +22,7 @@ import java.util.List;
 @Slf4j
 @Tag(name = "智能推荐系统V2")
 @RestController
-@RequestMapping("/api/recommend/v2")
+@RequestMapping("/recommend/v2")
 @RequiredArgsConstructor
 public class RecommendationControllerV2 {
 

@@ -1,5 +1,6 @@
 package com.xx.xianqijava.task;
 
+import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.StatisticsService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class DataMaintenanceScheduledTask {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final StatisticsService statisticsService;
+    private final UserMapper userMapper;
 
     /**
      * 清理过期的验证码
@@ -88,11 +90,9 @@ public class DataMaintenanceScheduledTask {
         log.info("开始执行生成每日统计数据任务");
 
         try {
-            String yesterday = LocalDateTime.now().minusDays(1)
-                    .format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
+            java.time.LocalDate yesterday = java.time.LocalDate.now().minusDays(1);
 
-            // 生成前一天的统计数据
-            // statisticsService.generateDailyStatistics(yesterday);
+            statisticsService.generateDailyStatistics(yesterday);
 
             log.info("生成每日统计数据任务完成，日期：{}", yesterday);
         } catch (Exception e) {
@@ -127,10 +127,9 @@ public class DataMaintenanceScheduledTask {
         log.debug("执行数据库健康检查");
 
         try {
-            // 执行简单的查询来检查数据库连接
-            redisTemplate.opsForValue().get("health_check");
-
-            log.debug("数据库健康检查完成");
+            userMapper.selectCount(null);
+            String redisStatus = redisTemplate.getConnectionFactory().getConnection().ping();
+            log.debug("数据库健康检查完成, redis={}", redisStatus);
         } catch (Exception e) {
             log.error("数据库健康检查失败", e);
         }

@@ -194,14 +194,10 @@ public class UserManageServiceImpl implements UserManageService {
         statistics.setMonthNewUsers(monthNewUsers);
 
         // 活跃用户数（7天内登录）
-        // TODO: User实体暂无lastLoginTime字段，暂时统计7天内活跃用户
-        // 建议在User实体中添加lastLoginTime字段或在LoginLog表中统计
         LocalDateTime activeTime = LocalDateTime.now().minusDays(7);
-        Long activeUsers = 0L;
-        // 暂时返回0，待添加lastLoginTime字段后启用以下代码：
-        // Long activeUsers = userMapper.selectCount(
-        //         new LambdaQueryWrapper<User>().ge(User::getLastLoginTime, activeTime)
-        // );
+        Long activeUsers = userMapper.selectCount(
+                new LambdaQueryWrapper<User>().ge(User::getLastLoginTime, activeTime)
+        );
         statistics.setActiveUsers(activeUsers);
 
         return statistics;

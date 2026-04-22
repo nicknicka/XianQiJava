@@ -3,6 +3,7 @@ package com.xx.xianqijava.controller;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.xx.xianqijava.common.Result;
+import com.xx.xianqijava.dto.EvaluationAppendDTO;
 import com.xx.xianqijava.dto.EvaluationCreateDTO;
 import com.xx.xianqijava.entity.Evaluation;
 import com.xx.xianqijava.service.EvaluationService;
@@ -38,6 +39,20 @@ public class EvaluationController {
         log.info("创建评价, userId={}, orderId={}, rating={}", userId, createDTO.getOrderId(), createDTO.getRating());
         EvaluationVO evaluationVO = evaluationService.createEvaluation(createDTO, userId);
         return Result.success("评价创建成功", evaluationVO);
+    }
+
+    /**
+     * 追加评价
+     */
+    @PostMapping("/{evalId}/append")
+    @Operation(summary = "追加评价")
+    public Result<EvaluationVO> appendEvaluation(
+            @Parameter(description = "评价ID") @PathVariable("evalId") Long evalId,
+            @Valid @RequestBody EvaluationAppendDTO appendDTO) {
+        Long userId = SecurityUtil.getCurrentUserIdRequired();
+        log.info("追加评价, userId={}, evalId={}", userId, evalId);
+        EvaluationVO evaluationVO = evaluationService.appendEvaluation(evalId, appendDTO, userId);
+        return Result.success("追评成功", evaluationVO);
     }
 
     /**

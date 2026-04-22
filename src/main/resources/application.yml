@@ -171,16 +171,27 @@ app:
 
 # 短信服务配置
 sms:
-  enabled: true              # 是否启用短信服务
-  mock-mode: true            # 模拟模式（开发环境使用true，生产环境使用false）
+  enabled: false             # 是否启用短信服务
   # 阿里云短信配置（生产环境）
   aliyun:
+    region-id: cn-hangzhou
     access-key-id: ${ALIYUN_ACCESS_KEY_ID:your-access-key-id}
     access-key-secret: ${ALIYUN_ACCESS_KEY_SECRET:your-access-key-secret}
     sign-name: 校园二手交易
-    template-register: SMS_TEMPLATE_REGISTER  # 注册验证码模板
-    template-login: SMS_TEMPLATE_LOGIN      # 登录验证码模板
-    template-reset: SMS_TEMPLATE_RESET      # 重置密码模板
+    template-register: ${ALIYUN_SMS_TEMPLATE_REGISTER:SMS_TEMPLATE_REGISTER}
+    template-login: ${ALIYUN_SMS_TEMPLATE_LOGIN:SMS_TEMPLATE_LOGIN}
+    template-reset: ${ALIYUN_SMS_TEMPLATE_RESET:SMS_TEMPLATE_RESET}
+    template-security-alert: ${ALIYUN_SMS_TEMPLATE_SECURITY_ALERT:}
+    template-order-notify: ${ALIYUN_SMS_TEMPLATE_ORDER_NOTIFY:}
+
+# 地图服务配置
+map:
+  enabled: false
+  provider: amap
+  api-key: ${AMAP_API_KEY:}
+  base-url: https://restapi.amap.com
+  timeout-ms: 5000
+  nearby-radius: 1000
 
 # 支付服务配置
 payment:

@@ -158,7 +158,13 @@ public class BusinessNotificationServiceImpl implements BusinessNotificationServ
 
             // 如果是全部用户，通过 WebSocket 广播
             if (targetType == 1) {
-                // TODO: 实现广播功能，推送给所有在线用户
+                webSocketMessageService.broadcastToAll("system_notification", java.util.Map.of(
+                        "title", title,
+                        "message", content,
+                        "type", "announcement",
+                        "priority", notification.getPriority(),
+                        "notificationId", notification.getNotificationId()
+                ));
             }
         } else {
             log.error("系统公告发送失败");

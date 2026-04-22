@@ -133,6 +133,8 @@ public class SecurityConfig {
                                 "/product/*",  // 商品详情
                                 "/banner",
                                 "/recommend/**",
+                                "/location/**",
+                                "/map/**",
                                 "/config/public",
                                 "/notification/unread-count",  // 允许未登录访问未读数（返回0）
                                 "/flash-sale/**",  // 限时秒杀接口（无需认证即可浏览）

@@ -18,7 +18,7 @@ import java.util.List;
 @Slf4j
 @Tag(name = "信用分管理")
 @RestController
-@RequestMapping("/api/credit")
+@RequestMapping("/credit")
 public class CreditScoreController {
 
     @Autowired

@@ -1,9 +1,15 @@
 package com.xx.xianqijava.task;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.xx.xianqijava.entity.Order;
+import com.xx.xianqijava.entity.ShareItem;
+import com.xx.xianqijava.entity.TransferRecord;
 import com.xx.xianqijava.enums.OrderStatus;
 import com.xx.xianqijava.mapper.OrderMapper;
+import com.xx.xianqijava.mapper.ShareItemMapper;
+import com.xx.xianqijava.mapper.TransferRecordMapper;
+import com.xx.xianqijava.service.BusinessNotificationService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -31,6 +37,9 @@ import java.time.LocalDateTime;
 public class OrderScheduledTask {
 
     private final OrderMapper orderMapper;
+    private final TransferRecordMapper transferRecordMapper;
+    private final ShareItemMapper shareItemMapper;
+    private final BusinessNotificationService businessNotificationService;
 
     /**
      * 待确认订单自动关闭时间（默认7天）
@@ -45,6 +54,9 @@ public class OrderScheduledTask {
      */
     @Value("${business.order.auto-finish-time:2592000}")
     private int autoFinishTimeSeconds;
+
+    @Value("${business.transfer.auto-close-time:604800}")
+    private int transferAutoCloseTimeSeconds;
 
     /**
      * 自动关闭超时待确认的订单
@@ -122,9 +134,42 @@ public class OrderScheduledTask {
         log.info("开始执行自动取消超时转赠请求任务");
 
         try {
-            // TODO: 实现转赠记录的自动取消逻辑
-            // 需要查询 share_item_transfer 表中状态为待处理且创建时间超过7天的记录
-            log.debug("自动取消超时转赠请求任务完成（暂未实现）");
+            LocalDateTime expireTime = LocalDateTime.now().minusSeconds(transferAutoCloseTimeSeconds);
+            LambdaQueryWrapper<TransferRecord> wrapper = new LambdaQueryWrapper<>();
+            wrapper.eq(TransferRecord::getAcceptStatus, 0)
+                    .le(TransferRecord::getCreateTime, expireTime);
+
+            java.util.List<TransferRecord> expiredTransfers = transferRecordMapper.selectList(wrapper);
+            if (expiredTransfers.isEmpty()) {
+                log.debug("自动取消超时转赠请求任务完成，无需处理");
+                return;
+            }
+
+            LocalDateTime now = LocalDateTime.now();
+            for (TransferRecord transfer : expiredTransfers) {
+                transfer.setAcceptStatus(2);
+                transfer.setRejectReason("超时未处理自动关闭");
+                transfer.setConfirmTime(now);
+                transferRecordMapper.updateById(transfer);
+
+                ShareItem shareItem = shareItemMapper.selectById(transfer.getShareId());
+                String itemTitle = shareItem != null ? shareItem.getTitle() : "共享物品";
+                businessNotificationService.sendTransferNotification(
+                        transfer.getFromUserId(),
+                        transfer.getToUserId(),
+                        transfer.getTransferId(),
+                        itemTitle,
+                        3
+                );
+                businessNotificationService.sendTransferNotification(
+                        transfer.getToUserId(),
+                        transfer.getFromUserId(),
+                        transfer.getTransferId(),
+                        itemTitle,
+                        4
+                );
+            }
+            log.info("自动取消超时转赠请求任务完成，处理数量：{}", expiredTransfers.size());
         } catch (Exception e) {
             log.error("自动取消超时转赠请求任务执行失败", e);
         }

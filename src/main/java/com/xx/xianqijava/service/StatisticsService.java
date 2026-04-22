@@ -1,5 +1,7 @@
 package com.xx.xianqijava.service;
 
+import java.time.LocalDate;
+
 import com.xx.xianqijava.vo.OrderStatisticsVO;
 import com.xx.xianqijava.vo.ProductStatisticsVO;
 import com.xx.xianqijava.vo.StatisticsVO;
@@ -37,4 +39,11 @@ public interface StatisticsService {
      * @return 订单统计VO
      */
     OrderStatisticsVO getOrderStatistics();
+
+    /**
+     * 生成并缓存指定日期的统计数据
+     *
+     * @param date 统计日期
+     */
+    void generateDailyStatistics(LocalDate date);
 }

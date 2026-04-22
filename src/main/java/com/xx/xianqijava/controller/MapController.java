@@ -18,7 +18,7 @@ import java.util.Map;
 @Slf4j
 @Tag(name = "地图服务", description = "地理位置相关接口")
 @RestController
-@RequestMapping("/api/map")
+@RequestMapping("/map")
 @RequiredArgsConstructor
 public class MapController {
 

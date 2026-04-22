@@ -25,7 +25,7 @@ import java.util.List;
 @Slf4j
 @Tag(name = "物品转赠管理")
 @RestController
-@RequestMapping("/api/transfer")
+@RequestMapping("/transfer")
 @RequiredArgsConstructor
 public class TransferRecordController {
 

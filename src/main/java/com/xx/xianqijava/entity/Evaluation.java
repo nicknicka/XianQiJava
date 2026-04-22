@@ -44,6 +44,18 @@ public class Evaluation {
     @Schema(description = "标签（JSON）")
     private String tags;
 
+    @Schema(description = "评价图片（JSON）")
+    private String images;
+
+    @Schema(description = "追评内容")
+    private String appendContent;
+
+    @Schema(description = "追评图片（JSON）")
+    private String appendImages;
+
+    @Schema(description = "追评时间")
+    private LocalDateTime appendTime;
+
     @Schema(description = "创建时间")
     private LocalDateTime createTime;
 }

@@ -1,6 +1,8 @@
 package com.xx.xianqijava.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.xx.xianqijava.entity.*;
 import com.xx.xianqijava.mapper.*;
 import com.xx.xianqijava.service.StatisticsService;
@@ -35,6 +37,8 @@ public class StatisticsServiceImpl implements StatisticsService {
     private final SystemNotificationMapper systemNotificationMapper;
     private final UserFeedbackMapper userFeedbackMapper;
     private final ReportMapper reportMapper;
+    private final StatisticsCacheMapper statisticsCacheMapper;
+    private final ObjectMapper objectMapper;
 
     @Override
     public StatisticsVO getOverviewStatistics() {
@@ -153,6 +157,30 @@ public class StatisticsServiceImpl implements StatisticsService {
         vo.setAmountTrend(getAmountTrend(30));
 
         return vo;
+    }
+
+    @Override
+    public void generateDailyStatistics(LocalDate date) {
+        LocalDate targetDate = date != null ? date : LocalDate.now().minusDays(1);
+        StatisticsVO overview = getOverviewStatistics();
+
+        StatisticsCache cache = new StatisticsCache();
+        cache.setCacheKey("daily_statistics:" + targetDate);
+        cache.setCacheData(writeDailyStatistics(targetDate, overview));
+        cache.setExpireTime(targetDate.plusDays(30).atTime(LocalTime.MAX));
+
+        LambdaQueryWrapper<StatisticsCache> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(StatisticsCache::getCacheKey, cache.getCacheKey());
+        StatisticsCache existing = statisticsCacheMapper.selectOne(wrapper);
+
+        if (existing == null) {
+            statisticsCacheMapper.insert(cache);
+        } else {
+            existing.setCacheData(cache.getCacheData());
+            existing.setExpireTime(cache.getExpireTime());
+            statisticsCacheMapper.updateById(existing);
+        }
+        log.info("每日统计缓存已生成, date={}", targetDate);
     }
 
     // ==================== 私有辅助方法 ====================
@@ -397,5 +425,16 @@ public class StatisticsServiceImpl implements StatisticsService {
                 })
                 .sorted((a, b) -> Long.compare(b.getProductCount(), a.getProductCount())) // 按数量降序
                 .collect(Collectors.toList());
+    }
+
+    private String writeDailyStatistics(LocalDate date, StatisticsVO overview) {
+        try {
+            return objectMapper.writeValueAsString(java.util.Map.of(
+                    "date", date.toString(),
+                    "overview", overview
+            ));
+        } catch (JsonProcessingException e) {
+            throw new IllegalStateException("统计缓存序列化失败", e);
+        }
     }
 }

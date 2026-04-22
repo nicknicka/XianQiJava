@@ -167,6 +167,16 @@ public interface UserService extends IService<User> {
      */
     UserLoginVO loginByPhone(String phone, String code);
 
+    /**
+     * 搜索用户
+     *
+     * @param keyword 搜索关键词
+     * @param current 页码
+     * @param size 每页数量
+     * @return 用户分页结果
+     */
+    com.baomidou.mybatisplus.core.metadata.IPage<UserInfoVO> searchUsers(String keyword, Integer current, Integer size);
+
     // ==================== 账号安全相关方法 ====================
 
     /**

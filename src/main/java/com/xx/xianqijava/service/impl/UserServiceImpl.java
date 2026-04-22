@@ -3,6 +3,8 @@ package com.xx.xianqijava.service.impl;
 import cn.hutool.core.bean.BeanUtil;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xx.xianqijava.common.ErrorCode;
 import com.xx.xianqijava.dto.UpdateLocationDTO;
@@ -28,8 +30,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Random;
-import java.util.concurrent.TimeUnit;
+import java.util.List;
 
 /**
  * 用户服务实现类
@@ -48,6 +49,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     private final com.xx.xianqijava.service.UserPreferenceService userPreferenceService;
     private final StringRedisTemplate redisTemplate;
     private final com.xx.xianqijava.service.LoginDeviceService loginDeviceService;
+    private final com.xx.xianqijava.service.VerificationCodeService verificationCodeService;
 
     @Autowired
     @Lazy
@@ -68,7 +70,8 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                           com.xx.xianqijava.service.UserFollowService userFollowService,
                           com.xx.xianqijava.service.UserPreferenceService userPreferenceService,
                           StringRedisTemplate redisTemplate,
-                          com.xx.xianqijava.service.LoginDeviceService loginDeviceService) {
+                          com.xx.xianqijava.service.LoginDeviceService loginDeviceService,
+                          com.xx.xianqijava.service.VerificationCodeService verificationCodeService) {
         this.passwordEncoder = passwordEncoder;
         this.jwtUtil = jwtUtil;
         this.productService = productService;
@@ -79,6 +82,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         this.userPreferenceService = userPreferenceService;
         this.redisTemplate = redisTemplate;
         this.loginDeviceService = loginDeviceService;
+        this.verificationCodeService = verificationCodeService;
     }
 
     @Override
@@ -97,6 +101,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (existUser != null) {
             throw new BusinessException(ErrorCode.PHONE_EXISTS);
         }
+
+        // 2.1 校验注册验证码
+        verifyCodeByType(registerDTO.getPhone(), registerDTO.getCode(), "register");
 
         // 3. 校验学号是否已注册（仅当学号不为空时校验）
         if (StrUtil.isNotBlank(registerDTO.getStudentId())) {
@@ -573,45 +580,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.BAD_REQUEST, "手机号格式不正确");
         }
 
-        // 检查是否频繁发送（60秒内只能发送一次）
-        String rateLimitKey = "verify_code:rate:" + phone;
-        String lastSendTime = redisTemplate.opsForValue().get(rateLimitKey);
-        if (lastSendTime != null) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST, "验证码发送过于频繁，请60秒后再试");
+        String normalizedType = normalizeVerificationType(type);
+        String code = verificationCodeService.sendVerificationCode(phone, normalizedType);
+        if (code == null) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "验证码发送失败，请稍后重试");
         }
 
-        // 生成6位随机验证码
-        String code = String.format("%06d", new Random().nextInt(999999));
-
-        // 存储验证码到Redis，5分钟过期
-        String verifyCodeKey = "verify_code:" + phone;
-        redisTemplate.opsForValue().set(verifyCodeKey, code, 5, TimeUnit.MINUTES);
-
-        // 设置发送频率限制
-        redisTemplate.opsForValue().set(rateLimitKey, String.valueOf(System.currentTimeMillis()), 60, TimeUnit.SECONDS);
-
-        // TODO: 实际发送短信（这里需要对接短信服务商）
-        // 这里仅打印日志，实际生产环境需要调用短信服务API
-        log.info("验证码生成成功, phone={}, code={}, type={}", phone, code, type);
-        // smsService.sendVerifyCode(phone, code);
+        log.info("验证码发送成功, phone={}, type={}", phone, normalizedType);
     }
 
     @Override
     public boolean verifyCode(String phone, String code) {
         log.info("验证验证码, phone={}, code={}", phone, code);
-
-        String verifyCodeKey = "verify_code:" + phone;
-        String savedCode = redisTemplate.opsForValue().get(verifyCodeKey);
-
-        if (savedCode == null) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST, "验证码已过期或不存在");
-        }
-
-        if (!savedCode.equals(code)) {
-            throw new BusinessException(ErrorCode.BAD_REQUEST, "验证码不正确");
-        }
-
-        return true;
+        return verifyCodeByType(phone, code, "reset_password");
     }
 
     @Override
@@ -620,7 +601,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("重置密码, phone={}", phone);
 
         // 验证验证码
-        verifyCode(phone, code);
+        verifyCodeByType(phone, code, "reset_password");
 
         // 查找用户
         User user = getByPhone(phone);
@@ -637,10 +618,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "密码重置失败");
         }
 
-        // 删除验证码
-        String verifyCodeKey = "verify_code:" + phone;
-        redisTemplate.delete(verifyCodeKey);
-
         log.info("密码重置成功, phone={}, userId={}", phone, user.getUserId());
     }
 
@@ -649,7 +626,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("手机号验证码登录, phone={}", phone);
 
         // 验证验证码
-        verifyCode(phone, code);
+        verifyCodeByType(phone, code, "login");
 
         // 查找用户
         User user = getByPhone(phone);
@@ -661,10 +638,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (user.getStatus() == 1) {
             throw new BusinessException(ErrorCode.USER_BANNED);
         }
-
-        // 登录成功后删除验证码
-        String verifyCodeKey = "verify_code:" + phone;
-        redisTemplate.delete(verifyCodeKey);
 
         // 生成Token
         String token = jwtUtil.generateToken(user.getUserId(), user.getUsername());
@@ -689,6 +662,40 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         return loginVO;
     }
 
+    @Override
+    public IPage<UserInfoVO> searchUsers(String keyword, Integer current, Integer size) {
+        String normalizedKeyword = StrUtil.trim(keyword);
+        long pageNo = current == null || current < 1 ? 1L : current;
+        long pageSize = size == null || size < 1 ? 10L : Math.min(size, 50);
+
+        Page<UserInfoVO> emptyPage = new Page<>(pageNo, pageSize, 0);
+        if (StrUtil.isBlank(normalizedKeyword)) {
+            emptyPage.setRecords(List.of());
+            return emptyPage;
+        }
+
+        boolean phoneKeyword = normalizedKeyword.matches("^1[3-9]\\d{9}$");
+        LambdaQueryWrapper<User> wrapper = new LambdaQueryWrapper<>();
+        wrapper.eq(User::getStatus, 0)
+                .and(query -> query
+                        .like(User::getUsername, normalizedKeyword)
+                        .or()
+                        .like(User::getNickname, normalizedKeyword)
+                        .or(phoneKeyword, phone -> phone
+                                .eq(User::getPhone, normalizedKeyword)
+                                .and(priv -> priv.eq(User::getPhoneSearchEnabled, 1)
+                                        .or()
+                                        .isNull(User::getPhoneSearchEnabled))))
+                .orderByDesc(User::getUpdateTime);
+
+        Page<User> userPage = page(new Page<>(pageNo, pageSize), wrapper);
+        Page<UserInfoVO> resultPage = new Page<>(userPage.getCurrent(), userPage.getSize(), userPage.getTotal());
+        resultPage.setRecords(userPage.getRecords().stream()
+                .map(this::buildPublicUserInfo)
+                .toList());
+        return resultPage;
+    }
+
     // ==================== 账号安全相关方法实现 ====================
 
     @Override
@@ -697,7 +704,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("绑定手机号, userId={}, phone={}", userId, bindPhoneDTO.getPhone());
 
         // 验证验证码
-        verifyCode(bindPhoneDTO.getPhone(), bindPhoneDTO.getCode());
+        verifyCodeByType(bindPhoneDTO.getPhone(), bindPhoneDTO.getCode(), "bind");
 
         // 检查手机号是否已被其他用户绑定
         User existUser = getByPhone(bindPhoneDTO.getPhone());
@@ -718,10 +725,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "手机号绑定失败");
         }
 
-        // 删除验证码
-        String verifyCodeKey = "verify_code:" + bindPhoneDTO.getPhone();
-        redisTemplate.delete(verifyCodeKey);
-
         log.info("手机号绑定成功, userId={}, phone={}", userId, bindPhoneDTO.getPhone());
     }
 
@@ -731,7 +734,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("更换手机号, userId={}", userId);
 
         // 验证验证码
-        verifyCode(changePhoneDTO.getNewPhone(), changePhoneDTO.getCode());
+        verifyCodeByType(changePhoneDTO.getNewPhone(), changePhoneDTO.getCode(), "bind");
 
         // 检查新手机号是否已被其他用户绑定
         User existUser = getByPhone(changePhoneDTO.getNewPhone());
@@ -756,10 +759,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "手机号更换失败");
         }
 
-        // 删除验证码
-        String verifyCodeKey = "verify_code:" + changePhoneDTO.getNewPhone();
-        redisTemplate.delete(verifyCodeKey);
-
         log.info("手机号更换成功, userId={}, newPhone={}", userId, changePhoneDTO.getNewPhone());
     }
 
@@ -779,7 +778,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("设置支付密码, userId={}", userId);
 
         // 验证验证码
-        verifyCode(setPasswordDTO.getPhone(), setPasswordDTO.getCode());
+        verifyCodeByType(setPasswordDTO.getPhone(), setPasswordDTO.getCode(), "login");
 
         // 验证手机号是否属于当前用户
         User user = getById(userId);
@@ -810,10 +809,6 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (!updated) {
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "支付密码设置失败");
         }
-
-        // 删除验证码
-        String verifyCodeKey = "verify_code:" + setPasswordDTO.getPhone();
-        redisTemplate.delete(verifyCodeKey);
 
         log.info("支付密码设置成功, userId={}", userId);
     }
@@ -862,7 +857,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         log.info("重置支付密码, userId={}", userId);
 
         // 验证验证码
-        verifyCode(resetPasswordDTO.getPhone(), resetPasswordDTO.getCode());
+        verifyCodeByType(resetPasswordDTO.getPhone(), resetPasswordDTO.getCode(), "login");
 
         // 验证手机号是否属于当前用户
         User user = getById(userId);
@@ -889,11 +884,54 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "支付密码重置失败");
         }
 
-        // 删除验证码
-        String verifyCodeKey = "verify_code:" + resetPasswordDTO.getPhone();
-        redisTemplate.delete(verifyCodeKey);
-
         log.info("支付密码重置成功, userId={}", userId);
+    }
+
+    private boolean verifyCodeByType(String phone, String code, String type) {
+        String normalizedType = normalizeVerificationType(type);
+        boolean valid = verificationCodeService.verifyCode(phone, code, normalizedType);
+        if (!valid) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "验证码不正确或已过期");
+        }
+        return true;
+    }
+
+    private String normalizeVerificationType(String type) {
+        if (StrUtil.isBlank(type)) {
+            return "login";
+        }
+
+        switch (type) {
+            case "register":
+                return "register";
+            case "reset":
+            case "reset_password":
+                return "reset_password";
+            case "bind":
+            case "bind_phone":
+            case "change_phone":
+                return "bind";
+            case "login":
+            default:
+                return "login";
+        }
+    }
+
+    private UserInfoVO buildPublicUserInfo(User user) {
+        UserInfoVO userInfoVO = new UserInfoVO();
+        userInfoVO.setId(user.getUserId());
+        userInfoVO.setUsername(user.getUsername());
+        userInfoVO.setNickname(StrUtil.blankToDefault(user.getNickname(), user.getUsername()));
+        userInfoVO.setAvatar(user.getAvatar());
+        userInfoVO.setCreditScore(user.getCreditScore());
+        userInfoVO.setCreditLevel(calculateCreditLevel(user.getCreditScore()));
+        userInfoVO.setStatus(user.getStatus());
+        userInfoVO.setIsVerified(user.getIsVerified());
+        userInfoVO.setFollowerCount(userFollowService.countFollowers(user.getUserId()));
+        userInfoVO.setFollowingCount(userFollowService.countFollowing(user.getUserId()));
+        userInfoVO.setCreatedAt(user.getCreateTime() != null ? user.getCreateTime().toString() : null);
+        userInfoVO.setUpdatedAt(user.getUpdateTime() != null ? user.getUpdateTime().toString() : null);
+        return userInfoVO;
     }
 
     @Override

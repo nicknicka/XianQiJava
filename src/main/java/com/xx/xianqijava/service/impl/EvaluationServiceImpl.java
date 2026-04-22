@@ -1,11 +1,11 @@
 package com.xx.xianqijava.service.impl;
 
-import cn.hutool.core.bean.BeanUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.xx.xianqijava.common.ErrorCode;
+import com.xx.xianqijava.dto.EvaluationAppendDTO;
 import com.xx.xianqijava.dto.EvaluationCreateDTO;
 import com.xx.xianqijava.entity.Evaluation;
 import com.xx.xianqijava.entity.Order;
@@ -21,12 +21,18 @@ import com.xx.xianqijava.mapper.UserMapper;
 import com.xx.xianqijava.service.EvaluationService;
 import com.xx.xianqijava.util.IdConverter;
 import com.xx.xianqijava.vo.EvaluationVO;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 评价服务实现类
@@ -40,6 +46,7 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
     private final ProductMapper productMapper;
     private final UserMapper userMapper;
     private final ProductImageMapper productImageMapper;
+    private final ObjectMapper objectMapper;
 
     @Override
     @Transactional(rollbackFor = Exception.class)
@@ -62,8 +69,10 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
                 throw new BusinessException(ErrorCode.BAD_REQUEST, "评价内容长度不能超过500个字符");
             }
 
+            Long orderId = IdConverter.toLong(createDTO.getOrderId());
+
             // 1. 查询订单
-            Order order = orderMapper.selectById(createDTO.getOrderId());
+            Order order = orderMapper.selectById(orderId);
             if (order == null) {
                 log.warn("订单不存在, orderId={}", createDTO.getOrderId());
                 throw new BusinessException(ErrorCode.ORDER_NOT_FOUND, "订单不存在");
@@ -94,7 +103,7 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
 
             // 4. 检查是否已经评价过（order_id有唯一约束）
             LambdaQueryWrapper<Evaluation> wrapper = new LambdaQueryWrapper<>();
-            wrapper.eq(Evaluation::getOrderId, createDTO.getOrderId());
+            wrapper.eq(Evaluation::getOrderId, orderId);
             if (count(wrapper) > 0) {
                 log.warn("订单已被评价, orderId={}", createDTO.getOrderId());
                 throw new BusinessException(ErrorCode.BAD_REQUEST, "该订单已被评价");
@@ -102,23 +111,13 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
 
             // 5. 创建评价
             Evaluation evaluation = new Evaluation();
-            evaluation.setOrderId(IdConverter.toLong(createDTO.getOrderId()));
+            evaluation.setOrderId(orderId);
             evaluation.setFromUserId(evaluatorId);
             evaluation.setToUserId(evaluatedUserId);
             evaluation.setScore(createDTO.getRating());
             evaluation.setContent(content.trim());
-            // 将标签字符串转换为JSON数组格式存储
-            String tags = createDTO.getTags();
-            if (tags != null && !tags.trim().isEmpty()) {
-                String[] tagArray = tags.split(",");
-                StringBuilder jsonBuilder = new StringBuilder("[");
-                for (int i = 0; i < tagArray.length; i++) {
-                    if (i > 0) jsonBuilder.append(",");
-                    jsonBuilder.append("\"").append(tagArray[i].trim()).append("\"");
-                }
-                jsonBuilder.append("]");
-                evaluation.setTags(jsonBuilder.toString());
-            }
+            evaluation.setTags(toJsonArray(parseCommaSeparatedValues(createDTO.getTags())));
+            evaluation.setImages(toJsonArray(sanitizeImages(createDTO.getImages())));
 
             save(evaluation);
 
@@ -138,6 +137,44 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
                     evaluatorId, createDTO.getOrderId(), e.getMessage(), e);
             throw new BusinessException(ErrorCode.INTERNAL_ERROR, "创建评价失败，请稍后重试");
         }
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public EvaluationVO appendEvaluation(Long evalId, EvaluationAppendDTO appendDTO, Long evaluatorId) {
+        log.info("追加评价, evalId={}, evaluatorId={}", evalId, evaluatorId);
+
+        if (evalId == null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "评价ID不能为空");
+        }
+        Evaluation evaluation = getById(evalId);
+        if (evaluation == null) {
+            throw new BusinessException(ErrorCode.EVALUATION_NOT_FOUND, "评价不存在");
+        }
+        if (!evaluation.getFromUserId().equals(evaluatorId)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "您无权追加该评价");
+        }
+        if (evaluation.getAppendTime() != null) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "该评价已追评");
+        }
+
+        String content = appendDTO.getContent() == null ? "" : appendDTO.getContent().trim();
+        List<String> images = sanitizeImages(appendDTO.getImages());
+        if (content.isEmpty() && images.isEmpty()) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "追评内容或图片不能为空");
+        }
+        if (content.length() > 500) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "追评内容长度不能超过500个字符");
+        }
+
+        evaluation.setAppendContent(content.isEmpty() ? null : content);
+        evaluation.setAppendImages(toJsonArray(images));
+        evaluation.setAppendTime(LocalDateTime.now());
+        updateById(evaluation);
+
+        Order order = orderMapper.selectById(evaluation.getOrderId());
+        boolean isBuyer = order != null && order.getBuyerId().equals(evaluatorId);
+        return convertToVO(evaluation, isBuyer);
     }
 
     @Override
@@ -227,13 +264,23 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
      */
     private EvaluationVO convertToVO(Evaluation evaluation, boolean isBuyer) {
         EvaluationVO vo = new EvaluationVO();
-        BeanUtil.copyProperties(evaluation, vo);
-
-        // Map entity fields to VO fields
+        vo.setId(String.valueOf(evaluation.getEvalId()));
         vo.setEvaluationId(String.valueOf(evaluation.getEvalId()));
+        vo.setOrderId(String.valueOf(evaluation.getOrderId()));
         vo.setEvaluatorId(String.valueOf(evaluation.getFromUserId()));
+        vo.setFromUserId(vo.getEvaluatorId());
         vo.setEvaluatedUserId(String.valueOf(evaluation.getToUserId()));
+        vo.setToUserId(vo.getEvaluatedUserId());
         vo.setRating(evaluation.getScore());
+        vo.setContent(evaluation.getContent());
+        vo.setTags(parseJsonArray(evaluation.getTags()));
+        vo.setImages(parseJsonArray(evaluation.getImages()));
+        vo.setAppendContent(evaluation.getAppendContent());
+        vo.setAppendImages(parseJsonArray(evaluation.getAppendImages()));
+        vo.setAppendTime(evaluation.getAppendTime());
+        vo.setHasAppend(evaluation.getAppendTime() != null);
+        vo.setCreateTime(evaluation.getCreateTime());
+        vo.setCreatedAt(evaluation.getCreateTime());
 
         // Set target type based on role
         vo.setTargetType(isBuyer ? 1 : 2);
@@ -250,6 +297,7 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
             Product product = productMapper.selectById(order.getProductId());
             if (product != null) {
                 vo.setProductTitle(product.getTitle());
+                vo.setProductName(product.getTitle());
                 // 获取商品封面图
                 vo.setProductImage(getProductCoverImage(product.getProductId()));
             }
@@ -259,17 +307,70 @@ public class EvaluationServiceImpl extends ServiceImpl<EvaluationMapper, Evaluat
         User evaluator = userMapper.selectById(evaluation.getFromUserId());
         if (evaluator != null) {
             vo.setEvaluatorNickname(evaluator.getNickname());
+            vo.setEvaluatorName(evaluator.getNickname());
+            vo.setFromUserName(evaluator.getNickname());
             vo.setEvaluatorAvatar(evaluator.getAvatar());
+            vo.setFromUserAvatar(evaluator.getAvatar());
         }
 
         // 查询被评价人信息
         User evaluatedUser = userMapper.selectById(evaluation.getToUserId());
         if (evaluatedUser != null) {
             vo.setEvaluatedUserNickname(evaluatedUser.getNickname());
+            vo.setToUserName(evaluatedUser.getNickname());
             vo.setEvaluatedUserAvatar(evaluatedUser.getAvatar());
+            vo.setToUserAvatar(evaluatedUser.getAvatar());
         }
 
         return vo;
+    }
+
+    private List<String> parseCommaSeparatedValues(String rawValue) {
+        if (rawValue == null || rawValue.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        return java.util.Arrays.stream(rawValue.split(","))
+                .map(String::trim)
+                .filter(value -> !value.isEmpty())
+                .distinct()
+                .collect(Collectors.toList());
+    }
+
+    private List<String> sanitizeImages(List<String> images) {
+        if (images == null || images.isEmpty()) {
+            return Collections.emptyList();
+        }
+        List<String> sanitizedImages = images.stream()
+                .map(image -> image == null ? "" : image.trim())
+                .filter(image -> !image.isEmpty())
+                .distinct()
+                .collect(Collectors.toCollection(ArrayList::new));
+        if (sanitizedImages.size() > 3) {
+            throw new BusinessException(ErrorCode.BAD_REQUEST, "评价图片最多上传3张");
+        }
+        return sanitizedImages;
+    }
+
+    private String toJsonArray(List<String> values) {
+        if (values == null || values.isEmpty()) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(values);
+        } catch (Exception e) {
+            throw new BusinessException(ErrorCode.INTERNAL_ERROR, "评价数据序列化失败");
+        }
+    }
+
+    private List<String> parseJsonArray(String rawValue) {
+        if (rawValue == null || rawValue.isBlank()) {
+            return Collections.emptyList();
+        }
+        try {
+            return objectMapper.readValue(rawValue, new TypeReference<List<String>>() {});
+        } catch (Exception e) {
+            return parseCommaSeparatedValues(rawValue);
+        }
     }
 
     @Override
